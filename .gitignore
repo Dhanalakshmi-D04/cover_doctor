@@ -1,0 +1,28 @@
+# Docs — internal reference only, never goes to GitHub
+docs/
+
+# Go
+backend/bin/
+*.exe
+
+# Node
+frontend/node_modules/
+frontend/dist/
+
+# Env
+.env
+*.env.local
+
+# OS
+.DS_Store
+
+# Editor/IDE
+.vscode/
+.idea/
+
+# Uploaded/test images (don't commit real cover files)
+benchmarks/uploads/
+*.jpg
+*.jpeg
+*.png
+!frontend/public/**
