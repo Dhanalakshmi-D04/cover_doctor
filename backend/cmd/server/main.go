@@ -1,17 +1,42 @@
 package main
 
 import (
-	"net/http"
+	"log"
+	"os"
 
-	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
+
+	"github.com/Dhanalakshmi-D04/cover_doctor/backend/internal/api"
+	"github.com/Dhanalakshmi-D04/cover_doctor/backend/internal/db"
 )
 
 func main() {
-	router := gin.Default()
+	_ = godotenv.Load() // fine if .env doesn't exist (e.g. in production)
 
-	router.GET("/healthz", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{"status": "ok"})
-	})
+	databaseURL := os.Getenv("DATABASE_URL")
+	if databaseURL == "" {
+		log.Fatal("DATABASE_URL is required (see backend/.env)")
+	}
 
-	router.Run(":8080")
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+
+	uploadDir := "uploads"
+	if err := os.MkdirAll(uploadDir, 0o755); err != nil {
+		log.Fatalf("failed to create upload directory: %v", err)
+	}
+
+	database, err := db.Connect(databaseURL)
+	if err != nil {
+		log.Fatalf("failed to connect to database: %v", err)
+	}
+	defer database.Close()
+
+	router := api.NewRouter(database, uploadDir)
+
+	if err := router.Run(":" + port); err != nil {
+		log.Fatalf("server failed: %v", err)
+	}
 }

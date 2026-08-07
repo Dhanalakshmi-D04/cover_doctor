@@ -3,6 +3,7 @@ docs/
 
 # Go
 backend/bin/
+backend/uploads/
 *.exe
 
 # Node
@@ -26,3 +27,5 @@ benchmarks/uploads/
 *.jpeg
 *.png
 !frontend/public/**
+
+img/
