@@ -13,7 +13,7 @@ export default function Report({ coverId, onReset }) {
 
   return (
     <div className="report-page">
-      <ScoreReport report={data} />
+      <ScoreReport plan={data.plan} report={data.report} coverId={coverId} />
       <button onClick={onReset}>Score another cover</button>
     </div>
   );

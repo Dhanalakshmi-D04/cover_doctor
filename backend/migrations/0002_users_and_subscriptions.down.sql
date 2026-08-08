@@ -1,0 +1,3 @@
+ALTER TABLE covers DROP COLUMN IF EXISTS user_id;
+DROP TABLE IF EXISTS subscriptions;
+DROP TABLE IF EXISTS users;

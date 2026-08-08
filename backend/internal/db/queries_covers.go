@@ -10,16 +10,18 @@ import (
 func InsertCover(database *sqlx.DB, cover *models.Cover) error {
 	query := `
 		INSERT INTO covers (
-			id, filename, image_width, image_height,
-			title_text, title_height_percent, title_height_percentile,
-			contrast_ratio, contrast_percentile,
-			whitespace_percent, whitespace_percentile,
+			id, filename, user_id, book_project_id, version_number,
+			image_width, image_height, style,
+			title_text, title_height_percent, title_height_percentile, title_explanation,
+			contrast_ratio, contrast_percentile, contrast_explanation,
+			whitespace_percent, whitespace_percentile, whitespace_explanation,
 			overall_score
 		) VALUES (
-			:id, :filename, :image_width, :image_height,
-			:title_text, :title_height_percent, :title_height_percentile,
-			:contrast_ratio, :contrast_percentile,
-			:whitespace_percent, :whitespace_percentile,
+			:id, :filename, :user_id, :book_project_id, :version_number,
+			:image_width, :image_height, :style,
+			:title_text, :title_height_percent, :title_height_percentile, :title_explanation,
+			:contrast_ratio, :contrast_percentile, :contrast_explanation,
+			:whitespace_percent, :whitespace_percentile, :whitespace_explanation,
 			:overall_score
 		)`
 
