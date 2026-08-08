@@ -10,10 +10,11 @@ import (
 	"github.com/Dhanalakshmi-D04/cover_doctor/backend/internal/billing"
 	"github.com/Dhanalakshmi-D04/cover_doctor/backend/internal/config"
 	"github.com/Dhanalakshmi-D04/cover_doctor/backend/internal/middleware"
+	"github.com/Dhanalakshmi-D04/cover_doctor/backend/internal/scraper"
 )
 
 // NewRouter wires up all HTTP routes for the API.
-func NewRouter(database *sqlx.DB, cfg *config.Config, aiClient *ai.Client, billingClient *billing.Client, uploadDir string) *gin.Engine {
+func NewRouter(database *sqlx.DB, cfg *config.Config, aiClient *ai.Client, billingClient *billing.Client, uploadDir string, scraperScheduler ...*scraper.Scheduler) *gin.Engine {
 	if cfg.GinMode != "" {
 		gin.SetMode(cfg.GinMode)
 	}
@@ -27,12 +28,18 @@ func NewRouter(database *sqlx.DB, cfg *config.Config, aiClient *ai.Client, billi
 	authRateLimiter := middleware.NewRateLimiter(15)   // 15 requests/min per IP
 	uploadRateLimiter := middleware.NewRateLimiter(20) // 20 uploads/min per IP
 
+	var sched *scraper.Scheduler
+	if len(scraperScheduler) > 0 {
+		sched = scraperScheduler[0]
+	}
+
 	handler := &Handler{
-		DB:        database,
-		UploadDir: uploadDir,
-		Config:    cfg,
-		AI:        aiClient,
-		Billing:   billingClient,
+		DB:               database,
+		UploadDir:        uploadDir,
+		Config:           cfg,
+		AI:               aiClient,
+		Billing:          billingClient,
+		ScraperScheduler: sched,
 	}
 
 	router.GET("/healthz", func(c *gin.Context) {
@@ -57,6 +64,10 @@ func NewRouter(database *sqlx.DB, cfg *config.Config, aiClient *ai.Client, billi
 		protected.GET("/book-projects/:id/versions", handler.ListVersions)
 		protected.POST("/billing/checkout", handler.CreateCheckoutSession)
 		protected.POST("/billing/portal", handler.CreatePortalSession)
+
+		// Admin scraper control routes
+		protected.POST("/admin/scraper/run", handler.TriggerScraper)
+		protected.GET("/admin/scraper/status", handler.GetScraperStatus)
 	}
 
 	return router

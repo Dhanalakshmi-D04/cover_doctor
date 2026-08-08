@@ -11,6 +11,7 @@ import (
 	"github.com/Dhanalakshmi-D04/cover_doctor/backend/internal/billing"
 	"github.com/Dhanalakshmi-D04/cover_doctor/backend/internal/config"
 	"github.com/Dhanalakshmi-D04/cover_doctor/backend/internal/db"
+	"github.com/Dhanalakshmi-D04/cover_doctor/backend/internal/scraper"
 )
 
 func main() {
@@ -42,7 +43,12 @@ func main() {
 		log.Println("warning: STRIPE_SECRET_KEY not set — billing endpoints will return an error until configured")
 	}
 
-	router := api.NewRouter(database, cfg, aiClient, billingClient, uploadDir)
+	scraperOpts := scraper.DefaultSchedulerOptions()
+	scraperScheduler := scraper.NewScheduler(database, aiClient, scraperOpts)
+	scraperScheduler.Start()
+	defer scraperScheduler.Stop()
+
+	router := api.NewRouter(database, cfg, aiClient, billingClient, uploadDir, scraperScheduler)
 
 	if err := router.Run(":" + cfg.Port); err != nil {
 		log.Fatalf("server failed: %v", err)

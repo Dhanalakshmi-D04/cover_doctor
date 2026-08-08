@@ -139,7 +139,7 @@ func (h *Handler) Upload(c *gin.Context) {
 		style = ai.DefaultStyle
 	}
 
-	benchmark := scoring.BenchmarkForStyle(style)
+	benchmark := scoring.BenchmarkForStyleWithDB(h.DB, style)
 	report := scoring.Score(title.HeightPercent, contrast, whitespace, benchmark)
 
 	// AI touchpoint #2: turning the already-finished numbers into prose.

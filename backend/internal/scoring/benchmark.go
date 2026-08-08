@@ -1,5 +1,10 @@
 package scoring
 
+import (
+	"github.com/jmoiron/sqlx"
+)
+
+
 // BenchmarkEntry represents one already-analyzed cover's measurements, used
 // as a comparison point for percentile calculations.
 type BenchmarkEntry struct {
@@ -74,3 +79,31 @@ func BenchmarkForStyle(style string) []BenchmarkEntry {
 	}
 	return benchmarksByStyle["Bold Typography"]
 }
+
+// BenchmarkForStyleWithDB attempts to load benchmark entries for a visual style
+// from PostgreSQL. If database is nil, encounters an error, or has no entries for that style,
+// it gracefully falls back to the hardcoded baseline dataset from BenchmarkForStyle.
+func BenchmarkForStyleWithDB(database *sqlx.DB, style string) []BenchmarkEntry {
+	if database != nil {
+		type benchData struct {
+			TitleHeightPercent float64 `db:"title_height_percent"`
+			ContrastRatio      float64 `db:"contrast_ratio"`
+			WhitespacePercent  float64 `db:"whitespace_percent"`
+		}
+		var rows []benchData
+		err := database.Select(&rows, `SELECT title_height_percent, contrast_ratio, whitespace_percent FROM benchmarks WHERE style = $1`, style)
+		if err == nil && len(rows) > 0 {
+			entries := make([]BenchmarkEntry, len(rows))
+			for i, r := range rows {
+				entries[i] = BenchmarkEntry{
+					TitleHeightPercent: r.TitleHeightPercent,
+					ContrastRatio:      r.ContrastRatio,
+					WhitespacePercent:  r.WhitespacePercent,
+				}
+			}
+			return entries
+		}
+	}
+	return BenchmarkForStyle(style)
+}
+
