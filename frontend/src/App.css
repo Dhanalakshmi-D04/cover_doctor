@@ -56,6 +56,52 @@
   margin-bottom: 1.5rem;
 }
 
+.score-gauge-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 0.9rem;
+}
+
+.score-circle {
+  width: 110px;
+  height: 110px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 6px solid var(--theme-accent);
+  background: var(--theme-accent-light);
+  box-shadow: 0 8px 24px rgba(27,67,50,0.08);
+  flex-shrink: 0;
+}
+
+.score-num {
+  font-size: 2.1rem;
+  font-weight: 900;
+  line-height: 1;
+  display: block;
+}
+
+.score-total {
+  font-size: 0.85rem;
+  color: var(--theme-text-muted);
+  display: block;
+}
+
+.score-meta {
+  display: flex;
+  flex-direction: column;
+}
+
+.score-status-tag {
+  padding: 0.35rem 0.85rem;
+  border-radius: var(--radius-pill);
+  font-weight: 700;
+  display: inline-block;
+  margin-bottom: 0.4rem;
+}
+
 .percentile-bar {
   margin-bottom: 1.25rem;
 }
@@ -85,10 +131,10 @@
 
 .report-page button {
   margin-top: 1.5rem;
-  padding: 0.5rem 1rem;
+  padding: 0.6rem 1rem;
   border-radius: var(--radius-pill);
   border: 1px solid var(--theme-accent);
-  background: white;
+  background: linear-gradient(135deg,#fff,#fff);
   cursor: pointer;
 }
 
