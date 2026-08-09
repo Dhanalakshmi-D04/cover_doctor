@@ -6,7 +6,9 @@ import BestsellerExplorer from "./pages/BestsellerExplorer";
 import ABTestStudio from "./pages/ABTestStudio";
 import ColorPaletteStudio from "./pages/ColorPaletteStudio";
 import ExportStudio from "./pages/ExportStudio";
-import Navbar from "./components/Navbar";
+import Account from "./pages/Account";
+import Pricing from "./pages/Pricing";
+import AppShell from "./components/AppShell";
 import { logout } from "./api/client";
 
 function App() {
@@ -29,7 +31,7 @@ function App() {
     window.addEventListener("auth_unauthorized", handleUnauthorized);
 
     const hash = window.location.hash.replace("#", "");
-    if (["explore", "ab-test", "palette-studio", "export"].includes(hash)) {
+    if (["explore", "ab-test", "palette-studio", "export", "account", "pricing"].includes(hash)) {
       setActiveTab(hash);
     }
 
@@ -60,32 +62,21 @@ function App() {
   }
 
   return (
-    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
-      <Navbar
-        activeTab={activeTab}
-        setActiveTab={handleTabChange}
-        isAuthenticated={isAuthenticated}
-        onLogout={handleLogout}
-      />
-
-      <main className="app-container">
-        {activeTab === "home" && (
-          coverId ? (
-            <Report coverId={coverId} onReset={() => setCoverId(null)} onNavigate={handleTabChange} />
-          ) : (
-            <Home onUploaded={setCoverId} onNavigate={handleTabChange} />
-          )
-        )}
-        {activeTab === "explore" && <BestsellerExplorer userCoverId={coverId} />}
-        {activeTab === "ab-test" && <ABTestStudio />}
-        {activeTab === "palette-studio" && <ColorPaletteStudio />}
-        {activeTab === "export" && <ExportStudio />}
-      </main>
-
-      <footer className="no-print" style={{ textAlign: "center", padding: "1.5rem", borderTop: "1px solid var(--theme-border)", color: "var(--theme-muted)", fontSize: "0.82rem", marginTop: "auto" }}>
-        Cover Doctor • Spring Edition • Minimal & Warm Benchmark Analytics for Authors & Designers
-      </footer>
-    </div>
+    <AppShell activeTab={activeTab} setActiveTab={handleTabChange} isAuthenticated={isAuthenticated} onLogout={handleLogout}>
+      {activeTab === "home" && (
+        coverId ? (
+          <Report coverId={coverId} onReset={() => setCoverId(null)} onNavigate={handleTabChange} />
+        ) : (
+          <Home onUploaded={setCoverId} onNavigate={handleTabChange} />
+        )
+      )}
+      {activeTab === "explore" && <BestsellerExplorer userCoverId={coverId} />}
+      {activeTab === "ab-test" && <ABTestStudio />}
+      {activeTab === "palette-studio" && <ColorPaletteStudio />}
+      {activeTab === "export" && <ExportStudio />}
+      {activeTab === "account" && <Account onNavigate={handleTabChange} />}
+      {activeTab === "pricing" && <Pricing />}
+    </AppShell>
   );
 }
 
