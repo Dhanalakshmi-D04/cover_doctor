@@ -89,7 +89,7 @@ export default function ExportStudio({ userCoverImage }) {
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.8rem" }}>
         {/* Designer Fix Checklist */}
-        <div className="spring-card" style={{ background: "white" }}>
+        <div className="spring-card" style={{ backgroundColor: "var(--bg-glass-card)", borderColor: "var(--border-glass)" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
             <h3 style={{ fontSize: "1.15rem", color: "var(--theme-olive-dark)" }}>
               🛠️ Copy-Pasteable Designer Fix Checklist
@@ -139,7 +139,7 @@ export default function ExportStudio({ userCoverImage }) {
         </div>
 
         {/* PDF Preview Card */}
-        <div className="spring-card" style={{ background: "white" }}>
+        <div className="spring-card" style={{ backgroundColor: "var(--bg-glass-card)", borderColor: "var(--border-glass)" }}>
           <div style={{ borderBottom: "2px solid var(--theme-olive)", paddingBottom: "0.75rem", marginBottom: "1.2rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <div>
               <span style={{ fontSize: "0.7rem", fontWeight: 800, color: "var(--theme-olive)", letterSpacing: "0.1em", textTransform: "uppercase" }}>

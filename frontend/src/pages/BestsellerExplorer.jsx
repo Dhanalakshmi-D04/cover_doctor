@@ -286,7 +286,7 @@ export default function BestsellerExplorer({ _userCoverId, userCoverImage }) {
 
           {/* ACTIVE COVERFLOW SPOTLIGHT INSPECTION CARD */}
           {activeCover && (
-            <div className="spring-card animate-fade-in" style={{ marginTop: "2rem", background: "white" }}>
+            <div className="spring-card animate-fade-in" style={{ marginTop: "2rem", backgroundColor: "var(--bg-glass-card)", borderColor: "var(--border-glass)" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1.5rem" }}>
                 <div style={{ flex: 1, minWidth: "260px" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", marginBottom: "0.3rem" }}>

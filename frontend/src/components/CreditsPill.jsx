@@ -1,34 +1,106 @@
-import React, { useState } from "react";
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Zap, Sparkles, Info, PlusCircle } from 'lucide-react';
+import { useAuthStore } from '../stores/useAuthStore';
 
-export default function CreditsPill({ credits = null }) {
+export default function CreditsPill({ onNavigate }) {
   const [open, setOpen] = useState(false);
-  const display = credits == null ? "Free" : credits;
+  const credits = useAuthStore((state) => state.credits);
+  const plan = useAuthStore((state) => state.plan);
+
+  const isLow = credits !== null && credits <= 5;
 
   return (
-    <div style={{ position: "relative", display: "inline-block" }}>
-      <button
-        className="pill-button pill-button--muted"
-        onClick={() => setOpen((s) => !s)}
+    <div style={{ position: 'relative', display: 'inline-block' }}>
+      <motion.button
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
+        onClick={() => setOpen((prev) => !prev)}
         aria-expanded={open}
-        aria-label="Credits info"
-        style={{ fontWeight: 700, display: "inline-flex", gap: "0.5rem" }}
+        aria-label="View credits balance"
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '0.4rem',
+          padding: '0.45rem 0.95rem',
+          borderRadius: 'var(--radius-full)',
+          backgroundColor: isLow ? 'rgba(245, 158, 11, 0.15)' : 'var(--bg-glass-card)',
+          border: `1px solid ${isLow ? 'var(--accent-warning)' : 'var(--border-glass-light)'}`,
+          color: isLow ? 'var(--accent-warning)' : 'var(--text-primary)',
+          fontSize: '0.85rem',
+          fontWeight: '600',
+          cursor: 'pointer',
+          backdropFilter: 'blur(8px)',
+          transition: 'all var(--transition-fast)',
+        }}
       >
-        <span style={{ fontSize: "0.95rem" }}>🪙</span>
-        <span style={{ fontSize: "0.95rem" }}>{display}</span>
-        <span style={{ fontSize: "0.85rem", opacity: 0.85, marginLeft: "0.4rem" }}>credits</span>
-        <span style={{ fontSize: "0.9rem", marginLeft: "0.25rem", opacity: 0.9 }}>i</span>
-      </button>
+        <Zap size={14} color={isLow ? 'var(--accent-warning)' : 'var(--accent-primary)'} fill={isLow ? 'var(--accent-warning)' : 'var(--accent-primary)'} />
+        <span>{credits ?? 50}</span>
+        <span style={{ fontSize: '0.75rem', opacity: 0.7 }}>credits</span>
+        <Info size={12} style={{ opacity: 0.6, marginLeft: '0.2rem' }} />
+      </motion.button>
 
-      {open && (
-        <div className="credits-tooltip">
-          <div style={{ fontWeight: 800, marginBottom: "0.5rem", color: "var(--ct-cream)" }}>Credit Usage:</div>
-          <ul style={{ paddingLeft: "1rem", lineHeight: 1.4 }}>
-            <li>Each analysis costs 1 credit</li>
-            <li>Credits are purchased in packs and may expire</li>
-            <li>Unused credits roll into monthly quotas for subscriptions</li>
-          </ul>
-        </div>
-      )}
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: 8, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 8, scale: 0.95 }}
+            transition={{ duration: 0.15 }}
+            style={{
+              position: 'absolute',
+              right: 0,
+              top: 'calc(100% + 8px)',
+              width: '260px',
+              padding: '1rem',
+              backgroundColor: 'var(--bg-surface)',
+              border: '1px solid var(--border-glass-light)',
+              borderRadius: 'var(--radius-md)',
+              boxShadow: 'var(--shadow-lg)',
+              zIndex: 100,
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: '700', fontSize: '0.9rem' }}>
+                <Sparkles size={16} color="var(--accent-primary)" />
+                <span>Credit Balance</span>
+              </div>
+              <span style={{ fontSize: '0.75rem', padding: '0.15rem 0.5rem', borderRadius: 'var(--radius-full)', backgroundColor: 'rgba(99, 102, 241, 0.15)', color: 'var(--accent-primary)', textTransform: 'uppercase', fontWeight: '700' }}>
+                {plan}
+              </span>
+            </div>
+
+            <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.75rem', lineHeight: '1.4' }}>
+              1 credit is used per cover diagnostic report, A/B comparison analysis, or visual palette breakdown.
+            </p>
+
+            <button
+              onClick={() => {
+                setOpen(false);
+                if (onNavigate) onNavigate('pricing');
+              }}
+              style={{
+                width: '100%',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.4rem',
+                padding: '0.5rem',
+                borderRadius: 'var(--radius-sm)',
+                backgroundColor: 'var(--accent-primary)',
+                color: '#FFFFFF',
+                border: 'none',
+                fontWeight: '600',
+                fontSize: '0.825rem',
+                cursor: 'pointer',
+              }}
+            >
+              <PlusCircle size={14} />
+              <span>Get More Credits</span>
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

@@ -1,5 +1,8 @@
 import React, { useState, useRef } from "react";
 import { createCoverSvgDataUrl } from "../data/bestsellersData";
+import ImageSliderAB from "../components/ImageSliderAB";
+import PillButton from "../components/PillButton";
+import { Split, Trophy, Upload, ArrowRight, Share2 } from "lucide-react";
 
 export default function ABTestStudio() {
   const [activeSubTab, setActiveSubTab] = useState("head-to-head"); // "head-to-head" | "share-poll" | "analytics" | "public-vote-preview"
@@ -270,6 +273,17 @@ export default function ABTestStudio() {
                 Score Gap: +{coverB.overall - coverA.overall} pts
               </span>
             </div>
+          </div>
+
+          {/* Interactive Split Screen Slider */}
+          <div className="spring-card" style={{ padding: "1.5rem", textAlign: "center" }}>
+            <h4 style={{ fontSize: "1.1rem", fontWeight: "700", color: "var(--text-primary)", marginBottom: "0.5rem" }}>
+              🎛️ Interactive A/B Cover Split-Screen Slider
+            </h4>
+            <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", marginBottom: "1.25rem" }}>
+              Drag the center slider handle left and right to visually inspect cover typography and contrast shifts in real time.
+            </p>
+            <ImageSliderAB imageA={coverA.imgUrl} imageB={coverB.imgUrl} labelA={coverA.name} labelB={coverB.name} />
           </div>
 
           {/* Side by Side Comparison Grid */}
