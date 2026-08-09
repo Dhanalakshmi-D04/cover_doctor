@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { getReport } from "../api/client";
 import ScoreReport from "../components/ScoreReport";
+import PillButton from "../components/PillButton";
 
 export default function Report({ coverId, onReset, onNavigate }) {
   const { data, isLoading, isError, error } = useQuery({
@@ -24,7 +25,7 @@ export default function Report({ coverId, onReset, onNavigate }) {
         <div style={{ fontSize: "2.5rem", marginBottom: "0.5rem" }}>⚠️</div>
         <h3 style={{ color: "#DC2626" }}>Unable to generate score report</h3>
         <p style={{ color: "var(--theme-text-muted)", margin: "0.5rem 0 1.5rem 0" }}>{error.message}</p>
-        <button className="btn-primary" onClick={onReset}>Try Scoring Another Cover</button>
+        <PillButton onClick={onReset}>Try Scoring Another Cover</PillButton>
       </div>
     );
   }

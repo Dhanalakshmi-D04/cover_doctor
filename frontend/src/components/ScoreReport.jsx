@@ -2,6 +2,7 @@ import PercentileBar from "./PercentileBar";
 import LockedSection from "./LockedSection";
 import VisualBreakdown from "./VisualBreakdown";
 import EvolutionTracking from "./EvolutionTracking";
+import PillButton from "./PillButton";
 import { imageUrl } from "../api/client";
 
 export default function ScoreReport({ plan, report, coverId, onReset, onNavigate }) {
@@ -240,9 +241,9 @@ export default function ScoreReport({ plan, report, coverId, onReset, onNavigate
       <div className="score-report-footer spring-card" style={{ marginTop: "2.5rem", textAlign: "center" }}>
         <h4 style={{ fontFamily: "var(--font-serif)", fontSize: "1.2rem", marginBottom: "0.5rem" }}>What would you like to do next?</h4>
         <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "1rem", marginTop: "1rem" }}>
-          <button className="btn-primary" onClick={onReset}>
+          <PillButton onClick={onReset}>
             🔄 Score Another Cover
-          </button>
+          </PillButton>
           {onNavigate && (
             <>
               <button className="btn-secondary" onClick={() => onNavigate("explore")}>

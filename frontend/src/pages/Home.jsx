@@ -1,6 +1,7 @@
 import React from "react";
 import UploadForm from "../components/UploadForm";
 import CreateBookProjectForm from "../components/CreateBookProjectForm";
+import PillButton from "../components/PillButton";
 
 export default function Home({ onUploaded, onNavigate }) {
   return (
@@ -42,9 +43,10 @@ export default function Home({ onUploaded, onNavigate }) {
           <p style={{ fontSize: "0.85rem", color: "var(--theme-text-muted)", lineHeight: "1.4" }}>
             Browse top Amazon bestseller covers & underlying title/contrast ratios across 5 genres.
           </p>
-          <button className="btn-primary" style={{ marginTop: "1rem", width: "100%", padding: "0.6rem", fontSize: "0.85rem" }}>
+          <import-placeholder />
+          <PillButton onClick={() => onNavigate("explore")} style={{ marginTop: "1rem", width: "100%", padding: "0.6rem", fontSize: "0.85rem" }}>
             Explore Bestsellers →
-          </button>
+          </PillButton>
         </div>
 
         {/* A/B Voting Studio */}
@@ -63,9 +65,9 @@ export default function Home({ onUploaded, onNavigate }) {
           <p style={{ fontSize: "0.85rem", color: "var(--theme-text-muted)", lineHeight: "1.4" }}>
             Upload Cover A & Cover B for mathematical compare & shareable reader voting links.
           </p>
-          <button className="btn-secondary" style={{ marginTop: "1rem", width: "100%", padding: "0.6rem", fontSize: "0.85rem" }}>
+          <PillButton variant="muted" onClick={() => onNavigate("ab-test")} style={{ marginTop: "1rem", width: "100%", padding: "0.6rem", fontSize: "0.85rem" }}>
             Run Cover A/B Poll →
-          </button>
+          </PillButton>
         </div>
 
         {/* Color & Font Studio */}
@@ -84,9 +86,9 @@ export default function Home({ onUploaded, onNavigate }) {
           <p style={{ fontSize: "0.85rem", color: "var(--theme-text-muted)", lineHeight: "1.4" }}>
             Extract HSL color palettes, test genre color harmony, and view font legibility heatmaps.
           </p>
-          <button className="btn-primary" style={{ marginTop: "1rem", width: "100%", padding: "0.6rem", fontSize: "0.85rem" }}>
+          <PillButton onClick={() => onNavigate("palette-studio")} style={{ marginTop: "1rem", width: "100%", padding: "0.6rem", fontSize: "0.85rem" }}>
             Inspect Legibility →
-          </button>
+          </PillButton>
         </div>
 
         {/* PDF Brief Export */}
@@ -105,9 +107,9 @@ export default function Home({ onUploaded, onNavigate }) {
           <p style={{ fontSize: "0.85rem", color: "var(--theme-text-muted)", lineHeight: "1.4" }}>
             Download executive PDF reports & copy designer checklists for freelance cover designers.
           </p>
-          <button className="btn-secondary" style={{ marginTop: "1rem", width: "100%", padding: "0.6rem", fontSize: "0.85rem" }}>
+          <PillButton variant="muted" onClick={() => onNavigate("export")} style={{ marginTop: "1rem", width: "100%", padding: "0.6rem", fontSize: "0.85rem" }}>
             Export PDF Brief →
-          </button>
+          </PillButton>
         </div>
       </div>
     </div>

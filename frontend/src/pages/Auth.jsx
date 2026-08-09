@@ -88,14 +88,13 @@ export default function Auth({ onAuthenticated }) {
             </div>
           )}
 
-          <button
+          <PillButton
             type="submit"
-            className="btn-primary"
             disabled={mutation.isPending}
             style={{ width: "100%", padding: "0.8rem", marginTop: "0.5rem" }}
           >
             {mutation.isPending ? "Connecting..." : mode === "login" ? "Log In to Cover Doctor" : "Create Account"}
-          </button>
+          </PillButton>
         </form>
 
         <div style={{ marginTop: "1.5rem" }}>
