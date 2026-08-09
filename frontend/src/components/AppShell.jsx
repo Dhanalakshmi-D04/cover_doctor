@@ -14,6 +14,9 @@ export default function AppShell({ children, activeTab, setActiveTab, isAuthenti
           width: '100%',
           margin: '0 auto',
           padding: '1.75rem 1.25rem 3rem 1.25rem',
+          /* clip (not hidden) prevents horizontal scrollbar without trapping
+             overflow:visible descendants (e.g. 3-D book drop-shadows) */
+          overflowX: 'clip',
         }}
       >
         {children}

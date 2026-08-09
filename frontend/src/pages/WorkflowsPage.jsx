@@ -334,8 +334,16 @@ const STEPS = [
    Structure: Spine (left edge) + Pages (behind cover) + Cover (full width, opens right→left)
 ───────────────────────────────────────────────────────────────────────────── */
 function Book3D({ step, theme, isLeft, scrollProgress }) {
-  /* Cover goes from closed(0°) → open(-170°) → gently returns(-20°) as user scrolls away */
-  const openDeg     = useTransform(scrollProgress, [0.08, 0.38, 0.65, 0.94], [2, -170, -170, -18]);
+  /*
+   * Left-side books:  spine on left, cover opens LEFTWARD  (-170°) around left edge
+   * Right-side books: spine on right, cover opens RIGHTWARD (+170°) around right edge
+   *   → cover always folds AWAY from the center text panel, never overlapping it.
+   */
+  const openDeg = useTransform(
+    scrollProgress,
+    [0.08, 0.38, 0.65, 0.94],
+    isLeft ? [2, -170, -170, -18] : [-2, 170, 170, 18]
+  );
   const contentOpacity = useTransform(scrollProgress, [0.3, 0.52], [0, 1]);
   const bookOpacity = useTransform(scrollProgress, [0, 0.1, 0.9, 1], [0.35, 1, 1, 0.35]);
   const bookY       = useTransform(scrollProgress, [0, 0.18, 0.82, 1], [36, 0, 0, -24]);
@@ -360,7 +368,8 @@ function Book3D({ step, theme, isLeft, scrollProgress }) {
         scale: springScale,
         /* perspective must wrap the preserve-3d child */
         perspective: 1100,
-        perspectiveOrigin: '50% 50%',
+        /* right-side books tilt toward center; shift origin accordingly */
+        perspectiveOrigin: isLeft ? '60% 50%' : '40% 50%',
         display: 'inline-block',
       }}
     >
@@ -371,26 +380,36 @@ function Book3D({ step, theme, isLeft, scrollProgress }) {
           height: H,
           position: 'relative',
           transformStyle: 'preserve-3d',
-          /* gentle 3-D tilt so it reads as a solid object */
-          transform: 'rotateX(3deg) rotateY(-6deg)',
-          filter: 'drop-shadow(-10px 18px 36px rgba(41,37,31,0.38))',
+          /* mirror tilt direction: left books lean right, right books lean left (toward center) */
+          transform: isLeft ? 'rotateX(3deg) rotateY(-6deg)' : 'rotateX(3deg) rotateY(6deg)',
+          /* mirror shadow: left books shadow right, right books shadow left (inward) */
+          filter: isLeft
+            ? 'drop-shadow(-10px 18px 36px rgba(41,37,31,0.38))'
+            : 'drop-shadow(10px 18px 36px rgba(41,37,31,0.38))',
         }}
       >
-        {/* ── 1. Spine — always visible on the left ── */}
+        {/*
+         * ── 1. Spine ──
+         * Left books:  spine on the LEFT  (near viewport left edge)
+         * Right books: spine on the RIGHT (near viewport right edge, away from text)
+         */}
         <div
           style={{
             position: 'absolute',
-            left: 0,
+            ...(isLeft
+              ? { left: 0 }
+              : { right: 0 }),
             top: 0,
             width: SPINE_W,
             height: H,
             background: `linear-gradient(180deg, ${theme.spine} 0%, ${theme.cover} 100%)`,
-            borderRadius: '5px 0 0 5px',
+            borderRadius: isLeft ? '5px 0 0 5px' : '0 5px 5px 0',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            /* Create 3-D spine depth with shadow */
-            boxShadow: 'inset -3px 0 6px rgba(0,0,0,0.25), 2px 0 0 rgba(0,0,0,0.08)',
+            boxShadow: isLeft
+              ? 'inset -3px 0 6px rgba(0,0,0,0.25), 2px 0 0 rgba(0,0,0,0.08)'
+              : 'inset 3px 0 6px rgba(0,0,0,0.25), -2px 0 0 rgba(0,0,0,0.08)',
             zIndex: 2,
           }}
         >
@@ -410,20 +429,27 @@ function Book3D({ step, theme, isLeft, scrollProgress }) {
           </div>
         </div>
 
-        {/* ── 2. Pages block — sits behind the cover, reveals content ── */}
+        {/*
+         * ── 2. Pages block ──
+         * Left books:  pages to the RIGHT of the spine
+         * Right books: pages to the LEFT  of the spine
+         */}
         <div
           style={{
             position: 'absolute',
-            left: SPINE_W,
+            ...(isLeft
+              ? { left: SPINE_W }
+              : { left: 0 }),
             top: 0,
             width: COVER_W,
             height: H,
             background: 'linear-gradient(108deg, #EEE4CC 0%, #FAF7F0 18%, #F7F2E8 100%)',
-            borderRadius: '0 5px 5px 0',
+            borderRadius: isLeft ? '0 5px 5px 0' : '5px 0 0 5px',
             overflow: 'hidden',
             zIndex: 1,
-            /* page-edge shadow from spine side */
-            boxShadow: 'inset 4px 0 10px rgba(0,0,0,0.08)',
+            boxShadow: isLeft
+              ? 'inset 4px 0 10px rgba(0,0,0,0.08)'
+              : 'inset -4px 0 10px rgba(0,0,0,0.08)',
           }}
         >
           {/* Faint ruled lines (visible briefly before content appears) */}
@@ -448,15 +474,22 @@ function Book3D({ step, theme, isLeft, scrollProgress }) {
           </motion.div>
         </div>
 
-        {/* ── 3. Front cover — spans full cover width, rotates open around left edge ── */}
+        {/*
+         * ── 3. Front cover ──
+         * Left books:  cover sits right of spine, opens around LEFT  edge (-170°)
+         * Right books: cover sits left  of spine, opens around RIGHT edge (+170°)
+         * Both covers fold AWAY from the center text panel.
+         */}
         <motion.div
           style={{
             position: 'absolute',
-            left: SPINE_W,
+            ...(isLeft
+              ? { left: SPINE_W }
+              : { left: 0 }),
             top: 0,
             width: COVER_W,
             height: H,
-            transformOrigin: 'left center',
+            transformOrigin: isLeft ? 'left center' : 'right center',
             transformStyle: 'preserve-3d',
             rotateY: springOpen,
             zIndex: 10,
@@ -468,7 +501,7 @@ function Book3D({ step, theme, isLeft, scrollProgress }) {
               position: 'absolute',
               inset: 0,
               background: `linear-gradient(155deg, ${theme.cover} 0%, ${theme.spine} 100%)`,
-              borderRadius: '0 5px 5px 0',
+              borderRadius: isLeft ? '0 5px 5px 0' : '5px 0 0 5px',
               backfaceVisibility: 'hidden',
               overflow: 'hidden',
               display: 'flex',
@@ -476,8 +509,9 @@ function Book3D({ step, theme, isLeft, scrollProgress }) {
               alignItems: 'center',
               justifyContent: 'center',
               padding: '1.4rem 1rem',
-              /* right-side shadow for depth when closed */
-              boxShadow: '3px 0 10px rgba(0,0,0,0.18)',
+              boxShadow: isLeft
+                ? '3px 0 10px rgba(0,0,0,0.18)'
+                : '-3px 0 10px rgba(0,0,0,0.18)',
             }}
           >
             {/* Top rule */}
@@ -505,7 +539,7 @@ function Book3D({ step, theme, isLeft, scrollProgress }) {
               position: 'absolute',
               inset: 0,
               background: 'linear-gradient(160deg, #EDE3CC, #F5EDD8)',
-              borderRadius: '0 5px 5px 0',
+              borderRadius: isLeft ? '0 5px 5px 0' : '5px 0 0 5px',
               backfaceVisibility: 'hidden',
               transform: 'rotateY(180deg)',
             }}
@@ -516,12 +550,11 @@ function Book3D({ step, theme, isLeft, scrollProgress }) {
         <div
           style={{
             position: 'absolute',
-            left: SPINE_W + 2,
+            ...(isLeft ? { left: SPINE_W + 2, right: 1 } : { left: 1, right: SPINE_W + 2 }),
             top: -3,
-            right: 1,
             height: 3,
             background: 'linear-gradient(180deg, #F5EDD8 0%, #E8DDCA 100%)',
-            borderRadius: '2px 4px 0 0',
+            borderRadius: isLeft ? '2px 4px 0 0' : '4px 2px 0 0',
             opacity: 0.8,
           }}
         />
@@ -529,12 +562,11 @@ function Book3D({ step, theme, isLeft, scrollProgress }) {
         <div
           style={{
             position: 'absolute',
-            left: SPINE_W + 2,
+            ...(isLeft ? { left: SPINE_W + 2, right: 1 } : { left: 1, right: SPINE_W + 2 }),
             bottom: -3,
-            right: 1,
             height: 3,
             background: 'linear-gradient(0deg, #DDD2BA 0%, #EDE3CC 100%)',
-            borderRadius: '0 0 4px 2px',
+            borderRadius: isLeft ? '0 0 4px 2px' : '0 0 2px 4px',
             opacity: 0.8,
           }}
         />
@@ -600,14 +632,16 @@ function BookSection({ step, index, theme }) {
         background: index % 2 === 0
           ? 'transparent'
           : 'radial-gradient(ellipse at 80% 50%, rgba(194,161,90,0.04) 0%, transparent 65%)',
+        /* allow 3-D book shadows to breathe without clipping */
+        overflow: 'visible',
       }}
     >
       <div
         className="wf-book-section-grid"
-        style={{ width: '100%', maxWidth: 1080, margin: '0 auto', padding: '0 2rem' }}
+        style={{ width: '100%', maxWidth: 1080, margin: '0 auto', padding: '0 2rem', overflow: 'visible' }}
       >
         {/* Left column */}
-        <div className="wf-left-col" style={{ display: 'flex', justifyContent: 'flex-end' }}>
+        <div className="wf-left-col" style={{ display: 'flex', justifyContent: 'flex-end', overflow: 'visible' }}>
           {isLeft
             ? <Book3D step={step} theme={theme} isLeft={true} scrollProgress={scrollYProgress} />
             : <TextPanel step={step} alignRight={true} scrollProgress={scrollYProgress} />}
@@ -618,8 +652,18 @@ function BookSection({ step, index, theme }) {
           <TimelineNode index={index} isActive={isInView} theme={theme} />
         </div>
 
-        {/* Right column */}
-        <div className="wf-right-col" style={{ display: 'flex', justifyContent: 'flex-start' }}>
+        {/* Right column — extra right padding so 3-D book shadow isn't clipped */}
+        <div
+          className="wf-right-col"
+          style={{
+            display: 'flex',
+            justifyContent: 'flex-start',
+            overflow: 'visible',
+            /* right-side books have a 3-D tilt + drop-shadow that bleeds right;
+               pad enough space so the shadow isn't cut off */
+            paddingRight: !isLeft ? '2.5rem' : 0,
+          }}
+        >
           {isLeft
             ? <TextPanel step={step} alignRight={false} scrollProgress={scrollYProgress} />
             : <Book3D step={step} theme={theme} isLeft={false} scrollProgress={scrollYProgress} />}
@@ -730,6 +774,10 @@ const WF_STYLES = `
     grid-template-columns: 1fr 60px 1fr;
     align-items: center;
     gap: 2.5rem;
+    overflow: visible;
+  }
+  .wf-left-col, .wf-right-col {
+    overflow: visible;
   }
   @media (max-width: 768px) {
     .wf-book-section-grid {
@@ -739,6 +787,7 @@ const WF_STYLES = `
     }
     .wf-left-col, .wf-right-col {
       justify-content: center !important;
+      padding-right: 0 !important;
     }
     .wf-timeline-node-wrap {
       order: -1;
@@ -758,7 +807,9 @@ export default function WorkflowsPage({ onNavigate }) {
       position: 'relative',
       marginLeft:  'calc(-1.25rem)',
       marginRight: 'calc(-1.25rem)',
-      overflowX: 'hidden',
+      /* hidden on x to prevent page scroll, but sections use overflow:visible
+         so 3-D book shadows are only clipped at this outermost boundary */
+      overflowX: 'clip',
     }}>
       {/* Inject scoped responsive styles */}
       <style>{WF_STYLES}</style>
