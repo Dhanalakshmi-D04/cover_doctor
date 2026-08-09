@@ -1,8 +1,8 @@
-/* Cover Doctor - Theme: Warm Cream (#F7F3EA), Forest Green (#355E3B), Muted Olive (#6B7D5B), Warm Brown (#8B5E3C), Caramel (#C89B6D), Dark Brown (#29251F) */
+/* Cover Doctor - Theme: Warm Cream (base), Earthy accents */
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap');
 
 :root {
-  /* High-Contrast Design System Core Palette */
+  /* High-Contrast Design System Core Palette (legacy aliases kept for backwards compatibility) */
   --theme-bg: #F7F3EA;
   --theme-cream: #F7F3EA;
 
@@ -26,7 +26,28 @@
   --theme-text-muted: #57534E;
   --theme-card: #FFFFFF;
 
-  /* Universal Compatibility Aliases */
+  /* New Design Tokens (inspired by covertech.ai but keeping the existing color theme) */
+  --ct-olive: #556B2F;     /* Primary / nav / footer */
+  --ct-sage: #8F9779;      /* Secondary / muted surfaces */
+  --ct-mustard: #C2A15A;   /* Accent / CTA (pill buttons) */
+  --ct-cream: #F1E4B3;     /* Global page background */
+  --ct-brown: #7B4F2C;     /* Dark accent / text on cream */
+  --ct-danger: #DC2626;    /* Destructive (sign out) */
+
+  /* Typography tokens */
+  --font-hero: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --font-body: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-serif: 'Playfair Display', Georgia, serif;
+  --hero-weight: 800;
+  --heading-line-height: 1.12;
+  --body-line-height: 1.6;
+
+  /* Component tokens */
+  --pill-radius: 999px;
+  --pill-padding: 0.6rem 1.2rem;
+  --pill-font-weight: 800;
+
+  /* Universal Compatibility Aliases (keep originals) */
   --theme-butter: #355E3B;
   --theme-butter-yellow: #355E3B;
   --theme-butter-hover: #27482D;
@@ -434,6 +455,49 @@ body {
   transform: translateY(-2px);
   box-shadow: 0 6px 18px rgba(37, 22, 19, 0.45);
   color: #FFFFFF !important;
+}
+
+/* Reusable PillButton component tokens & styles */
+.pill-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: var(--pill-padding);
+  border-radius: var(--pill-radius);
+  font-weight: var(--pill-font-weight);
+  cursor: pointer;
+  border: none;
+  transition: transform 0.14s ease, box-shadow 0.14s ease, opacity 0.12s ease;
+}
+
+/* Primary gold CTA */
+.pill-button--gold {
+  background: linear-gradient(135deg, var(--ct-mustard) 0%, color-mix(in srgb, var(--ct-mustard) 60%, black 10%));
+  color: #2B1F10; /* dark text for mustard */
+  box-shadow: 0 8px 24px rgba(34,28,20,0.08);
+  border: 1px solid rgba(0,0,0,0.06);
+}
+
+.pill-button--gold:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 36px rgba(34,28,20,0.12);
+}
+
+/* Secondary neutral pill */
+.pill-button--muted {
+  background: var(--ct-sage);
+  color: #ffffff;
+  opacity: 0.95;
+  box-shadow: none;
+  border: 1px solid rgba(0,0,0,0.04);
+}
+
+.pill-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 .btn-amber, .btn-yellow, .btn-gold, .btn-upgrade {
