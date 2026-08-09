@@ -3,7 +3,26 @@ import CreditsPill from "./CreditsPill";
 import AvatarDropdown from "./AvatarDropdown";
 import PillButton from "./PillButton";
 
+import { useEffect, useState } from "react";
+import { getAccount } from "../api/client";
+
 export default function TopNav({ activeTab, setActiveTab, isAuthenticated, onLogout }) {
+  const [account, setAccount] = useState(null);
+
+  useEffect(() => {
+    let mounted = true;
+    async function load() {
+      try {
+        const data = await getAccount();
+        if (mounted) setAccount(data);
+      } catch (err) {
+        // silently ignore: unauthenticated or network error
+      }
+    }
+    if (isAuthenticated) load();
+    return () => { mounted = false; };
+  }, [isAuthenticated]);
+
   const navItems = [
     { id: "home", label: "🏠 Analyze" },
     { id: "explore", label: "📚 Explorer" },
@@ -29,9 +48,9 @@ export default function TopNav({ activeTab, setActiveTab, isAuthenticated, onLog
         </nav>
 
         <div className="topnav-right">
-          <CreditsPill />
+          <CreditsPill credits={account ? account.credits : null} />
           <PillButton onClick={() => setActiveTab && setActiveTab("pricing")} style={{ marginLeft: 8 }}>Buy Credits</PillButton>
-          <AvatarDropdown onLogout={onLogout} />
+          <AvatarDropdown onLogout={onLogout} onNavigate={setActiveTab} />
         </div>
       </div>
     </header>

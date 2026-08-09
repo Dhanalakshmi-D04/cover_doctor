@@ -137,3 +137,11 @@ export async function getScraperStatus() {
   });
   return parseOrThrow(response);
 }
+
+export async function getAccount() {
+  const response = await fetch(`${API_BASE_URL}/account`, {
+    headers: authHeaders(),
+    credentials: "include",
+  });
+  return parseOrThrow(response); // { plan, credits }
+}

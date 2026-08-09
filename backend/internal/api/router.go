@@ -65,10 +65,13 @@ func NewRouter(database *sqlx.DB, cfg *config.Config, aiClient *ai.Client, billi
 		protected.POST("/billing/checkout", handler.CreateCheckoutSession)
 		protected.POST("/billing/portal", handler.CreatePortalSession)
 
+		// Protected account info
+		protected.GET("/account", handler.GetAccount)
+
 		// Admin scraper control routes
 		protected.POST("/admin/scraper/run", handler.TriggerScraper)
 		protected.GET("/admin/scraper/status", handler.GetScraperStatus)
-	}
+}
 
 	return router
-}
+	}

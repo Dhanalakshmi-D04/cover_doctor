@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 
-export default function AvatarDropdown({ onLogout }) {
+export default function AvatarDropdown({ onLogout, onNavigate }) {
   const [open, setOpen] = useState(false);
   const ref = useRef();
 
@@ -26,10 +26,10 @@ export default function AvatarDropdown({ onLogout }) {
 
       {open && (
         <div className="avatar-dropdown">
-          <button className="avatar-dropdown-item">👤 Account</button>
-          <button className="avatar-dropdown-item">🏠 Home</button>
+          <button className="avatar-dropdown-item" onClick={() => { onNavigate && onNavigate('account'); setOpen(false); }}>👤 Account</button>
+          <button className="avatar-dropdown-item" onClick={() => { onNavigate && onNavigate('home'); setOpen(false); }}>🏠 Home</button>
           <div className="avatar-dropdown-divider" />
-          <button className="avatar-dropdown-item" onClick={onLogout} style={{ color: "var(--ct-danger)" }}>Sign Out ⇢</button>
+          <button className="avatar-dropdown-item" onClick={() => { onLogout && onLogout(); setOpen(false); }} style={{ color: "var(--ct-danger)" }}>Sign Out ⇢</button>
         </div>
       )}
     </div>
