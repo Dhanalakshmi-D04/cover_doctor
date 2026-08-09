@@ -87,45 +87,45 @@ function adjustBrightness(hex, percent) {
 // 25+ Scraped Bestseller Covers Dataset across all 5 genres
 export const BESTSELLER_COVERS = [
   // ROMANCE
-  { id: "rom-1", title: "Love in the Midnight Sky", author: "Elena Rostova", genre: "Romance", style: "Bold Typography", rank: 1, avgTitleSizePct: 22.4, contrastRatio: 6.8, whitespacePct: 41.2, bgHex: "#445237", textHex: "#ffffff", accentHex: "#f7cd75" },
-  { id: "rom-2", title: "The Golden Promise", author: "Clara Vance", genre: "Romance", style: "Illustrated", rank: 2, avgTitleSizePct: 19.8, contrastRatio: 5.4, whitespacePct: 38.5, bgHex: "#f9f6f0", textHex: "#8d2e0f", accentHex: "#f7ba04" },
-  { id: "rom-3", title: "Forever After Autumn", author: "Nora Thorne", genre: "Romance", style: "Minimalist", rank: 3, avgTitleSizePct: 18.2, contrastRatio: 7.1, whitespacePct: 52.0, bgHex: "#2a3521", textHex: "#f9f6f0", accentHex: "#ec8406" },
-  { id: "rom-4", title: "Starlight Passions", author: "Juliet Montgomery", genre: "Romance", style: "Dark Photographic", rank: 4, avgTitleSizePct: 24.0, contrastRatio: 8.1, whitespacePct: 35.0, bgHex: "#321d28", textHex: "#ffffff", accentHex: "#f7cd75" },
-  { id: "rom-5", title: "Embers of Desire", author: "Sophia Blake", genre: "Romance", style: "Bold Typography", rank: 5, avgTitleSizePct: 25.1, contrastRatio: 7.9, whitespacePct: 40.0, bgHex: "#8d2e0f", textHex: "#fffbf0", accentHex: "#f7ba04" },
+  { id: "rom-1", title: "Love in the Midnight Sky", author: "Elena Rostova", genre: "Romance", style: "Bold Typography", rank: 1, avgTitleSizePct: 22.4, contrastRatio: 6.8, whitespacePct: 41.2, bgHex: "#355E3B", textHex: "#F7F3EA", accentHex: "#C89B6D" },
+  { id: "rom-2", title: "The Golden Promise", author: "Clara Vance", genre: "Romance", style: "Illustrated", rank: 2, avgTitleSizePct: 19.8, contrastRatio: 5.4, whitespacePct: 38.5, bgHex: "#6B7D5B", textHex: "#29251F", accentHex: "#F7F3EA" },
+  { id: "rom-3", title: "Forever After Autumn", author: "Nora Thorne", genre: "Romance", style: "Minimalist", rank: 3, avgTitleSizePct: 18.2, contrastRatio: 7.1, whitespacePct: 52.0, bgHex: "#8B5E3C", textHex: "#F7F3EA", accentHex: "#C89B6D" },
+  { id: "rom-4", title: "Starlight Passions", author: "Juliet Montgomery", genre: "Romance", style: "Dark Photographic", rank: 4, avgTitleSizePct: 24.0, contrastRatio: 8.1, whitespacePct: 35.0, bgHex: "#29251F", textHex: "#F7F3EA", accentHex: "#355E3B" },
+  { id: "rom-5", title: "Embers of Desire", author: "Sophia Blake", genre: "Romance", style: "Bold Typography", rank: 5, avgTitleSizePct: 25.1, contrastRatio: 7.9, whitespacePct: 40.0, bgHex: "#355E3B", textHex: "#F7F3EA", accentHex: "#C89B6D" },
 
   // PSYCHOLOGICAL THRILLER
-  { id: "thr-1", title: "The Silent Confession", author: "Marcus Vance", genre: "Psychological Thriller", style: "Dark Photographic", rank: 1, avgTitleSizePct: 24.1, contrastRatio: 8.9, whitespacePct: 34.0, bgHex: "#1b2420", textHex: "#ffffff", accentHex: "#ec8406" },
-  { id: "thr-2", title: "Whispers in the Dark", author: "Hannah Cross", genre: "Psychological Thriller", style: "Bold Typography", rank: 2, avgTitleSizePct: 26.5, contrastRatio: 7.6, whitespacePct: 29.8, bgHex: "#2a3521", textHex: "#f7ba04", accentHex: "#8d2e0f" },
-  { id: "thr-3", title: "Don't Look Behind You", author: "David Mercer", genre: "Psychological Thriller", style: "Minimalist", rank: 3, avgTitleSizePct: 21.4, contrastRatio: 9.2, whitespacePct: 45.0, bgHex: "#121714", textHex: "#ffffff", accentHex: "#f7ba04" },
-  { id: "thr-4", title: "The Glass House Alibi", author: "Rachel Morgan", genre: "Psychological Thriller", style: "Illustrated", rank: 4, avgTitleSizePct: 20.8, contrastRatio: 6.9, whitespacePct: 38.0, bgHex: "#8d2e0f", textHex: "#f9f6f0", accentHex: "#f7cd75" },
-  { id: "thr-5", title: "Deception at Dawn", author: "Victor Sterling", genre: "Psychological Thriller", style: "Dark Photographic", rank: 5, avgTitleSizePct: 27.2, contrastRatio: 8.4, whitespacePct: 31.5, bgHex: "#1e2923", textHex: "#ec8406", accentHex: "#ffffff" },
+  { id: "thr-1", title: "The Silent Confession", author: "Marcus Vance", genre: "Psychological Thriller", style: "Dark Photographic", rank: 1, avgTitleSizePct: 24.1, contrastRatio: 8.9, whitespacePct: 34.0, bgHex: "#29251F", textHex: "#F7F3EA", accentHex: "#6B7D5B" },
+  { id: "thr-2", title: "Whispers in the Dark", author: "Hannah Cross", genre: "Psychological Thriller", style: "Bold Typography", rank: 2, avgTitleSizePct: 26.5, contrastRatio: 7.6, whitespacePct: 29.8, bgHex: "#355E3B", textHex: "#F7F3EA", accentHex: "#C89B6D" },
+  { id: "thr-3", title: "Don't Look Behind You", author: "David Mercer", genre: "Psychological Thriller", style: "Minimalist", rank: 3, avgTitleSizePct: 21.4, contrastRatio: 9.2, whitespacePct: 45.0, bgHex: "#29251F", textHex: "#F7F3EA", accentHex: "#8B5E3C" },
+  { id: "thr-4", title: "The Glass House Alibi", author: "Rachel Morgan", genre: "Psychological Thriller", style: "Illustrated", rank: 4, avgTitleSizePct: 20.8, contrastRatio: 6.9, whitespacePct: 38.0, bgHex: "#355E3B", textHex: "#F7F3EA", accentHex: "#6B7D5B" },
+  { id: "thr-5", title: "Deception at Dawn", author: "Victor Sterling", genre: "Psychological Thriller", style: "Dark Photographic", rank: 5, avgTitleSizePct: 27.2, contrastRatio: 8.4, whitespacePct: 31.5, bgHex: "#8B5E3C", textHex: "#F7F3EA", accentHex: "#C89B6D" },
 
   // SCI-FI / FANTASY
-  { id: "sci-1", title: "Chronicles of Aethelgard", author: "Kaelen Voss", genre: "Sci-Fi/Fantasy", style: "Dark Photographic", rank: 1, avgTitleSizePct: 21.0, contrastRatio: 7.4, whitespacePct: 36.5, bgHex: "#18222d", textHex: "#e6dfd3", accentHex: "#f7cd75" },
-  { id: "sci-2", title: "Quantum Horizon", author: "Dr. Sarah Lin", genre: "Sci-Fi/Fantasy", style: "Bold Typography", rank: 2, avgTitleSizePct: 23.8, contrastRatio: 8.2, whitespacePct: 40.1, bgHex: "#445237", textHex: "#f7ba04", accentHex: "#ec8406" },
-  { id: "sci-3", title: "The Last Starship Fleet", author: "Orion Vance", genre: "Sci-Fi/Fantasy", style: "Minimalist", rank: 3, avgTitleSizePct: 19.5, contrastRatio: 8.9, whitespacePct: 50.0, bgHex: "#121a22", textHex: "#ffffff", accentHex: "#f7ba04" },
-  { id: "sci-4", title: "Realm of Dragonsteel", author: "Toren Blackwood", genre: "Sci-Fi/Fantasy", style: "Illustrated", rank: 4, avgTitleSizePct: 22.9, contrastRatio: 7.1, whitespacePct: 33.2, bgHex: "#8d2e0f", textHex: "#f7cd75", accentHex: "#ffffff" },
-  { id: "sci-5", title: "Cybernetic Genesis", author: "Valerie Chen", genre: "Sci-Fi/Fantasy", style: "Dark Photographic", rank: 5, avgTitleSizePct: 25.0, contrastRatio: 8.0, whitespacePct: 37.0, bgHex: "#1c251e", textHex: "#ec8406", accentHex: "#f7cd75" },
+  { id: "sci-1", title: "Chronicles of Aethelgard", author: "Kaelen Voss", genre: "Sci-Fi/Fantasy", style: "Dark Photographic", rank: 1, avgTitleSizePct: 21.0, contrastRatio: 7.4, whitespacePct: 36.5, bgHex: "#29251F", textHex: "#F7F3EA", accentHex: "#6B7D5B" },
+  { id: "sci-2", title: "Quantum Horizon", author: "Dr. Sarah Lin", genre: "Sci-Fi/Fantasy", style: "Bold Typography", rank: 2, avgTitleSizePct: 23.8, contrastRatio: 8.2, whitespacePct: 40.1, bgHex: "#355E3B", textHex: "#F7F3EA", accentHex: "#C89B6D" },
+  { id: "sci-3", title: "The Last Starship Fleet", author: "Orion Vance", genre: "Sci-Fi/Fantasy", style: "Minimalist", rank: 3, avgTitleSizePct: 19.5, contrastRatio: 8.9, whitespacePct: 50.0, bgHex: "#29251F", textHex: "#F7F3EA", accentHex: "#6B7D5B" },
+  { id: "sci-4", title: "Realm of Dragonsteel", author: "Toren Blackwood", genre: "Sci-Fi/Fantasy", style: "Illustrated", rank: 4, avgTitleSizePct: 22.9, contrastRatio: 7.1, whitespacePct: 33.2, bgHex: "#8B5E3C", textHex: "#F7F3EA", accentHex: "#C89B6D" },
+  { id: "sci-5", title: "Cybernetic Genesis", author: "Valerie Chen", genre: "Sci-Fi/Fantasy", style: "Dark Photographic", rank: 5, avgTitleSizePct: 25.0, contrastRatio: 8.0, whitespacePct: 37.0, bgHex: "#355E3B", textHex: "#F7F3EA", accentHex: "#6B7D5B" },
 
   // NON-FICTION / BUSINESS
-  { id: "bus-1", title: "The Exponential Mindset", author: "Arthur Pendelton", genre: "Non-Fiction/Business", style: "Minimalist", rank: 1, avgTitleSizePct: 25.2, contrastRatio: 9.1, whitespacePct: 48.0, bgHex: "#ffffff", textHex: "#445237", accentHex: "#ec8406" },
-  { id: "bus-2", title: "Capital & Culture", author: "Elena Zhao", genre: "Non-Fiction/Business", style: "Bold Typography", rank: 2, avgTitleSizePct: 27.0, contrastRatio: 8.5, whitespacePct: 44.5, bgHex: "#445237", textHex: "#f9f6f0", accentHex: "#f7cd75" },
-  { id: "bus-3", title: "The Founder's Playbook", author: "Marcus Brody", genre: "Non-Fiction/Business", style: "Minimalist", rank: 3, avgTitleSizePct: 26.1, contrastRatio: 8.8, whitespacePct: 51.0, bgHex: "#f9f6f0", textHex: "#8d2e0f", accentHex: "#f7ba04" },
-  { id: "bus-4", title: "Agile Leadership 2.0", author: "Diane Ross", genre: "Non-Fiction/Business", style: "Bold Typography", rank: 4, avgTitleSizePct: 28.3, contrastRatio: 9.4, whitespacePct: 42.0, bgHex: "#8d2e0f", textHex: "#ffffff", accentHex: "#ec8406" },
-  { id: "bus-5", title: "Scaling High Impact Teams", author: "Robert Sterling", genre: "Non-Fiction/Business", style: "Illustrated", rank: 5, avgTitleSizePct: 24.5, contrastRatio: 7.9, whitespacePct: 46.0, bgHex: "#2a3521", textHex: "#f7ba04", accentHex: "#f7cd75" },
+  { id: "bus-1", title: "The Exponential Mindset", author: "Arthur Pendelton", genre: "Non-Fiction/Business", style: "Minimalist", rank: 1, avgTitleSizePct: 25.2, contrastRatio: 9.1, whitespacePct: 48.0, bgHex: "#FFFFFF", textHex: "#29251F", accentHex: "#355E3B" },
+  { id: "bus-2", title: "Capital & Culture", author: "Elena Zhao", genre: "Non-Fiction/Business", style: "Bold Typography", rank: 2, avgTitleSizePct: 27.0, contrastRatio: 8.5, whitespacePct: 44.5, bgHex: "#355E3B", textHex: "#F7F3EA", accentHex: "#C89B6D" },
+  { id: "bus-3", title: "The Founder's Playbook", author: "Marcus Brody", genre: "Non-Fiction/Business", style: "Minimalist", rank: 3, avgTitleSizePct: 26.1, contrastRatio: 8.8, whitespacePct: 51.0, bgHex: "#F7F3EA", textHex: "#29251F", accentHex: "#6B7D5B" },
+  { id: "bus-4", title: "Agile Leadership 2.0", author: "Diane Ross", genre: "Non-Fiction/Business", style: "Bold Typography", rank: 4, avgTitleSizePct: 28.3, contrastRatio: 9.4, whitespacePct: 42.0, bgHex: "#6B7D5B", textHex: "#F7F3EA", accentHex: "#C89B6D" },
+  { id: "bus-5", title: "Scaling High Impact Teams", author: "Robert Sterling", genre: "Non-Fiction/Business", style: "Illustrated", rank: 5, avgTitleSizePct: 24.5, contrastRatio: 7.9, whitespacePct: 46.0, bgHex: "#8B5E3C", textHex: "#F7F3EA", accentHex: "#6B7D5B" },
 
   // SELF-HELP
-  { id: "sh-1", title: "Unshakable Calm", author: "Maya Linford", genre: "Self-Help", style: "Minimalist", rank: 1, avgTitleSizePct: 20.5, contrastRatio: 7.8, whitespacePct: 54.2, bgHex: "#eff3ec", textHex: "#445237", accentHex: "#ec8406" },
-  { id: "sh-2", title: "The Habit Loop Shift", author: "Dr. Julian Ross", genre: "Self-Help", style: "Bold Typography", rank: 2, avgTitleSizePct: 24.8, contrastRatio: 8.4, whitespacePct: 46.0, bgHex: "#f9f6f0", textHex: "#8d2e0f", accentHex: "#f7ba04" },
-  { id: "sh-3", title: "Mastering Inner Peace", author: "Swami Ananda", genre: "Self-Help", style: "Minimalist", rank: 3, avgTitleSizePct: 19.8, contrastRatio: 8.0, whitespacePct: 56.0, bgHex: "#ffffff", textHex: "#445237", accentHex: "#f7cd75" },
-  { id: "sh-4", title: "Mindful Momentum", author: "Clara Bennett", genre: "Self-Help", style: "Illustrated", rank: 4, avgTitleSizePct: 22.0, contrastRatio: 7.5, whitespacePct: 49.0, bgHex: "#fef5e9", textHex: "#ec8406", accentHex: "#445237" },
-  { id: "sh-5", title: "The Resilience Code", author: "Dr. Ethan Wright", genre: "Self-Help", style: "Bold Typography", rank: 5, avgTitleSizePct: 26.2, contrastRatio: 8.7, whitespacePct: 44.0, bgHex: "#445237", textHex: "#ffffff", accentHex: "#f7ba04" }
+  { id: "sh-1", title: "Unshakable Calm", author: "Maya Linford", genre: "Self-Help", style: "Minimalist", rank: 1, avgTitleSizePct: 20.5, contrastRatio: 7.8, whitespacePct: 54.2, bgHex: "#F7F3EA", textHex: "#29251F", accentHex: "#355E3B" },
+  { id: "sh-2", title: "The Habit Loop Shift", author: "Dr. Julian Ross", genre: "Self-Help", style: "Bold Typography", rank: 2, avgTitleSizePct: 24.8, contrastRatio: 8.4, whitespacePct: 46.0, bgHex: "#6B7D5B", textHex: "#29251F", accentHex: "#C89B6D" },
+  { id: "sh-3", title: "Mastering Inner Peace", author: "Swami Ananda", genre: "Self-Help", style: "Minimalist", rank: 3, avgTitleSizePct: 19.8, contrastRatio: 8.0, whitespacePct: 56.0, bgHex: "#FFFFFF", textHex: "#29251F", accentHex: "#355E3B" },
+  { id: "sh-4", title: "Mindful Momentum", author: "Clara Bennett", genre: "Self-Help", style: "Illustrated", rank: 4, avgTitleSizePct: 22.0, contrastRatio: 7.5, whitespacePct: 49.0, bgHex: "#355E3B", textHex: "#F7F3EA", accentHex: "#C89B6D" },
+  { id: "sh-5", title: "The Resilience Code", author: "Dr. Ethan Wright", genre: "Self-Help", style: "Bold Typography", rank: 5, avgTitleSizePct: 26.2, contrastRatio: 8.7, whitespacePct: 44.0, bgHex: "#8B5E3C", textHex: "#F7F3EA", accentHex: "#6B7D5B" }
 ];
 
 export const GENRE_BENCHMARKS = {
-  "Romance": { avgTitleSizePct: 21.8, avgContrastRatio: 7.1, avgWhitespacePct: 41.0, topColors: ["Deep Russet", "Honey Gold", "Warm Cream"] },
-  "Psychological Thriller": { avgTitleSizePct: 25.1, avgContrastRatio: 8.2, avgWhitespacePct: 35.5, topColors: ["Forest Dark", "Sunset Amber", "Golden Yellow"] },
-  "Sci-Fi/Fantasy": { avgTitleSizePct: 22.4, avgContrastRatio: 8.0, avgWhitespacePct: 39.0, topColors: ["Cosmic Forest", "Star Gold", "Amber Orange"] },
-  "Non-Fiction/Business": { avgTitleSizePct: 26.8, avgContrastRatio: 8.7, avgWhitespacePct: 46.0, topColors: ["Executive Olive", "Clean White", "Russet Accent"] },
-  "Self-Help": { avgTitleSizePct: 22.6, avgContrastRatio: 7.9, avgWhitespacePct: 50.0, topColors: ["Soft Mint", "Warm Honey Gold", "Sunset Amber"] },
+  "Romance": { avgTitleSizePct: 21.8, avgContrastRatio: 7.1, avgWhitespacePct: 41.0, topColors: ["Forest Green (#355E3B)", "Muted Olive (#6B7D5B)", "Warm Cream (#F7F3EA)"] },
+  "Psychological Thriller": { avgTitleSizePct: 25.1, avgContrastRatio: 8.2, avgWhitespacePct: 35.5, topColors: ["Dark Brown (#29251F)", "Forest Green (#355E3B)", "Caramel (#C89B6D)"] },
+  "Sci-Fi/Fantasy": { avgTitleSizePct: 22.4, avgContrastRatio: 8.0, avgWhitespacePct: 39.0, topColors: ["Dark Brown (#29251F)", "Muted Olive (#6B7D5B)", "Forest Green (#355E3B)"] },
+  "Non-Fiction/Business": { avgTitleSizePct: 26.8, avgContrastRatio: 8.7, avgWhitespacePct: 46.0, topColors: ["Warm Cream (#F7F3EA)", "Forest Green (#355E3B)", "Dark Brown (#29251F)"] },
+  "Self-Help": { avgTitleSizePct: 22.6, avgContrastRatio: 7.9, avgWhitespacePct: 50.0, topColors: ["Warm Cream (#F7F3EA)", "Muted Olive (#6B7D5B)", "Caramel (#C89B6D)"] },
 };

@@ -15,10 +15,25 @@ function App() {
   const [activeTab, setActiveTab] = useState("home");
 
   useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token === "demo-token" || token === "demo-token-bypass") {
+      localStorage.removeItem("token");
+      setIsAuthenticated(false);
+    }
+
+    function handleUnauthorized() {
+      localStorage.removeItem("token");
+      setIsAuthenticated(false);
+      setCoverId(null);
+    }
+    window.addEventListener("auth_unauthorized", handleUnauthorized);
+
     const hash = window.location.hash.replace("#", "");
     if (["explore", "ab-test", "palette-studio", "export"].includes(hash)) {
       setActiveTab(hash);
     }
+
+    return () => window.removeEventListener("auth_unauthorized", handleUnauthorized);
   }, []);
 
   function handleTabChange(tab) {

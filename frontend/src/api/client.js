@@ -2,12 +2,19 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080
 
 function authHeaders() {
   const token = localStorage.getItem("token");
-  return token ? { Authorization: `Bearer ${token}` } : {};
+  if (!token || token === "demo-token" || token === "demo-token-bypass") {
+    return {};
+  }
+  return { Authorization: `Bearer ${token}` };
 }
 
 async function parseOrThrow(response) {
   if (!response.ok) {
     const body = await response.json().catch(() => ({}));
+    if (response.status === 401) {
+      localStorage.removeItem("token");
+      window.dispatchEvent(new Event("auth_unauthorized"));
+    }
     throw new Error(body.error || "Request failed");
   }
   return response.json();

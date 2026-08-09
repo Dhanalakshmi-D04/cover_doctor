@@ -188,7 +188,7 @@ export default function ABTestStudio() {
           className={`tab-btn tab-btn-secondary ${activeSubTab === "public-vote-preview" ? "active" : ""}`}
           onClick={() => setActiveSubTab("public-vote-preview")}
         >
-          🗳️ Public Voter View (Demo)
+          🗳️ Public Voter View
         </button>
       </div>
 

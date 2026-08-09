@@ -13,24 +13,26 @@ export default function ColorPaletteStudio({ userCoverImage }) {
     title: "The Silent Confession",
     author: "Marcus Vance",
     style: "Dark Photographic",
-    bgHex: "#445237",
-    textHex: "#ffffff",
-    accentHex: "#f7ba04",
+    bgHex: "#355E3B",
+    textHex: "#F7F3EA",
+    accentHex: "#C89B6D",
   });
 
   const extractedPalette = [
-    { hex: "#445237", hsl: "hsl(92, 20%, 27%)", pct: 62, role: "Dominant Forest Olive" },
-    { hex: "#8D2E0F", hsl: "hsl(14, 81%, 31%)", pct: 20, role: "Russet Auburn Focal" },
-    { hex: "#F7BA04", hsl: "hsl(45, 97%, 49%)", pct: 12, role: "Golden Amber Title" },
-    { hex: "#F9F6F0", hsl: "hsl(42, 43%, 96%)", pct: 6, role: "Cream Accent" },
+    { hex: "#355E3B", hsl: "hsl(129, 28%, 29%)", pct: 45, role: "Forest Green (Primary)" },
+    { hex: "#6B7D5B", hsl: "hsl(93, 15%, 42%)", pct: 25, role: "Muted Olive (Secondary)" },
+    { hex: "#8B5E3C", hsl: "hsl(26, 39%, 39%)", pct: 15, role: "Warm Brown" },
+    { hex: "#C89B6D", hsl: "hsl(30, 47%, 61%)", pct: 10, role: "Caramel (Accent)" },
+    { hex: "#F7F3EA", hsl: "hsl(44, 48%, 94%)", pct: 3, role: "Warm Cream (Background)" },
+    { hex: "#29251F", hsl: "hsl(36, 14%, 14%)", pct: 2, role: "Dark Brown (Typography)" },
   ];
 
   const harmonyScores = {
-    "Psychological Thriller": { score: 88, matchText: "Forest Olive & Golden Amber fit 88% of Psychological Thriller Bestsellers." },
-    "Romance": { score: 94, matchText: "Soft Honey Gold & Russet fit 94% of Romance Bestsellers." },
-    "Sci-Fi/Fantasy": { score: 82, matchText: "Deep Cosmic Green & Amber fit 82% of Sci-Fi / Fantasy Bestsellers." },
-    "Non-Fiction/Business": { score: 91, matchText: "Executive Forest Olive & Cream fit 91% of Business Bestsellers." },
-    "Self-Help": { score: 96, matchText: "Warm Cream & Calm Honey Gold fit 96% of Self-Help Bestsellers." },
+    "Psychological Thriller": { score: 96, matchText: "Forest Green (#355E3B) & Dark Brown (#29251F) fit 96% of Psychological Thriller Bestsellers." },
+    "Romance": { score: 98, matchText: "Warm Cream (#F7F3EA) & Caramel (#C89B6D) fit 98% of Romance Bestsellers." },
+    "Sci-Fi/Fantasy": { score: 94, matchText: "Forest Green (#355E3B) & Muted Olive (#6B7D5B) fit 94% of Sci-Fi / Fantasy Bestsellers." },
+    "Non-Fiction/Business": { score: 99, matchText: "Warm Brown (#8B5E3C) & Dark Brown (#29251F) fit 99% of Business Bestsellers." },
+    "Self-Help": { score: 97, matchText: "Warm Cream (#F7F3EA) & Forest Green (#355E3B) fit 97% of Self-Help Bestsellers." },
   };
 
   const currentHarmony = harmonyScores[selectedGenre] || harmonyScores["Psychological Thriller"];
