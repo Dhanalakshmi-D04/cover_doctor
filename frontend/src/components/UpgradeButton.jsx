@@ -10,11 +10,20 @@ export default function UpgradeButton({ plan = "monthly" }) {
   });
 
   return (
-    <div className="upgrade-button-wrap">
-      <button onClick={() => mutation.mutate()} disabled={mutation.isPending}>
-        {mutation.isPending ? "Redirecting..." : "Upgrade to Paid"}
+    <div>
+      <button
+        className="btn-amber"
+        style={{ padding: "0.5rem 1.1rem", fontSize: "0.85rem" }}
+        onClick={() => mutation.mutate()}
+        disabled={mutation.isPending}
+      >
+        {mutation.isPending ? "Redirecting..." : "⭐ Upgrade Pro"}
       </button>
-      {mutation.isError && <p className="error small">{mutation.error.message}</p>}
+      {mutation.isError && (
+        <p style={{ color: "var(--theme-russet)", fontSize: "0.75rem", marginTop: "2px" }}>
+          {mutation.error.message}
+        </p>
+      )}
     </div>
   );
 }

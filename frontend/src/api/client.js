@@ -113,3 +113,20 @@ export async function openBillingPortal() {
   });
   return parseOrThrow(response); // { portal_url }
 }
+
+export async function triggerScraper() {
+  const response = await fetch(`${API_BASE_URL}/admin/scraper/run`, {
+    method: "POST",
+    headers: authHeaders(),
+    credentials: "include",
+  });
+  return parseOrThrow(response);
+}
+
+export async function getScraperStatus() {
+  const response = await fetch(`${API_BASE_URL}/admin/scraper/status`, {
+    headers: authHeaders(),
+    credentials: "include",
+  });
+  return parseOrThrow(response);
+}

@@ -12,25 +12,39 @@ export default function CreateBookProjectForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="book-project-form">
-      <label htmlFor="project-title">New book project (for tracking versions over time)</label>
-      <input
-        id="project-title"
-        type="text"
-        placeholder="e.g. Abandoned Kingdom"
-        value={title}
-        onChange={(event) => setTitle(event.target.value)}
-      />
-      <button type="submit" disabled={!title || mutation.isPending}>
-        Create project
-      </button>
+    <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "0.8rem", marginBottom: "1.5rem", paddingBottom: "1.5rem", borderBottom: "1px dashed var(--theme-border)" }}>
+      <label htmlFor="project-title" style={{ fontSize: "0.88rem", fontWeight: 700, color: "var(--theme-olive-dark)", textAlign: "left" }}>
+        📚 Start New Book Project (Track cover revisions over time)
+      </label>
+      <div style={{ display: "flex", gap: "0.6rem" }}>
+        <input
+          id="project-title"
+          type="text"
+          className="styled-input"
+          placeholder="e.g. The Secrets of Aethelgard"
+          value={title}
+          onChange={(event) => setTitle(event.target.value)}
+        />
+        <button
+          type="submit"
+          className="btn-olive"
+          disabled={!title || mutation.isPending}
+          style={{ whiteSpace: "nowrap", padding: "0.75rem 1.2rem" }}
+        >
+          {mutation.isPending ? "Creating..." : "Create Project"}
+        </button>
+      </div>
+
       {mutation.isSuccess && (
-        <p className="hint">
-          Project ID: <code>{mutation.data.id}</code> — paste this into the upload form below to
-          track versions.
-        </p>
+        <div style={{ background: "var(--theme-olive-light)", color: "var(--theme-olive-dark)", padding: "0.75rem 1rem", borderRadius: "var(--radius-sm)", border: "1px solid var(--theme-olive-border)", fontSize: "0.85rem", textAlign: "left" }}>
+          ✓ Project Created! ID: <strong>{mutation.data.id}</strong> (Auto-attached for version tracking)
+        </div>
       )}
-      {mutation.isError && <p className="error">{mutation.error.message}</p>}
+      {mutation.isError && (
+        <div style={{ color: "var(--theme-russet)", fontSize: "0.85rem", textAlign: "left" }}>
+          ⚠️ {mutation.error.message}
+        </div>
+      )}
     </form>
   );
 }
