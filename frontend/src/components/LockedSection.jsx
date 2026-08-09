@@ -1,19 +1,38 @@
 import UpgradeButton from "./UpgradeButton";
 
-// Shows that a paid section exists, blurred, with an upgrade CTA —
-// deliberately never hidden entirely. See docs/05-pricing-and-plans.md:
-// "locked sections are shown but blurred ... never silently omitted."
-export default function LockedSection({ title }) {
+export default function LockedSection({ title, description, icon = "🔒" }) {
   return (
-    <div className="locked-section">
-      <div className="locked-section-blur">
-        <div className="fake-line" />
-        <div className="fake-line short" />
-        <div className="fake-line" />
+    <div className="locked-card-container">
+      <div className="locked-card-header">
+        <div className="locked-card-title-group">
+          <span className="locked-icon">{icon}</span>
+          <div>
+            <h4 style={{ fontSize: "1.05rem", fontWeight: "700", color: "var(--theme-text)" }}>{title}</h4>
+            {description && <p className="locked-card-desc" style={{ fontSize: "0.82rem", color: "var(--theme-text-muted)" }}>{description}</p>}
+          </div>
+        </div>
+        <span className="pastel-badge pastel-badge-chocolate" style={{ whiteSpace: "nowrap" }}>Pro Feature</span>
       </div>
-      <div className="locked-section-overlay">
-        <p>🔒 {title} is a paid feature</p>
-        <UpgradeButton />
+
+      <div className="locked-card-preview-area">
+        <div className="fake-data-wireframe">
+          <div className="fake-wireframe-bar" style={{ width: "85%" }} />
+          <div className="fake-wireframe-bar" style={{ width: "65%" }} />
+          <div className="fake-wireframe-bar" style={{ width: "90%" }} />
+          <div className="fake-wireframe-grid">
+            <div className="fake-grid-box" />
+            <div className="fake-grid-box" />
+          </div>
+        </div>
+
+        <div className="locked-card-overlay">
+          <div className="locked-cta-box">
+            <p className="locked-cta-text" style={{ fontSize: "0.88rem", fontWeight: "600", color: "var(--theme-text)", marginBottom: "0.5rem" }}>
+              Unlock <strong>{title}</strong> with Cover Doctor Pro
+            </p>
+            <UpgradeButton />
+          </div>
+        </div>
       </div>
     </div>
   );

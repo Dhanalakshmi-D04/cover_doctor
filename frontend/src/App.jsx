@@ -37,6 +37,9 @@ function App() {
   }, []);
 
   function handleTabChange(tab) {
+    if (tab === "home" && activeTab === "home" && coverId) {
+      setCoverId(null);
+    }
     setActiveTab(tab);
     window.location.hash = tab === "home" ? "" : tab;
   }
@@ -66,19 +69,17 @@ function App() {
       />
 
       <main className="app-container">
-        {coverId ? (
-          <Report coverId={coverId} onReset={() => setCoverId(null)} />
-        ) : (
-          <>
-            {activeTab === "home" && (
-              <Home onUploaded={setCoverId} onNavigate={handleTabChange} />
-            )}
-            {activeTab === "explore" && <BestsellerExplorer userCoverId={coverId} />}
-            {activeTab === "ab-test" && <ABTestStudio />}
-            {activeTab === "palette-studio" && <ColorPaletteStudio />}
-            {activeTab === "export" && <ExportStudio />}
-          </>
+        {activeTab === "home" && (
+          coverId ? (
+            <Report coverId={coverId} onReset={() => setCoverId(null)} onNavigate={handleTabChange} />
+          ) : (
+            <Home onUploaded={setCoverId} onNavigate={handleTabChange} />
+          )
         )}
+        {activeTab === "explore" && <BestsellerExplorer userCoverId={coverId} />}
+        {activeTab === "ab-test" && <ABTestStudio />}
+        {activeTab === "palette-studio" && <ColorPaletteStudio />}
+        {activeTab === "export" && <ExportStudio />}
       </main>
 
       <footer className="no-print" style={{ textAlign: "center", padding: "1.5rem", borderTop: "1px solid var(--theme-border)", color: "var(--theme-muted)", fontSize: "0.82rem", marginTop: "auto" }}>

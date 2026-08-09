@@ -57,6 +57,7 @@ func (h *Handler) GetReport(c *gin.Context) {
 		"plan": "free",
 		"report": gin.H{
 			"id":            cover.ID,
+			"filename":      cover.Filename,
 			"title_text":    cover.TitleText,
 			"overall_score": cover.OverallScore,
 			"improvements":  topImprovements(cover),
