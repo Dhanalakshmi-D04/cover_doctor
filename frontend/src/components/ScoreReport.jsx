@@ -77,7 +77,7 @@ export default function ScoreReport({ plan, report, coverId, onReset, onNavigate
                   display: coverSrc ? "none" : "flex",
                   flexDirection: "column",
                   alignItems: "center",
-                  justify-content: "center",
+                  justifyContent: "center",
                   height: "100%",
                   minHeight: "300px",
                   background: "linear-gradient(135deg, #1B4332 0%, #2D1E18 100%)",
