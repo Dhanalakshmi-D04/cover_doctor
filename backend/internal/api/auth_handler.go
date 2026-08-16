@@ -14,6 +14,9 @@ import (
 	"github.com/Dhanalakshmi-D04/cover_doctor/backend/internal/models"
 )
 
+// dummyPasswordHash is used in Login to perform a bcrypt comparison even when
+// no user is found. Without it, an attacker could measure the shorter response
+// time of "user not found" vs "wrong password" to enumerate valid emails.
 var dummyPasswordHash, _ = bcrypt.GenerateFromPassword([]byte("dummy-password-for-timing-defense"), bcrypt.DefaultCost)
 
 type signupRequest struct {
@@ -27,8 +30,7 @@ type loginRequest struct {
 }
 
 // Signup handles POST /auth/signup: creates a new account with a default
-// free-tier subscription and sets an httpOnly JWT cookie. Every user, free or paid,
-// needs an account — see docs/05-pricing-and-plans.md.
+// free-tier subscription in a single DB transaction, then issues a JWT cookie.
 func (h *Handler) Signup(c *gin.Context) {
 	var req signupRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -51,13 +53,11 @@ func (h *Handler) Signup(c *gin.Context) {
 	userID := uuid.New().String()
 	user := &models.User{ID: userID, Email: req.Email, PasswordHash: string(hash)}
 
-	if err := db.CreateUser(h.DB, user); err != nil {
+	// Atomic: both the user row and the free subscription row are written
+	// in the same transaction. If either fails, both are rolled back, so
+	// we never leave a user with no subscription row.
+	if err := db.CreateUserWithSubscription(h.DB, user, uuid.New().String()); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create account"})
-		return
-	}
-
-	if err := db.EnsureFreeSubscription(h.DB, uuid.New().String(), userID); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to set up account"})
 		return
 	}
 
@@ -67,7 +67,7 @@ func (h *Handler) Signup(c *gin.Context) {
 		return
 	}
 
-	c.SetCookie("auth_token", token, 7*24*3600, "/", "", false, true)
+	setAuthCookie(c, token, h.Config.IsProduction())
 	c.JSON(http.StatusCreated, gin.H{"token": token, "user_id": userID})
 }
 
@@ -82,7 +82,7 @@ func (h *Handler) Login(c *gin.Context) {
 	user, err := db.GetUserByEmail(h.DB, req.Email)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			// Perform dummy hash comparison to mitigate timing side-channel attack
+			// Timing-safe: always run bcrypt even when user not found
 			_ = bcrypt.CompareHashAndPassword(dummyPasswordHash, []byte(req.Password))
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid email or password"})
 			return
@@ -102,12 +102,23 @@ func (h *Handler) Login(c *gin.Context) {
 		return
 	}
 
-	c.SetCookie("auth_token", token, 7*24*3600, "/", "", false, true)
+	setAuthCookie(c, token, h.Config.IsProduction())
 	c.JSON(http.StatusOK, gin.H{"token": token, "user_id": user.ID})
 }
 
 // Logout handles POST /auth/logout: clears the httpOnly auth_token cookie.
 func (h *Handler) Logout(c *gin.Context) {
-	c.SetCookie("auth_token", "", -1, "/", "", false, true)
+	setAuthCookie(c, "", h.Config.IsProduction())
 	c.JSON(http.StatusOK, gin.H{"message": "logged out successfully"})
+}
+
+// setAuthCookie sets (or clears) the auth_token cookie.
+// secure=true must only be set in production (HTTPS), not in local dev (HTTP),
+// because browsers refuse to send Secure cookies over plain HTTP.
+func setAuthCookie(c *gin.Context, token string, secure bool) {
+	maxAge := 7 * 24 * 3600 // 7 days
+	if token == "" {
+		maxAge = -1 // tells the browser to delete the cookie
+	}
+	c.SetCookie("auth_token", token, maxAge, "/", "", secure, true /* httpOnly */)
 }

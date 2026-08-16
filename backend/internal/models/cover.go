@@ -14,6 +14,9 @@ type Cover struct {
 	BookProjectID *string `db:"book_project_id" json:"book_project_id,omitempty"`
 	VersionNumber int     `db:"version_number" json:"version_number"`
 	Status        string  `db:"status" json:"status"`
+	// JobID links this cover to its Asynq background processing task.
+	// Nil until the job is enqueued; used by GET /jobs/:job_id to report status.
+	JobID *string `db:"job_id" json:"job_id,omitempty"`
 
 	ImageWidth  int `db:"image_width" json:"image_width"`
 	ImageHeight int `db:"image_height" json:"image_height"`

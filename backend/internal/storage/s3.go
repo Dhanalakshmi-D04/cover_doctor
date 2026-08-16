@@ -69,7 +69,7 @@ func (s *S3Client) UploadFile(ctx context.Context, key string, contentType strin
 	return nil
 }
 
-// GetFileStream retrieves a file from S3 as a stream. 
+// GetFileStream retrieves a file from S3 as a stream.
 // It returns an io.ReadCloser which must be closed by the caller, or an error.
 func (s *S3Client) GetFileStream(ctx context.Context, key string) (io.ReadCloser, string, error) {
 	output, err := s.client.GetObject(ctx, &s3.GetObjectInput{
@@ -79,7 +79,7 @@ func (s *S3Client) GetFileStream(ctx context.Context, key string) (io.ReadCloser
 	if err != nil {
 		return nil, "", fmt.Errorf("failed to get object from S3: %w", err)
 	}
-	
+
 	contentType := ""
 	if output.ContentType != nil {
 		contentType = *output.ContentType
@@ -90,15 +90,15 @@ func (s *S3Client) GetFileStream(ctx context.Context, key string) (io.ReadCloser
 // GeneratePresignedURL generates a presigned URL to download an object directly.
 func (s *S3Client) GeneratePresignedURL(ctx context.Context, key string, duration time.Duration) (string, error) {
 	presignClient := s3.NewPresignClient(s.client)
-	
+
 	req, err := presignClient.PresignGetObject(ctx, &s3.GetObjectInput{
 		Bucket: aws.String(s.bucket),
 		Key:    aws.String(key),
 	}, s3.WithPresignExpires(duration))
-	
+
 	if err != nil {
 		return "", fmt.Errorf("failed to generate presigned URL: %w", err)
 	}
-	
+
 	return req.URL, nil
 }

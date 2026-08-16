@@ -1,9 +1,7 @@
 package middleware
 
 import (
-	"context"
 	"net/http"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis_rate/v10"

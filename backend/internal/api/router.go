@@ -25,7 +25,8 @@ func NewRouter(database *sqlx.DB, rdb *redis.Client, cfg *config.Config, aiClien
 	router := gin.New()
 	router.Use(gin.Recovery())
 	router.Use(middleware.RequestLogger())
-	_ = router.SetTrustedProxies(nil) // explicitly disable proxy trusting by default
+	router.Use(middleware.HTTPSRedirect()) // Redirects http→https when behind a TLS proxy
+	_ = router.SetTrustedProxies(nil)      // explicitly disable proxy trusting by default
 
 	router.Use(middleware.CORS(cfg.AllowedOrigin))
 
@@ -78,7 +79,7 @@ func NewRouter(database *sqlx.DB, rdb *redis.Client, cfg *config.Config, aiClien
 		// Admin scraper control routes
 		protected.POST("/admin/scraper/run", handler.TriggerScraper)
 		protected.GET("/admin/scraper/status", handler.GetScraperStatus)
-}
+	}
 
 	return router
-	}
+}

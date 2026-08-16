@@ -142,7 +142,7 @@ func (p *Processor) ProcessTaskProcessCover(ctx context.Context, t *asynq.Task) 
 	if payload.BookProjectID != "" {
 		bookProjectIDPtr = &payload.BookProjectID
 		// Assume version number was already calculated when enqueueing, or calculate it here?
-		// Wait, the original code calculates it just before insert. 
+		// Wait, the original code calculates it just before insert.
 		versionNumber, err = db.NextVersionNumber(p.db, payload.BookProjectID)
 		if err != nil {
 			logger.Error("failed to determine version number", "error", err)

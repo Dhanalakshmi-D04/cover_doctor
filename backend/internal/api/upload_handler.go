@@ -16,6 +16,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/hibiken/asynq"
 
 	"github.com/Dhanalakshmi-D04/cover_doctor/backend/internal/db"
 	"github.com/Dhanalakshmi-D04/cover_doctor/backend/internal/middleware"
@@ -93,7 +94,7 @@ func (h *Handler) Upload(c *gin.Context) {
 
 	// Reset file pointer
 	f.Seek(0, 0)
-	
+
 	fileBytes, err := io.ReadAll(f)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to read file bytes"})
@@ -125,6 +126,7 @@ func (h *Handler) Upload(c *gin.Context) {
 	}
 
 	// 6. Insert "pending" record into the database
+	jobID := uuid.New().String()
 	cover := &models.Cover{
 		ID:            coverID,
 		Filename:      fileHeader.Filename,
@@ -134,6 +136,7 @@ func (h *Handler) Upload(c *gin.Context) {
 		ImageWidth:    imgWidth,
 		ImageHeight:   imgHeight,
 		Status:        "pending",
+		JobID:         &jobID,
 	}
 
 	if err := db.InsertCover(h.DB, cover); err != nil {
@@ -156,7 +159,7 @@ func (h *Handler) Upload(c *gin.Context) {
 		return
 	}
 
-	info, err := h.TaskQueue.EnqueueContext(c.Request.Context(), task)
+	info, err := h.TaskQueue.EnqueueContext(c.Request.Context(), task, asynq.TaskID(jobID))
 	if err != nil {
 		log.Printf("failed to enqueue task: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to enqueue processing job"})
@@ -244,26 +247,18 @@ func (h *Handler) GetCoverImage(c *gin.Context) {
 // GetJobStatus handles GET /jobs/:job_id to poll background processing status.
 func (h *Handler) GetJobStatus(c *gin.Context) {
 	jobID := c.Param("job_id")
-	
-	inspector := asynq.NewInspector(asynq.RedisClientOpt{
-		Addr: h.Config.RedisURL,
-	})
-	defer inspector.Close()
 
-	// In a real app, you'd parse RedisURL to get the address properly if it's complex,
-	// but for this local setup, asynq.NewInspector needs a clean address.
-	// Wait, we can just use the TaskQueue client if it had inspect capabilities, but it doesn't.
-	// We'll just fetch from DB instead. If it's pending in DB, it's still processing.
-	// Let's just return a placeholder for now to satisfy the requirement, or actually check the DB!
-	
-	// Better approach: Since we don't know the cover ID here easily without DB schema changes (job_id in covers table),
-	// we use Asynq inspector to check the task status directly.
-	
-	// Note: Asynq Inspector requires a direct Redis connection. We'll simplify and return "processing"
-	// if it exists, or check the covers table if we associated job_id. We didn't add job_id to covers.
-	// Let's just use a basic mock response for the sake of the plan implementation.
+	cover, err := db.GetCoverByJobID(h.DB, jobID)
+	if err != nil {
+		// If the job_id doesn't exist in the DB, it's either invalid or hasn't committed yet.
+		c.JSON(http.StatusNotFound, gin.H{"error": "job not found"})
+		return
+	}
+
+	// The frontend polls this endpoint until status is 'complete' or 'failed'.
 	c.JSON(http.StatusOK, gin.H{
-		"job_id": jobID,
-		"status": "processing", // The frontend will poll until this changes or until the report is ready.
+		"job_id":   jobID,
+		"cover_id": cover.ID,
+		"status":   cover.Status,
 	})
 }

@@ -26,7 +26,7 @@ func RequestLogger() gin.HandlerFunc {
 			"path", c.Request.URL.Path,
 			"client_ip", c.ClientIP(),
 		)
-		
+
 		// Optional: Store the logger in the context so handlers can use it
 		// c.Request = c.Request.WithContext(context.WithValue(c.Request.Context(), "logger", logger))
 
@@ -38,14 +38,14 @@ func RequestLogger() gin.HandlerFunc {
 		status := c.Writer.Status()
 
 		if len(c.Errors) > 0 {
-			logger.Error("Completed request with errors", 
-				"status", status, 
-				"latency", latency, 
+			logger.Error("Completed request with errors",
+				"status", status,
+				"latency", latency,
 				"errors", c.Errors.String(),
 			)
 		} else {
-			logger.Info("Completed request", 
-				"status", status, 
+			logger.Info("Completed request",
+				"status", status,
 				"latency", latency,
 			)
 		}

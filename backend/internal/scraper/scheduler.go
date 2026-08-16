@@ -15,11 +15,11 @@ import (
 
 // SchedulerOptions configures background periodic scraper execution.
 type SchedulerOptions struct {
-	Enabled       bool          `json:"enabled"`
-	IntervalDays  int           `json:"interval_days"` // e.g. 90 for quarterly runs
-	RunOnStartup  bool          `json:"run_on_startup"`
-	ScraperOpts   Options       `json:"scraper_opts"`
-	Sources       []BestsellerSource
+	Enabled      bool    `json:"enabled"`
+	IntervalDays int     `json:"interval_days"` // e.g. 90 for quarterly runs
+	RunOnStartup bool    `json:"run_on_startup"`
+	ScraperOpts  Options `json:"scraper_opts"`
+	Sources      []BestsellerSource
 }
 
 // DefaultSchedulerOptions returns recommended settings for quarterly scraping.

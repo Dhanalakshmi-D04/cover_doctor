@@ -11,8 +11,7 @@ import (
 )
 
 // CreateCheckoutSession handles POST /billing/checkout: starts a Stripe
-// Checkout session for the authenticated user to subscribe to the paid
-// plan. Requires STRIPE_SECRET_KEY and price IDs to be configured.
+// Checkout session for the authenticated user to subscribe to the paid plan.
 func (h *Handler) CreateCheckoutSession(c *gin.Context) {
 	userID := c.GetString(middleware.UserIDContextKey)
 
@@ -32,8 +31,11 @@ func (h *Handler) CreateCheckoutSession(c *gin.Context) {
 		priceID = h.Config.StripePriceIDAnnual
 	}
 
-	successURL := "http://localhost:5173/billing/success"
-	cancelURL := "http://localhost:5173/billing/cancel"
+	// Build redirect URLs from APP_BASE_URL so they work in dev and production
+	// without any code changes — just swap the env var.
+	base := h.Config.AppBaseURL
+	successURL := base + "/billing/success"
+	cancelURL := base + "/billing/cancel"
 
 	checkoutURL, err := h.Billing.CreateCheckoutSession(priceID, user.Email, userID, successURL, cancelURL)
 	if err != nil {
@@ -44,8 +46,8 @@ func (h *Handler) CreateCheckoutSession(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"checkout_url": checkoutURL})
 }
 
-// CreatePortalSession handles POST /billing/portal: starts a Stripe
-// Customer Portal session for managing an existing subscription.
+// CreatePortalSession handles POST /billing/portal: opens the Stripe Customer
+// Portal where users can manage, upgrade, or cancel their subscription.
 func (h *Handler) CreatePortalSession(c *gin.Context) {
 	userID := c.GetString(middleware.UserIDContextKey)
 
@@ -55,7 +57,7 @@ func (h *Handler) CreatePortalSession(c *gin.Context) {
 		return
 	}
 
-	returnURL := "http://localhost:5173/account"
+	returnURL := h.Config.AppBaseURL + "/account"
 
 	portalURL, err := h.Billing.CreatePortalSession(*sub.StripeCustomerID, returnURL)
 	if err != nil {

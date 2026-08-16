@@ -3,6 +3,7 @@ package db
 import (
 	"database/sql"
 	"errors"
+	"time"
 
 	"github.com/jmoiron/sqlx"
 
@@ -34,14 +35,15 @@ func GetSubscriptionByUserID(database *sqlx.DB, userID string) (*models.Subscrip
 }
 
 // UpdateSubscriptionByStripeID mirrors a Stripe subscription's plan/status
-// into the local table — called from the billing webhook handler. Stripe
-// is always the source of truth; this never originates a change itself.
-func UpdateSubscriptionByStripeID(database *sqlx.DB, stripeSubscriptionID, plan, status string) error {
+// and billing period into the local table. Called from the webhook handler.
+// Stripe is always the source of truth; this only syncs, never originates changes.
+// currentPeriodEnd may be nil if Stripe didn't include it in the event (rare).
+func UpdateSubscriptionByStripeID(database *sqlx.DB, stripeSubscriptionID, plan, status string, currentPeriodEnd *time.Time) error {
 	query := `
 		UPDATE subscriptions
-		SET plan = $1, status = $2
-		WHERE stripe_subscription_id = $3`
-	_, err := database.Exec(query, plan, status, stripeSubscriptionID)
+		SET plan = $1, status = $2, current_period_end = $3
+		WHERE stripe_subscription_id = $4`
+	_, err := database.Exec(query, plan, status, currentPeriodEnd, stripeSubscriptionID)
 	return err
 }
 

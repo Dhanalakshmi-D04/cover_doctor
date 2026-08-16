@@ -4,8 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
+	"log/slog"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jmoiron/sqlx"
@@ -17,8 +18,11 @@ import (
 
 // HandleWebhook processes Stripe subscription lifecycle events and keeps
 // the local `subscriptions` table in sync. Stripe is always the source of
-// truth here — this handler only mirrors what Stripe already decided, it
-// never originates a plan change itself.
+// truth — this handler only mirrors what Stripe already decided.
+//
+// Idempotency: Stripe retries webhook deliveries on failure. We record every
+// processed event ID in the `processed_stripe_events` table and skip duplicates,
+// so retries never cause double-processing (e.g. upgrading a user twice).
 func HandleWebhook(database *sqlx.DB, webhookSecret string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if webhookSecret == "" {
@@ -35,6 +39,20 @@ func HandleWebhook(database *sqlx.DB, webhookSecret string) gin.HandlerFunc {
 		event, err := webhook.ConstructEvent(payload, c.GetHeader("Stripe-Signature"), webhookSecret)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("webhook signature verification failed: %v", err)})
+			return
+		}
+
+		// Idempotency check: if we've already handled this event, acknowledge
+		// it and return 200 so Stripe stops retrying. Don't process it again.
+		alreadyDone, err := db.HasProcessedStripeEvent(database, event.ID)
+		if err != nil {
+			slog.Error("failed to check stripe event idempotency", "event_id", event.ID, "error", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "internal error"})
+			return
+		}
+		if alreadyDone {
+			slog.Info("Stripe event already processed, skipping", "event_id", event.ID, "type", event.Type)
+			c.JSON(http.StatusOK, gin.H{"received": true, "skipped": true})
 			return
 		}
 
@@ -55,7 +73,7 @@ func HandleWebhook(database *sqlx.DB, webhookSecret string) gin.HandlerFunc {
 			}
 			if userID != "" && customerID != "" && subscriptionID != "" {
 				if err := db.AttachStripeCustomer(database, userID, customerID, subscriptionID); err != nil {
-					log.Printf("failed to attach stripe customer for user %s: %v", userID, err)
+					slog.Error("failed to attach stripe customer", "user_id", userID, "error", err)
 					c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to link subscription"})
 					return
 				}
@@ -67,8 +85,15 @@ func HandleWebhook(database *sqlx.DB, webhookSecret string) gin.HandlerFunc {
 				c.JSON(http.StatusBadRequest, gin.H{"error": "failed to parse subscription payload"})
 				return
 			}
-			if err := db.UpdateSubscriptionByStripeID(database, sub.ID, "paid", string(sub.Status)); err != nil {
-				log.Printf("failed to update subscription for stripe sub %s: %v", sub.ID, err)
+			// Convert the Unix timestamp Stripe sends into a *time.Time so we
+			// can store it and eventually show users their renewal date.
+			var periodEnd *time.Time
+			if sub.CurrentPeriodEnd > 0 {
+				t := time.Unix(sub.CurrentPeriodEnd, 0).UTC()
+				periodEnd = &t
+			}
+			if err := db.UpdateSubscriptionByStripeID(database, sub.ID, "paid", string(sub.Status), periodEnd); err != nil {
+				slog.Error("failed to update subscription", "stripe_sub_id", sub.ID, "error", err)
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update subscription"})
 				return
 			}
@@ -79,11 +104,17 @@ func HandleWebhook(database *sqlx.DB, webhookSecret string) gin.HandlerFunc {
 				c.JSON(http.StatusBadRequest, gin.H{"error": "failed to parse subscription payload"})
 				return
 			}
-			if err := db.UpdateSubscriptionByStripeID(database, sub.ID, "free", "canceled"); err != nil {
-				log.Printf("failed to delete subscription for stripe sub %s: %v", sub.ID, err)
+			if err := db.UpdateSubscriptionByStripeID(database, sub.ID, "free", "canceled", nil); err != nil {
+				slog.Error("failed to cancel subscription", "stripe_sub_id", sub.ID, "error", err)
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update subscription"})
 				return
 			}
+		}
+
+		// Mark this event as processed so Stripe retries don't run it again.
+		if err := db.MarkStripeEventProcessed(database, event.ID); err != nil {
+			// Log but don't fail — we already applied the change successfully above.
+			slog.Warn("failed to record processed stripe event", "event_id", event.ID, "error", err)
 		}
 
 		c.JSON(http.StatusOK, gin.H{"received": true})

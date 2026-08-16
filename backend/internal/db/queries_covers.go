@@ -6,18 +6,19 @@ import (
 	"github.com/Dhanalakshmi-D04/cover_doctor/backend/internal/models"
 )
 
-// InsertCover stores a fully-scored cover record.
+// InsertCover stores a cover record. On the initial upload the record is
+// "pending" with no scores; when the worker finishes it UPSERTs the full results.
 func InsertCover(database *sqlx.DB, cover *models.Cover) error {
 	query := `
 		INSERT INTO covers (
-			id, filename, user_id, book_project_id, version_number, status,
+			id, filename, user_id, book_project_id, version_number, status, job_id,
 			image_width, image_height, style,
 			title_text, title_height_percent, title_height_percentile, title_explanation,
 			contrast_ratio, contrast_percentile, contrast_explanation,
 			whitespace_percent, whitespace_percentile, whitespace_explanation,
 			overall_score
 		) VALUES (
-			:id, :filename, :user_id, :book_project_id, :version_number, :status,
+			:id, :filename, :user_id, :book_project_id, :version_number, :status, :job_id,
 			:image_width, :image_height, :style,
 			:title_text, :title_height_percent, :title_height_percentile, :title_explanation,
 			:contrast_ratio, :contrast_percentile, :contrast_explanation,
@@ -46,6 +47,17 @@ func InsertCover(database *sqlx.DB, cover *models.Cover) error {
 func GetCoverByID(database *sqlx.DB, id string) (*models.Cover, error) {
 	var cover models.Cover
 	if err := database.Get(&cover, `SELECT * FROM covers WHERE id = $1`, id); err != nil {
+		return nil, err
+	}
+	return &cover, nil
+}
+
+// GetCoverByJobID looks up a cover by the Asynq job ID stored on it.
+// Used by GET /jobs/:job_id so the frontend can poll processing status
+// without knowing the cover_id ahead of time.
+func GetCoverByJobID(database *sqlx.DB, jobID string) (*models.Cover, error) {
+	var cover models.Cover
+	if err := database.Get(&cover, `SELECT * FROM covers WHERE job_id = $1`, jobID); err != nil {
 		return nil, err
 	}
 	return &cover, nil

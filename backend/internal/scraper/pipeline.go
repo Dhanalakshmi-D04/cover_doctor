@@ -220,19 +220,19 @@ func fallbackMetricsForStyle(style string, r *rand.Rand) (title, contrast, white
 	switch style {
 	case "Bold Typography":
 		title = 10.0 + r.Float64()*8.0       // 10% - 18%
-		contrast = 4.0 + r.Float64()*5.0    // 4.0 - 9.0
+		contrast = 4.0 + r.Float64()*5.0     // 4.0 - 9.0
 		whitespace = 45.0 + r.Float64()*20.0 // 45% - 65%
 	case "Dark Photographic":
-		title = 6.0 + r.Float64()*5.0       // 6% - 11%
-		contrast = 6.0 + r.Float64()*6.0    // 6.0 - 12.0
+		title = 6.0 + r.Float64()*5.0        // 6% - 11%
+		contrast = 6.0 + r.Float64()*6.0     // 6.0 - 12.0
 		whitespace = 20.0 + r.Float64()*20.0 // 20% - 40%
 	case "Illustrated":
-		title = 8.0 + r.Float64()*6.0       // 8% - 14%
-		contrast = 4.0 + r.Float64()*4.0    // 4.0 - 8.0
+		title = 8.0 + r.Float64()*6.0        // 8% - 14%
+		contrast = 4.0 + r.Float64()*4.0     // 4.0 - 8.0
 		whitespace = 30.0 + r.Float64()*20.0 // 30% - 50%
 	case "Minimalist":
-		title = 4.0 + r.Float64()*4.0       // 4% - 8%
-		contrast = 8.0 + r.Float64()*6.0    // 8.0 - 14.0
+		title = 4.0 + r.Float64()*4.0        // 4% - 8%
+		contrast = 8.0 + r.Float64()*6.0     // 8.0 - 14.0
 		whitespace = 65.0 + r.Float64()*20.0 // 65% - 85%
 	default:
 		title = 9.0 + r.Float64()*5.0

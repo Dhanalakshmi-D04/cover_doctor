@@ -4,7 +4,6 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-
 // BenchmarkEntry represents one already-analyzed cover's measurements, used
 // as a comparison point for percentile calculations.
 type BenchmarkEntry struct {
@@ -106,4 +105,3 @@ func BenchmarkForStyleWithDB(database *sqlx.DB, style string) []BenchmarkEntry {
 	}
 	return BenchmarkForStyle(style)
 }
-

@@ -15,6 +15,11 @@ type Config struct {
 	AllowedOrigin string
 	GinMode       string
 
+	// AppBaseURL is the public URL of the frontend app (e.g. "http://localhost:5173"
+	// in dev, "https://coverdoctor.com" in production). Used to build absolute
+	// redirect URLs for Stripe checkout/portal so they work in both environments.
+	AppBaseURL string
+
 	// AnthropicAPIKey is optional. If empty, AI features (style tagging,
 	// explanations) fall back to safe deterministic behavior rather than
 	// failing the request — see internal/ai.
@@ -30,7 +35,9 @@ type Config struct {
 	// Redis configuration for job queue and rate limiting
 	RedisURL string
 
-	// S3/MinIO configuration for object storage
+	// S3/MinIO configuration for object storage.
+	// S3Endpoint can point at MinIO (local dev), Cloudflare R2, or real AWS S3 —
+	// only env vars need to change, no code changes required.
 	S3Endpoint  string
 	S3AccessKey string
 	S3SecretKey string
@@ -39,6 +46,8 @@ type Config struct {
 
 // Load reads environment variables into a Config, returning an error only
 // if a variable required for the app to run at all is missing.
+// In production, env vars are injected by the hosting platform.
+// In local dev, they are loaded from a .env file before this function is called.
 func Load() (*Config, error) {
 	cfg := &Config{
 		Port:          getEnv("PORT", "8080"),
@@ -46,6 +55,7 @@ func Load() (*Config, error) {
 		JWTSecret:     os.Getenv("JWT_SECRET"),
 		AllowedOrigin: getEnv("ALLOWED_ORIGIN", "http://localhost:5173"),
 		GinMode:       getEnv("GIN_MODE", "release"),
+		AppBaseURL:    getEnv("APP_BASE_URL", "http://localhost:5173"),
 
 		AnthropicAPIKey: os.Getenv("ANTHROPIC_API_KEY"),
 
@@ -61,20 +71,28 @@ func Load() (*Config, error) {
 		S3Bucket:    os.Getenv("S3_BUCKET"),
 	}
 
+	// Fail fast with a specific message naming the missing variable, so it's
+	// immediately obvious what needs to be configured in a new environment.
 	if cfg.DatabaseURL == "" {
-		return nil, fmt.Errorf("DATABASE_URL is required (see backend/.env)")
+		return nil, fmt.Errorf("missing required env var DATABASE_URL (postgres connection string)")
 	}
 	if cfg.JWTSecret == "" {
-		return nil, fmt.Errorf("JWT_SECRET is required (see backend/.env)")
+		return nil, fmt.Errorf("missing required env var JWT_SECRET")
 	}
 	if len(cfg.JWTSecret) < 32 {
 		return nil, fmt.Errorf("JWT_SECRET must be at least 32 characters long for security")
 	}
-
-	// For S3 configuration, we expect either all to be set (production/local testing) or none (if we are falling back, though we shouldn't fall back anymore). 
-	// We'll require them for the new storage backend.
-	if cfg.S3Endpoint == "" || cfg.S3AccessKey == "" || cfg.S3SecretKey == "" || cfg.S3Bucket == "" {
-		return nil, fmt.Errorf("S3_ENDPOINT, S3_ACCESS_KEY, S3_SECRET_KEY, and S3_BUCKET are required")
+	if cfg.S3Endpoint == "" {
+		return nil, fmt.Errorf("missing required env var S3_ENDPOINT (use http://localhost:9000 for local MinIO)")
+	}
+	if cfg.S3AccessKey == "" {
+		return nil, fmt.Errorf("missing required env var S3_ACCESS_KEY")
+	}
+	if cfg.S3SecretKey == "" {
+		return nil, fmt.Errorf("missing required env var S3_SECRET_KEY")
+	}
+	if cfg.S3Bucket == "" {
+		return nil, fmt.Errorf("missing required env var S3_BUCKET")
 	}
 
 	return cfg, nil
@@ -88,6 +106,12 @@ func (c *Config) AIEnabled() bool {
 // BillingEnabled reports whether real Stripe calls can be made.
 func (c *Config) BillingEnabled() bool {
 	return c.StripeSecretKey != ""
+}
+
+// IsProduction returns true when running in production/release mode.
+// Used to enable security flags (e.g. Secure cookies) that should be off in dev.
+func (c *Config) IsProduction() bool {
+	return c.GinMode == "release"
 }
 
 func getEnv(key, fallback string) string {

@@ -1,9 +1,7 @@
 package worker
 
 import (
-	"context"
 	"encoding/json"
-	"fmt"
 
 	"github.com/hibiken/asynq"
 )

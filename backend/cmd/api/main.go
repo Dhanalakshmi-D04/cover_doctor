@@ -40,10 +40,19 @@ func main() {
 		os.Exit(1)
 	}
 	defer database.Close()
-	
+
 	database.SetMaxOpenConns(25)
 	database.SetMaxIdleConns(25)
 	database.SetConnMaxLifetime(5 * time.Minute)
+
+	// Run any pending database migrations before the server starts.
+	// This ensures the schema is always up to date on every deploy.
+	// Fail fast if migrations fail — starting with a broken schema causes
+	// confusing errors deep inside request handlers.
+	if err := db.RunMigrations(database, "migrations"); err != nil {
+		logger.Error("database migration failed", "error", err)
+		os.Exit(1)
+	}
 
 	// Redis client for rate limiting
 	opt, err := redis.ParseURL(cfg.RedisURL)

@@ -39,10 +39,18 @@ func main() {
 		os.Exit(1)
 	}
 	defer database.Close()
-	
+
 	database.SetMaxOpenConns(25)
 	database.SetMaxIdleConns(25)
 	database.SetConnMaxLifetime(5 * time.Minute)
+
+	// Run any pending database migrations.
+	// The worker also runs migrations on startup so the correct schema is
+	// guaranteed regardless of which process starts first.
+	if err := db.RunMigrations(database, "migrations"); err != nil {
+		logger.Error("database migration failed", "error", err)
+		os.Exit(1)
+	}
 
 	opt, err := redis.ParseURL(cfg.RedisURL)
 	if err != nil {
