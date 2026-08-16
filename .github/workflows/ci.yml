@@ -33,7 +33,8 @@ jobs:
       - name: golangci-lint (style, complexity, error handling checks)
         uses: golangci/golangci-lint-action@v6
         with:
-          version: latest
+          # Pinning a specific version prevents unexpected CI breakages when new releases drop support for older Go versions or introduce backward-incompatible checks.
+          version: v2.12.2
           working-directory: backend
           args: --timeout=5m
 
