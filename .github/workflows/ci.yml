@@ -31,7 +31,7 @@ jobs:
         run: go vet ./...
 
       - name: golangci-lint (style, complexity, error handling checks)
-        uses: golangci/golangci-lint-action@v6
+        uses: golangci/golangci-lint-action@v7
         with:
           # Pinning a specific version prevents unexpected CI breakages when new releases drop support for older Go versions or introduce backward-incompatible checks.
           version: v2.12.2

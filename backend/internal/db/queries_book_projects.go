@@ -20,7 +20,7 @@ func CreateBookProject(database *sqlx.DB, project *models.BookProject) error {
 	if err != nil {
 		return err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	if rows.Next() {
 		if err := rows.Scan(&project.CreatedAt); err != nil {

@@ -53,15 +53,15 @@ func (p *Processor) ProcessTaskProcessCover(ctx context.Context, t *asynq.Task) 
 		logger.Error("failed to get file from S3", "error", err)
 		return err
 	}
-	defer stream.Close()
+	defer func() { _ = stream.Close() }()
 
 	tmpFile, err := os.CreateTemp("", "cover_*.jpg")
 	if err != nil {
 		logger.Error("failed to create temp file", "error", err)
 		return err
 	}
-	defer os.Remove(tmpFile.Name())
-	defer tmpFile.Close()
+	defer func() { _ = os.Remove(tmpFile.Name()) }()
+	defer func() { _ = tmpFile.Close() }()
 
 	if _, err := io.Copy(tmpFile, stream); err != nil {
 		logger.Error("failed to save temp file", "error", err)

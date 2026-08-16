@@ -21,15 +21,16 @@ func (h *Handler) TriggerScraper(c *gin.Context) {
 		return
 	}
 
-	// Trigger scraper run in background goroutine so HTTP response returns quickly
-	go func() {
-		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Minute)
-		defer cancel()
-		h.ScraperScheduler.TriggerNow(ctx)
-	}()
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Minute)
+	defer cancel()
 
-	c.JSON(http.StatusAccepted, gin.H{
-		"message": "automated benchmark scraper job triggered",
+	if _, err := h.ScraperScheduler.TriggerNow(ctx); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to trigger scraper: " + err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "automated benchmark scraper job completed",
 		"status":  h.ScraperScheduler.Status(c.Request.Context()),
 	})
 }

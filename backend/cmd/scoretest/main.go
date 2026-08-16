@@ -34,7 +34,7 @@ func main() {
 		fmt.Println("error opening image:", err)
 		os.Exit(1)
 	}
-	defer imgFile.Close()
+	defer func() { _ = imgFile.Close() }()
 
 	img, _, err := image.Decode(imgFile)
 	if err != nil {

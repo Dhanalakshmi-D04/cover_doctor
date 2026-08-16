@@ -39,7 +39,7 @@ func main() {
 		logger.Error("failed to connect to database", "error", err)
 		os.Exit(1)
 	}
-	defer database.Close()
+	defer func() { _ = database.Close() }()
 
 	database.SetMaxOpenConns(25)
 	database.SetMaxIdleConns(25)
@@ -61,11 +61,11 @@ func main() {
 		os.Exit(1)
 	}
 	rdb := redis.NewClient(opt)
-	defer rdb.Close()
+	defer func() { _ = rdb.Close() }()
 
 	// Asynq client for enqueuing jobs
 	taskQueue := asynq.NewClient(asynq.RedisClientOpt{Addr: opt.Addr})
-	defer taskQueue.Close()
+	defer func() { _ = taskQueue.Close() }()
 
 	// S3 Client
 	s3Client, err := storage.NewS3Client(context.Background(), cfg)

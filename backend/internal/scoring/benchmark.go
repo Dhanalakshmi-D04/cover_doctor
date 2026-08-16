@@ -94,11 +94,7 @@ func BenchmarkForStyleWithDB(database *sqlx.DB, style string) []BenchmarkEntry {
 		if err == nil && len(rows) > 0 {
 			entries := make([]BenchmarkEntry, len(rows))
 			for i, r := range rows {
-				entries[i] = BenchmarkEntry{
-					TitleHeightPercent: r.TitleHeightPercent,
-					ContrastRatio:      r.ContrastRatio,
-					WhitespacePercent:  r.WhitespacePercent,
-				}
+				entries[i] = BenchmarkEntry(r)
 			}
 			return entries
 		}

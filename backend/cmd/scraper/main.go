@@ -33,7 +33,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to connect to database: %v", err)
 	}
-	defer database.Close()
+	defer func() { _ = database.Close() }()
 
 	aiClient := ai.NewClient(cfg.AnthropicAPIKey)
 

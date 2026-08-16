@@ -23,30 +23,21 @@ type S3Client struct {
 
 // NewS3Client creates a new S3Client connected to the provided endpoint (MinIO or real AWS S3).
 func NewS3Client(ctx context.Context, cfg *appconfig.Config) (*S3Client, error) {
-	resolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {
-		if cfg.S3Endpoint != "" {
-			return aws.Endpoint{
-				PartitionID:       "aws",
-				URL:               cfg.S3Endpoint,
-				SigningRegion:     "us-east-1",
-				HostnameImmutable: cfg.S3ForcePathStyle, // Needed for MinIO local dev
-			}, nil
-		}
-		// Fallback to default AWS resolver
-		return aws.Endpoint{}, &aws.EndpointNotFoundError{}
-	})
-
-	awsCfg, err := config.LoadDefaultConfig(ctx,
+	opts := []func(*config.LoadOptions) error{
 		config.WithRegion("us-east-1"),
-		config.WithEndpointResolverWithOptions(resolver),
 		config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(cfg.S3AccessKey, cfg.S3SecretKey, "")),
-	)
+	}
+
+	awsCfg, err := config.LoadDefaultConfig(ctx, opts...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load AWS config: %w", err)
 	}
 
 	client := s3.NewFromConfig(awsCfg, func(o *s3.Options) {
 		o.UsePathStyle = cfg.S3ForcePathStyle
+		if cfg.S3Endpoint != "" {
+			o.BaseEndpoint = aws.String(cfg.S3Endpoint)
+		}
 	})
 
 	return &S3Client{

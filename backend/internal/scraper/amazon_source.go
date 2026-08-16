@@ -51,13 +51,13 @@ func (a *AmazonSource) FetchTopCovers(ctx context.Context, style string, limit i
 		resp, err := a.client.Do(req)
 		if err != nil || resp.StatusCode != http.StatusOK {
 			if resp != nil {
-				resp.Body.Close()
+				_ = resp.Body.Close()
 			}
 			continue
 		}
 
 		imgData, err := io.ReadAll(resp.Body)
-		resp.Body.Close()
+		_ = resp.Body.Close()
 		if err != nil || len(imgData) == 0 {
 			continue
 		}

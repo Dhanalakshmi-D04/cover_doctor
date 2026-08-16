@@ -105,7 +105,7 @@ func (c *Client) callClaude(message claudeMessage) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("calling claude API: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	respBytes, err := io.ReadAll(resp.Body)
 	if err != nil {

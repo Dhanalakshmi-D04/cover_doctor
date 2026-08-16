@@ -29,7 +29,7 @@ func InsertBenchmarksBatch(database *sqlx.DB, benchmarks []*models.Benchmark) er
 	if err != nil {
 		return fmt.Errorf("begin transaction: %w", err)
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }()
 
 	query := `
 		INSERT INTO benchmarks (

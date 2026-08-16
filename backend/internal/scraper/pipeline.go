@@ -114,7 +114,7 @@ func ScrapeAndSave(ctx context.Context, database *sqlx.DB, aiClient *ai.Client, 
 
 func processSingleCover(ctx context.Context, c BestsellerCover, targetStyle, tempDir string, aiClient *ai.Client, timeout time.Duration, r *rand.Rand) (*models.Benchmark, error) {
 	tempPath := filepath.Join(tempDir, fmt.Sprintf("%s_%s.jpg", uuid.New().String(), sanitizeFilename(c.Title)))
-	defer os.Remove(tempPath)
+	defer func() { _ = os.Remove(tempPath) }()
 
 	imgBytes := c.ImageData
 	if len(imgBytes) == 0 && c.ImageURL != "" {
@@ -207,7 +207,7 @@ func fetchImageURL(ctx context.Context, url string, timeout time.Duration) ([]by
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("HTTP status %d", resp.StatusCode)

@@ -21,7 +21,6 @@ import (
 	"github.com/Dhanalakshmi-D04/cover_doctor/backend/internal/db"
 	"github.com/Dhanalakshmi-D04/cover_doctor/backend/internal/middleware"
 	"github.com/Dhanalakshmi-D04/cover_doctor/backend/internal/models"
-	"github.com/Dhanalakshmi-D04/cover_doctor/backend/internal/scoring"
 	"github.com/Dhanalakshmi-D04/cover_doctor/backend/internal/worker"
 )
 
@@ -81,7 +80,7 @@ func (h *Handler) Upload(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to open uploaded file"})
 		return
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
 	// Read first 512 bytes for mime type and full decode config for dimensions
 	imgConfig, format, err := image.DecodeConfig(f)
@@ -93,7 +92,10 @@ func (h *Handler) Upload(c *gin.Context) {
 	imgHeight := imgConfig.Height
 
 	// Reset file pointer
-	f.Seek(0, 0)
+	if _, err := f.Seek(0, 0); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to process uploaded file"})
+		return
+	}
 
 	fileBytes, err := io.ReadAll(f)
 	if err != nil {
@@ -102,9 +104,10 @@ func (h *Handler) Upload(c *gin.Context) {
 	}
 
 	contentType := "image/" + format
-	if format == "jpeg" {
+	switch format {
+	case "jpeg":
 		contentType = "image/jpeg"
-	} else if format == "png" {
+	case "png":
 		contentType = "image/png"
 	}
 
@@ -160,9 +163,9 @@ func (h *Handler) Upload(c *gin.Context) {
 	}
 
 	info, err := h.TaskQueue.EnqueueContext(
-		c.Request.Context(), 
-		task, 
-		asynq.TaskID(jobID), 
+		c.Request.Context(),
+		task,
+		asynq.TaskID(jobID),
 		asynq.MaxRetry(3),
 	)
 	if err != nil {
@@ -173,24 +176,6 @@ func (h *Handler) Upload(c *gin.Context) {
 
 	// 8. Return 202 Accepted
 	c.JSON(http.StatusAccepted, gin.H{"cover_id": coverID, "job_id": info.ID})
-}
-
-func averageOf(benchmark []scoring.BenchmarkEntry, feature string) float64 {
-	var total float64
-	for _, b := range benchmark {
-		switch feature {
-		case "title":
-			total += b.TitleHeightPercent
-		case "contrast":
-			total += b.ContrastRatio
-		case "whitespace":
-			total += b.WhitespacePercent
-		}
-	}
-	if len(benchmark) == 0 {
-		return 0
-	}
-	return total / float64(len(benchmark))
 }
 
 // topImprovements produces plain-text suggestions from whichever features
