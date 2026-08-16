@@ -4,29 +4,34 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/hibiken/asynq"
 	"github.com/jmoiron/sqlx"
+	"github.com/redis/go-redis/v9"
 
 	"github.com/Dhanalakshmi-D04/cover_doctor/backend/internal/ai"
 	"github.com/Dhanalakshmi-D04/cover_doctor/backend/internal/billing"
 	"github.com/Dhanalakshmi-D04/cover_doctor/backend/internal/config"
 	"github.com/Dhanalakshmi-D04/cover_doctor/backend/internal/middleware"
 	"github.com/Dhanalakshmi-D04/cover_doctor/backend/internal/scraper"
+	"github.com/Dhanalakshmi-D04/cover_doctor/backend/internal/storage"
 )
 
 // NewRouter wires up all HTTP routes for the API.
-func NewRouter(database *sqlx.DB, cfg *config.Config, aiClient *ai.Client, billingClient *billing.Client, uploadDir string, scraperScheduler ...*scraper.Scheduler) *gin.Engine {
+func NewRouter(database *sqlx.DB, rdb *redis.Client, cfg *config.Config, aiClient *ai.Client, billingClient *billing.Client, s3Client *storage.S3Client, taskQueue *asynq.Client, scraperScheduler ...*scraper.Scheduler) *gin.Engine {
 	if cfg.GinMode != "" {
 		gin.SetMode(cfg.GinMode)
 	}
 
-	router := gin.Default()
+	router := gin.New()
+	router.Use(gin.Recovery())
+	router.Use(middleware.RequestLogger())
 	_ = router.SetTrustedProxies(nil) // explicitly disable proxy trusting by default
 
 	router.Use(middleware.CORS(cfg.AllowedOrigin))
 
 	// Rate limiters for sensitive endpoints
-	authRateLimiter := middleware.NewRateLimiter(15)   // 15 requests/min per IP
-	uploadRateLimiter := middleware.NewRateLimiter(20) // 20 uploads/min per IP
+	authRateLimiter := middleware.NewRateLimiter(rdb, 15)   // 15 requests/min per IP
+	uploadRateLimiter := middleware.NewRateLimiter(rdb, 20) // 20 uploads/min per IP
 
 	var sched *scraper.Scheduler
 	if len(scraperScheduler) > 0 {
@@ -35,7 +40,8 @@ func NewRouter(database *sqlx.DB, cfg *config.Config, aiClient *ai.Client, billi
 
 	handler := &Handler{
 		DB:               database,
-		UploadDir:        uploadDir,
+		Storage:          s3Client,
+		TaskQueue:        taskQueue,
 		Config:           cfg,
 		AI:               aiClient,
 		Billing:          billingClient,
@@ -57,6 +63,7 @@ func NewRouter(database *sqlx.DB, cfg *config.Config, aiClient *ai.Client, billi
 	{
 		protected.POST("/auth/logout", handler.Logout)
 		protected.POST("/upload", uploadRateLimiter.Limit(), handler.Upload)
+		protected.GET("/jobs/:job_id", handler.GetJobStatus)
 		protected.GET("/report/:cover_id", handler.GetReport)
 		protected.GET("/images/:filename", handler.GetCoverImage)
 		protected.POST("/book-projects", handler.CreateBookProject)

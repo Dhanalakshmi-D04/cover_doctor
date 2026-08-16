@@ -13,6 +13,7 @@ type Cover struct {
 	UserID        *string `db:"user_id" json:"user_id,omitempty"`
 	BookProjectID *string `db:"book_project_id" json:"book_project_id,omitempty"`
 	VersionNumber int     `db:"version_number" json:"version_number"`
+	Status        string  `db:"status" json:"status"`
 
 	ImageWidth  int `db:"image_width" json:"image_width"`
 	ImageHeight int `db:"image_height" json:"image_height"`

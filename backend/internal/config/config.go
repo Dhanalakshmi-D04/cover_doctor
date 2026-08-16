@@ -26,6 +26,15 @@ type Config struct {
 	StripeWebhookSecret  string
 	StripePriceIDMonthly string
 	StripePriceIDAnnual  string
+
+	// Redis configuration for job queue and rate limiting
+	RedisURL string
+
+	// S3/MinIO configuration for object storage
+	S3Endpoint  string
+	S3AccessKey string
+	S3SecretKey string
+	S3Bucket    string
 }
 
 // Load reads environment variables into a Config, returning an error only
@@ -44,6 +53,12 @@ func Load() (*Config, error) {
 		StripeWebhookSecret:  os.Getenv("STRIPE_WEBHOOK_SECRET"),
 		StripePriceIDMonthly: os.Getenv("STRIPE_PRICE_ID_MONTHLY"),
 		StripePriceIDAnnual:  os.Getenv("STRIPE_PRICE_ID_ANNUAL"),
+
+		RedisURL:    getEnv("REDIS_URL", "redis://localhost:6379/0"),
+		S3Endpoint:  os.Getenv("S3_ENDPOINT"),
+		S3AccessKey: os.Getenv("S3_ACCESS_KEY"),
+		S3SecretKey: os.Getenv("S3_SECRET_KEY"),
+		S3Bucket:    os.Getenv("S3_BUCKET"),
 	}
 
 	if cfg.DatabaseURL == "" {
@@ -54,6 +69,12 @@ func Load() (*Config, error) {
 	}
 	if len(cfg.JWTSecret) < 32 {
 		return nil, fmt.Errorf("JWT_SECRET must be at least 32 characters long for security")
+	}
+
+	// For S3 configuration, we expect either all to be set (production/local testing) or none (if we are falling back, though we shouldn't fall back anymore). 
+	// We'll require them for the new storage backend.
+	if cfg.S3Endpoint == "" || cfg.S3AccessKey == "" || cfg.S3SecretKey == "" || cfg.S3Bucket == "" {
+		return nil, fmt.Errorf("S3_ENDPOINT, S3_ACCESS_KEY, S3_SECRET_KEY, and S3_BUCKET are required")
 	}
 
 	return cfg, nil

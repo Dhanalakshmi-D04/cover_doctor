@@ -1,0 +1,84 @@
+version: "3.8"
+
+services:
+  # Redis is used for the Asynq background job queue and distributed rate limiting.
+  redis:
+    image: redis:7-alpine
+    container_name: cover_doctor_redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+
+  # MinIO provides S3-compatible object storage for local development.
+  # We use this to test our S3 integration without needing real AWS credentials.
+  minio:
+    image: minio/minio:latest
+    container_name: cover_doctor_minio
+    ports:
+      - "9000:9000" # API port
+      - "9001:9001" # Web console port
+    environment:
+      # Default credentials for local development
+      MINIO_ROOT_USER: "minioadmin"
+      MINIO_ROOT_PASSWORD: "minioadmin"
+    command: server /data --console-address ":9001"
+    restart: unless-stopped
+    volumes:
+      - minio_data:/data
+
+  # Setup container to automatically create the 'covers' bucket in MinIO on startup
+  create_bucket:
+    image: minio/mc
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+      sleep 5;
+      /usr/bin/mc config host add myminio http://minio:9000 minioadmin minioadmin;
+      /usr/bin/mc mb myminio/covers;
+      /usr/bin/mc anonymous set public myminio/covers;
+      exit 0;
+      "
+
+  api:
+    build:
+      context: ./backend
+    container_name: cover_doctor_api
+    ports:
+      - "8080:8080"
+    environment:
+      - DATABASE_URL=postgres://covers:covers@host.docker.internal:5432/covers?sslmode=disable
+      - REDIS_URL=redis://redis:6379/0
+      - S3_ENDPOINT=http://minio:9000
+      - S3_ACCESS_KEY=minioadmin
+      - S3_SECRET_KEY=minioadmin
+      - S3_BUCKET=covers
+    depends_on:
+      - redis
+      - minio
+    restart: unless-stopped
+    command: ["/api"]
+
+  worker:
+    build:
+      context: ./backend
+    container_name: cover_doctor_worker
+    environment:
+      - DATABASE_URL=postgres://covers:covers@host.docker.internal:5432/covers?sslmode=disable
+      - REDIS_URL=redis://redis:6379/0
+      - S3_ENDPOINT=http://minio:9000
+      - S3_ACCESS_KEY=minioadmin
+      - S3_SECRET_KEY=minioadmin
+      - S3_BUCKET=covers
+    depends_on:
+      - redis
+      - minio
+    restart: unless-stopped
+    command: ["/worker"]
+
+volumes:
+  redis_data:
+  minio_data:

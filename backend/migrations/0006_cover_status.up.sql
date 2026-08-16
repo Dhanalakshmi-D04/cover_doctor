@@ -1,0 +1,1 @@
+ALTER TABLE covers ADD COLUMN status VARCHAR(50) DEFAULT 'complete' NOT NULL;

@@ -8,7 +8,7 @@ import { motion, useScroll, useTransform, useSpring, useInView, AnimatePresence 
 
 /* ── Palette ── */
 const C = {
-  bg:           '#F5F0E6',
+  bg:           'var(--bg-app)',
   ink:          '#29251F',
   inkLight:     '#695F52',
   inkMuted:     '#9E8E7C',
@@ -41,12 +41,12 @@ function SignInContent() {
         <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'linear-gradient(135deg, #1B4332, #2D6A4F)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 0.6rem', boxShadow: '0 4px 16px rgba(27,67,50,0.3)' }}>
           <span style={{ fontSize: '1.2rem' }}>📖</span>
         </div>
-        <div style={{ fontSize: '0.62rem', fontWeight: 700, letterSpacing: '0.12em', color: '#6B7D5B', textTransform: 'uppercase' }}>BookCover Doctor</div>
+        <div style={{ fontSize: '0.62rem', fontWeight: 700, letterSpacing: '0.12em', color: '#6B7D5B', textTransform: 'uppercase' }}>Cover Doctor</div>
         <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#29251F', fontFamily: 'Playfair Display, serif', marginTop: '0.2rem' }}>Welcome back</div>
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
         {[{ icon: '👤', label: 'Create Account', sub: 'name · email · password' }, { icon: '🔑', label: 'Secure Login', sub: 'authenticated session' }, { icon: '🏠', label: 'Enter Dashboard', sub: 'your workspace awaits' }].map((item, i) => (
-          <motion.div key={i} initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 + i * 0.12, duration: 0.4 }} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 0.6rem', borderRadius: 8, background: i === 1 ? 'rgba(27,67,50,0.08)' : 'rgba(245,240,230,0.7)', border: `1px solid ${i === 1 ? 'rgba(27,67,50,0.2)' : 'rgba(194,161,90,0.2)'}` }}>
+          <motion.div key={i} initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 + i * 0.12, duration: 0.4 }} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 0.6rem', borderRadius: 8, background: i === 1 ? 'rgba(27,67,50,0.08)' : 'rgba(230,221,215,0.7)', border: `1px solid ${i === 1 ? 'rgba(27,67,50,0.2)' : 'rgba(194,161,90,0.2)'}` }}>
             <span style={{ fontSize: '0.95rem' }}>{item.icon}</span>
             <div>
               <div style={{ fontSize: '0.7rem', fontWeight: 700, color: '#29251F' }}>{item.label}</div>
@@ -55,10 +55,10 @@ function SignInContent() {
           </motion.div>
         ))}
       </div>
-      <div style={{ marginTop: 'auto', padding: '0.65rem', borderRadius: 10, background: 'rgba(255,255,255,0.7)', border: '1px solid rgba(194,161,90,0.3)' }}>
+      <div style={{ marginTop: 'auto', padding: '0.65rem', borderRadius: 10, background: 'rgba(230,221,215,0.7)', border: '1px solid rgba(194,161,90,0.3)' }}>
         <div style={{ fontSize: '0.58rem', color: '#9E8E7C', fontWeight: 600, marginBottom: '0.4rem', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Quick Sign Up</div>
         {['Email address', 'Password'].map((ph, i) => (
-          <div key={i} onClick={() => setActiveField(i)} style={{ height: 26, borderRadius: 5, border: `1px solid ${activeField === i ? '#1B4332' : 'rgba(107,125,91,0.3)'}`, background: '#FFF', display: 'flex', alignItems: 'center', padding: '0 0.5rem', cursor: 'pointer', marginBottom: '0.3rem', transition: 'all 0.2s' }}>
+          <div key={i} onClick={() => setActiveField(i)} style={{ height: 26, borderRadius: 5, border: `1px solid ${activeField === i ? '#1B4332' : 'rgba(107,125,91,0.3)'}`, background: 'var(--bg-surface)', display: 'flex', alignItems: 'center', padding: '0 0.5rem', cursor: 'pointer', marginBottom: '0.3rem', transition: 'all 0.2s' }}>
             <span style={{ fontSize: '0.6rem', color: '#9E8E7C' }}>{ph}</span>
           </div>
         ))}
@@ -91,19 +91,19 @@ function UploadContent() {
         <div style={{ fontSize: '0.62rem', fontWeight: 700, letterSpacing: '0.12em', color: '#6B7D5B', textTransform: 'uppercase' }}>Studio Dashboard</div>
         <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#29251F', fontFamily: 'Playfair Display, serif', marginTop: '0.2rem' }}>Your Cover Studio</div>
       </div>
-      <div style={{ padding: '0.5rem 0.65rem', borderRadius: 8, background: 'rgba(255,255,255,0.7)', border: '1px solid rgba(194,161,90,0.3)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+      <div style={{ padding: '0.5rem 0.65rem', borderRadius: 8, background: 'rgba(230,221,215,0.7)', border: '1px solid rgba(194,161,90,0.3)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
         <span style={{ fontSize: '0.95rem' }}>📁</span>
         <div>
           <div style={{ fontSize: '0.68rem', fontWeight: 700, color: '#29251F' }}>My Novel Project</div>
           <div style={{ fontSize: '0.56rem', color: '#9E8E7C' }}>Created today · 1 cover</div>
         </div>
       </div>
-      <div style={{ border: `2px dashed ${uploaded ? '#1B4332' : 'rgba(107,125,91,0.4)'}`, borderRadius: 10, padding: '0.9rem', textAlign: 'center', background: uploaded ? 'rgba(27,67,50,0.06)' : 'rgba(245,240,230,0.5)', transition: 'all 0.5s' }}>
+      <div style={{ border: `2px dashed ${uploaded ? '#1B4332' : 'rgba(107,125,91,0.4)'}`, borderRadius: 10, padding: '0.9rem', textAlign: 'center', background: uploaded ? 'rgba(27,67,50,0.06)' : 'rgba(230,221,215,0.5)', transition: 'all 0.5s' }}>
         <AnimatePresence mode="wait">
           {!uploaded ? (
             <motion.div key="drop" exit={{ opacity: 0 }}>
               <div style={{ fontSize: '1.5rem', marginBottom: '0.25rem' }}>☁️</div>
-              <div style={{ fontSize: '0.65rem', fontWeight: 700, color: '#29251F' }}>Drag & Drop Cover</div>
+              <div style={{ fontSize: '0.65rem', fontWeight: 700, color: '#29251F' }}>Drag &amp; Drop Cover</div>
               <div style={{ fontSize: '0.56rem', color: '#9E8E7C' }}>JPG · PNG · PDF</div>
               <div style={{ marginTop: '0.5rem', height: 5, borderRadius: 99, background: 'rgba(0,0,0,0.08)', overflow: 'hidden' }}>
                 <div style={{ height: '100%', borderRadius: 99, background: 'linear-gradient(90deg, #1B4332, #2D6A4F)', width: `${progress}%`, transition: 'width 0.2s' }} />
@@ -171,14 +171,14 @@ function ExtractContent() {
         {Object.entries(boxes).map(([key, b]) => (
           detected.includes(key) && (
             <motion.div key={key} initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ position: 'absolute', top: b.top, left: b.left, width: b.width, height: b.height, border: `2px solid ${b.color}`, borderRadius: 3, boxShadow: `0 0 6px ${b.color}66`, pointerEvents: 'none' }}>
-              <div style={{ position: 'absolute', top: -13, left: 0, fontSize: '0.45rem', fontWeight: 800, color: b.color, background: 'rgba(255,255,255,0.9)', padding: '1px 3px', borderRadius: 3, textTransform: 'uppercase', whiteSpace: 'nowrap' }}>{key}</div>
+              <div style={{ position: 'absolute', top: -13, left: 0, fontSize: '0.45rem', fontWeight: 800, color: b.color, background: 'rgba(230,221,215,0.9)', padding: '1px 3px', borderRadius: 3, textTransform: 'uppercase', whiteSpace: 'nowrap' }}>{key}</div>
             </motion.div>
           )
         ))}
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
         {[{ key: 'title', label: 'Title', value: '"The Last Chapter"', color: '#1B4332' }, { key: 'subtitle', label: 'Subtitle', value: '"A Story…"', color: '#C2A15A' }, { key: 'author', label: 'Author', value: '"Jane Doe"', color: '#8B5E3C' }].map(item => (
-          <motion.div key={item.key} animate={{ opacity: detected.includes(item.key) ? 1 : 0.25 }} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.3rem 0.5rem', borderRadius: 6, background: 'rgba(245,240,230,0.7)', border: `1px solid ${detected.includes(item.key) ? item.color + '55' : 'transparent'}`, transition: 'all 0.4s' }}>
+          <motion.div key={item.key} animate={{ opacity: detected.includes(item.key) ? 1 : 0.25 }} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.3rem 0.5rem', borderRadius: 6, background: 'rgba(230,221,215,0.7)', border: `1px solid ${detected.includes(item.key) ? item.color + '55' : 'transparent'}`, transition: 'all 0.4s' }}>
             <div style={{ width: 7, height: 7, borderRadius: '50%', background: item.color, flexShrink: 0 }} />
             <span style={{ fontSize: '0.6rem', fontWeight: 700, color: '#695F52' }}>{item.label}</span>
             <span style={{ fontSize: '0.56rem', color: '#9E8E7C', marginLeft: 'auto' }}>{item.value}</span>
@@ -289,7 +289,7 @@ function ImproveContent() {
     <div style={{ padding: '1.2rem', display: 'flex', flexDirection: 'column', gap: '0.8rem', height: '100%' }}>
       <div style={{ textAlign: 'center' }}>
         <div style={{ fontSize: '0.62rem', fontWeight: 700, letterSpacing: '0.12em', color: '#6B7D5B', textTransform: 'uppercase' }}>Improvement Loop</div>
-        <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#29251F', fontFamily: 'Playfair Display, serif', marginTop: '0.2rem' }}>Before & After</div>
+        <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#29251F', fontFamily: 'Playfair Display, serif', marginTop: '0.2rem' }}>Before &amp; After</div>
       </div>
       <div style={{ display: 'flex', gap: '0.4rem' }}>
         {[{ label: 'Original', score: 61, color: '#8B6F52', emoji: '📕' }, { label: 'Improved', score: 84, color: '#1B4332', emoji: '📗' }].map((item, i) => (
@@ -324,21 +324,15 @@ const STEPS = [
   { id: 1, side: 'left',  chapter: '01', title: 'Sign In / Sign Up',            tagline: 'Start your journey',               spine_label: 'SIGN IN',  content: <SignInContent /> },
   { id: 2, side: 'right', chapter: '02', title: 'Create Project & Upload',       tagline: 'Bring your cover to the studio',   spine_label: 'UPLOAD',   content: <UploadContent /> },
   { id: 3, side: 'left',  chapter: '03', title: 'Extract Cover Information',     tagline: 'Read the structure of your cover', spine_label: 'EXTRACT',  content: <ExtractContent /> },
-  { id: 4, side: 'right', chapter: '04', title: 'Measure & Score',               tagline: 'Measure what matters',             spine_label: 'MEASURE',  content: <MeasureContent /> },
+  { id: 4, side: 'right', chapter: '04', title: 'Measure & Compare',             tagline: 'Measure what matters',             spine_label: 'MEASURE',  content: <MeasureContent /> },
   { id: 5, side: 'left',  chapter: '05', title: 'Report & Insights',             tagline: 'Understand your cover',            spine_label: 'REPORT',   content: <ReportContent /> },
   { id: 6, side: 'right', chapter: '06', title: 'Improve & Re-upload',           tagline: 'Make your cover better',           spine_label: 'IMPROVE',  content: <ImproveContent /> },
 ];
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   3D Book Component — Fixed geometry
-   Structure: Spine (left edge) + Pages (behind cover) + Cover (full width, opens right→left)
+   3D Book Component — UNCHANGED geometry & animation
 ───────────────────────────────────────────────────────────────────────────── */
 function Book3D({ step, theme, isLeft, scrollProgress }) {
-  /*
-   * Left-side books:  spine on left, cover opens LEFTWARD  (-170°) around left edge
-   * Right-side books: spine on right, cover opens RIGHTWARD (+170°) around right edge
-   *   → cover always folds AWAY from the center text panel, never overlapping it.
-   */
   const openDeg = useTransform(
     scrollProgress,
     [0.08, 0.38, 0.65, 0.94],
@@ -356,9 +350,9 @@ function Book3D({ step, theme, isLeft, scrollProgress }) {
   const springContent = useSpring(contentOpacity, { stiffness: 80, damping: 28 });
 
   /* Proper hardcover book proportions */
-  const SPINE_W = 20;   /* visible spine thickness */
-  const COVER_W = 168;  /* full cover/page width  */
-  const H       = 240;  /* book height            */
+  const SPINE_W = 20;
+  const COVER_W = 168;
+  const H       = 240;
 
   return (
     <motion.div
@@ -366,39 +360,28 @@ function Book3D({ step, theme, isLeft, scrollProgress }) {
         opacity: springOpacity,
         y: springY,
         scale: springScale,
-        /* perspective must wrap the preserve-3d child */
         perspective: 1100,
-        /* right-side books tilt toward center; shift origin accordingly */
         perspectiveOrigin: isLeft ? '60% 50%' : '40% 50%',
         display: 'inline-block',
       }}
     >
-      {/* ── Outer group giving whole book a subtle angled tilt ── */}
       <div
         style={{
           width: SPINE_W + COVER_W,
           height: H,
           position: 'relative',
           transformStyle: 'preserve-3d',
-          /* mirror tilt direction: left books lean right, right books lean left (toward center) */
           transform: isLeft ? 'rotateX(3deg) rotateY(-6deg)' : 'rotateX(3deg) rotateY(6deg)',
-          /* mirror shadow: left books shadow right, right books shadow left (inward) */
           filter: isLeft
             ? 'drop-shadow(-10px 18px 36px rgba(41,37,31,0.38))'
             : 'drop-shadow(10px 18px 36px rgba(41,37,31,0.38))',
         }}
       >
-        {/*
-         * ── 1. Spine ──
-         * Left books:  spine on the LEFT  (near viewport left edge)
-         * Right books: spine on the RIGHT (near viewport right edge, away from text)
-         */}
+        {/* Spine */}
         <div
           style={{
             position: 'absolute',
-            ...(isLeft
-              ? { left: 0 }
-              : { right: 0 }),
+            ...(isLeft ? { left: 0 } : { right: 0 }),
             top: 0,
             width: SPINE_W,
             height: H,
@@ -429,17 +412,11 @@ function Book3D({ step, theme, isLeft, scrollProgress }) {
           </div>
         </div>
 
-        {/*
-         * ── 2. Pages block ──
-         * Left books:  pages to the RIGHT of the spine
-         * Right books: pages to the LEFT  of the spine
-         */}
+        {/* Pages block */}
         <div
           style={{
             position: 'absolute',
-            ...(isLeft
-              ? { left: SPINE_W }
-              : { left: 0 }),
+            ...(isLeft ? { left: SPINE_W } : { left: 0 }),
             top: 0,
             width: COVER_W,
             height: H,
@@ -452,7 +429,6 @@ function Book3D({ step, theme, isLeft, scrollProgress }) {
               : 'inset -4px 0 10px rgba(0,0,0,0.08)',
           }}
         >
-          {/* Faint ruled lines (visible briefly before content appears) */}
           {Array.from({ length: 12 }).map((_, i) => (
             <div
               key={i}
@@ -467,25 +443,16 @@ function Book3D({ step, theme, isLeft, scrollProgress }) {
               }}
             />
           ))}
-
-          {/* Content fades in as cover opens */}
           <motion.div style={{ opacity: springContent, height: '100%', overflow: 'hidden' }}>
             {step.content}
           </motion.div>
         </div>
 
-        {/*
-         * ── 3. Front cover ──
-         * Left books:  cover sits right of spine, opens around LEFT  edge (-170°)
-         * Right books: cover sits left  of spine, opens around RIGHT edge (+170°)
-         * Both covers fold AWAY from the center text panel.
-         */}
+        {/* Front cover */}
         <motion.div
           style={{
             position: 'absolute',
-            ...(isLeft
-              ? { left: SPINE_W }
-              : { left: 0 }),
+            ...(isLeft ? { left: SPINE_W } : { left: 0 }),
             top: 0,
             width: COVER_W,
             height: H,
@@ -495,7 +462,6 @@ function Book3D({ step, theme, isLeft, scrollProgress }) {
             zIndex: 10,
           }}
         >
-          {/* ─ Front face of cover (closed state) ─ */}
           <div
             style={{
               position: 'absolute',
@@ -514,26 +480,17 @@ function Book3D({ step, theme, isLeft, scrollProgress }) {
                 : '-3px 0 10px rgba(0,0,0,0.18)',
             }}
           >
-            {/* Top rule */}
             <div style={{ position: 'absolute', top: 13, left: 13, right: 13, height: 1, background: `${theme.accent}99` }} />
-            {/* Bottom rule */}
             <div style={{ position: 'absolute', bottom: 13, left: 13, right: 13, height: 1, background: `${theme.accent}99` }} />
-            {/* Corner ornaments */}
             <div style={{ position: 'absolute', top: 9, left: 9, width: 10, height: 10, borderTop: `2px solid ${theme.accent}88`, borderLeft: `2px solid ${theme.accent}88` }} />
             <div style={{ position: 'absolute', top: 9, right: 9, width: 10, height: 10, borderTop: `2px solid ${theme.accent}88`, borderRight: `2px solid ${theme.accent}88` }} />
             <div style={{ position: 'absolute', bottom: 9, left: 9, width: 10, height: 10, borderBottom: `2px solid ${theme.accent}88`, borderLeft: `2px solid ${theme.accent}88` }} />
             <div style={{ position: 'absolute', bottom: 9, right: 9, width: 10, height: 10, borderBottom: `2px solid ${theme.accent}88`, borderRight: `2px solid ${theme.accent}88` }} />
-            {/* Chapter */}
             <div style={{ fontSize: '0.5rem', fontWeight: 800, letterSpacing: '0.22em', color: `${theme.accent}`, textTransform: 'uppercase', marginBottom: '0.55rem', opacity: 0.9 }}>{step.chapter}</div>
-            {/* Title */}
-            <div style={{ fontSize: '0.88rem', fontWeight: 800, fontFamily: 'Playfair Display, serif', color: theme.text, textAlign: 'center', lineHeight: 1.24, maxWidth: 130 }}>{step.title}</div>
-            {/* Divider */}
+            <div style={{ fontSize: '0.88rem', fontWeight: 800, fontFamily: 'Playfair Display, Georgia, serif', color: theme.text, textAlign: 'center', lineHeight: 1.24, maxWidth: 130 }}>{step.title}</div>
             <div style={{ width: 32, height: 2, background: theme.accent, borderRadius: 1, margin: '0.55rem auto', opacity: 0.9 }} />
-            {/* Tagline */}
             <div style={{ fontSize: '0.54rem', color: `${theme.text}bb`, textAlign: 'center', fontStyle: 'italic', lineHeight: 1.4, maxWidth: 120 }}>{step.tagline}</div>
           </div>
-
-          {/* ─ Inner face of cover (seen from behind when book is open) ─ */}
           <div
             style={{
               position: 'absolute',
@@ -546,7 +503,7 @@ function Book3D({ step, theme, isLeft, scrollProgress }) {
           />
         </motion.div>
 
-        {/* ── 4. Page-thickness top edge illusion ── */}
+        {/* Page-thickness top edge illusion */}
         <div
           style={{
             position: 'absolute',
@@ -558,7 +515,6 @@ function Book3D({ step, theme, isLeft, scrollProgress }) {
             opacity: 0.8,
           }}
         />
-        {/* Bottom edge */}
         <div
           style={{
             position: 'absolute',
@@ -576,7 +532,7 @@ function Book3D({ step, theme, isLeft, scrollProgress }) {
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   Text panel
+   Text panel — UNCHANGED animation
 ───────────────────────────────────────────────────────────────────────────── */
 function TextPanel({ step, alignRight, scrollProgress }) {
   const x = useTransform(scrollProgress, [0.05, 0.35], [alignRight ? -30 : 30, 0]);
@@ -584,11 +540,11 @@ function TextPanel({ step, alignRight, scrollProgress }) {
   const springX = useSpring(x, { stiffness: 80, damping: 22 });
 
   return (
-    <motion.div style={{ maxWidth: 300, opacity, x: springX, textAlign: alignRight ? 'right' : 'left' }}>
-      <div style={{ fontSize: '0.62rem', fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', color: '#6B7D5B', marginBottom: '0.5rem' }}>Chapter {step.chapter}</div>
-      <h2 style={{ fontSize: 'clamp(1.3rem, 2.5vw, 1.75rem)', fontWeight: 700, fontFamily: 'Playfair Display, Georgia, serif', color: '#29251F', lineHeight: 1.18, marginBottom: '0.65rem' }}>{step.title}</h2>
-      <div style={{ width: 34, height: 3, borderRadius: 2, background: '#C2A15A', marginBottom: '0.65rem', marginLeft: alignRight ? 'auto' : 0 }} />
-      <p style={{ fontSize: '0.9rem', color: '#695F52', lineHeight: 1.65, fontStyle: 'italic', fontFamily: 'Playfair Display, Georgia, serif' }}>"{step.tagline}"</p>
+    <motion.div style={{ maxWidth: 360, opacity, x: springX, textAlign: alignRight ? 'right' : 'left' }}>
+      <div style={{ fontSize: '0.6rem', fontWeight: 800, letterSpacing: '0.24em', textTransform: 'uppercase', color: '#8b9a7d', marginBottom: '0.5rem' }}>Chapter {step.chapter}</div>
+      <h2 style={{ fontSize: 'clamp(1.4rem, 2.8vw, 2.1rem)', fontWeight: 700, fontFamily: 'Playfair Display, Georgia, serif', color: '#4a3f35', lineHeight: 1.18, marginBottom: '0.65rem' }}>{step.title}</h2>
+      <div style={{ width: 34, height: 2, borderRadius: 2, background: '#a07a61', marginBottom: '0.7rem', marginLeft: alignRight ? 'auto' : 0, opacity: 0.75 }} />
+      <p style={{ fontSize: '0.95rem', color: '#2d3e34', lineHeight: 1.7, fontStyle: 'italic', fontFamily: 'Playfair Display, Georgia, serif', opacity: 0.88 }}>"{step.tagline}"</p>
     </motion.div>
   );
 }
@@ -599,11 +555,11 @@ function TextPanel({ step, alignRight, scrollProgress }) {
 function TimelineNode({ index, isActive, theme }) {
   return (
     <motion.div
-      animate={{ scale: isActive ? 1.12 : 1, backgroundColor: isActive ? theme.cover : '#EDE7DB', boxShadow: isActive ? `0 0 22px ${theme.cover}55, 0 0 0 5px ${theme.accent}33` : '0 2px 8px rgba(0,0,0,0.08)' }}
+      animate={{ scale: isActive ? 1.12 : 1, backgroundColor: isActive ? theme.cover : '#f0ede5', boxShadow: isActive ? `0 0 22px ${theme.cover}55, 0 0 0 5px ${theme.accent}33` : '0 2px 8px rgba(88,67,56,0.12)' }}
       transition={{ duration: 0.45 }}
-      style={{ width: 52, height: 52, borderRadius: '50%', border: `2px solid ${isActive ? theme.accent : '#D5C9B5'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, zIndex: 5 }}
+      style={{ width: 52, height: 52, borderRadius: '50%', border: `2px solid ${isActive ? theme.accent : '#dcd3c7'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, zIndex: 5 }}
     >
-      <motion.span animate={{ color: isActive ? theme.accent : '#9E8E7C' }} style={{ fontSize: '0.78rem', fontWeight: 800, fontFamily: 'Playfair Display, serif' }}>
+      <motion.span animate={{ color: isActive ? theme.accent : '#8b9a7d' }} style={{ fontSize: '0.78rem', fontWeight: 800, fontFamily: 'Playfair Display, serif' }}>
         {String(index + 1).padStart(2, '0')}
       </motion.span>
     </motion.div>
@@ -611,7 +567,79 @@ function TimelineNode({ index, isActive, theme }) {
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   Book section
+   BotanicalDecor — subtle SVG botanical shapes, no text, pure visual accent
+─────────────────────────────────────────────────────────────────────────────── */
+const BOTANICAL_SHAPES = [
+  (color) => (
+    <svg width="60" height="80" viewBox="0 0 60 80" fill="none">
+      <path d="M30 75 Q20 55 12 38 Q6 24 14 14 Q22 4 30 8 Q38 4 46 14 Q54 24 48 38 Q40 55 30 75Z" fill={color} opacity="0.12" />
+      <path d="M30 75 L30 8" stroke={color} strokeWidth="1" opacity="0.18" />
+      <path d="M30 50 Q20 40 14 32" stroke={color} strokeWidth="0.8" opacity="0.14" />
+      <path d="M30 50 Q40 40 46 32" stroke={color} strokeWidth="0.8" opacity="0.14" />
+      <path d="M30 35 Q22 27 18 20" stroke={color} strokeWidth="0.8" opacity="0.12" />
+      <path d="M30 35 Q38 27 42 20" stroke={color} strokeWidth="0.8" opacity="0.12" />
+    </svg>
+  ),
+  (color) => (
+    <svg width="60" height="80" viewBox="0 0 60 80" fill="none">
+      {[[10,20],[20,14],[30,10],[40,14],[50,20],[14,34],[26,28],[38,28],[46,34],[10,50],[20,56],[30,60],[40,56],[50,50]].map(([cx,cy],i) => (
+        <circle key={i} cx={cx} cy={cy} r="2.2" fill={color} opacity={0.1 + (i % 3) * 0.05} />
+      ))}
+    </svg>
+  ),
+  /* Contour arcs */
+  (color) => (
+    <svg width="60" height="90" viewBox="0 0 60 90" fill="none">
+      <path d="M5 85 Q30 50 55 15" stroke={color} strokeWidth="1" opacity="0.12" fill="none" />
+      <path d="M5 70 Q30 45 55 25" stroke={color} strokeWidth="0.8" opacity="0.10" fill="none" />
+      <path d="M5 55 Q30 40 55 35" stroke={color} strokeWidth="0.6" opacity="0.08" fill="none" />
+      <circle cx="10" cy="80" r="3" fill={color} opacity="0.12" />
+      <circle cx="30" cy="50" r="2" fill={color} opacity="0.10" />
+      <circle cx="50" cy="20" r="3" fill={color} opacity="0.12" />
+    </svg>
+  ),
+  /* Stem + berries */
+  (color) => (
+    <svg width="50" height="90" viewBox="0 0 50 90" fill="none">
+      <path d="M25 88 L25 40" stroke={color} strokeWidth="1.2" opacity="0.18" />
+      <path d="M25 70 Q15 58 10 46" stroke={color} strokeWidth="1" opacity="0.14" />
+      <path d="M25 70 Q35 58 40 46" stroke={color} strokeWidth="1" opacity="0.14" />
+      <path d="M25 52 Q16 42 12 32" stroke={color} strokeWidth="0.9" opacity="0.12" />
+      <path d="M25 52 Q34 42 38 32" stroke={color} strokeWidth="0.9" opacity="0.12" />
+      <circle cx="10" cy="44" r="4" fill={color} opacity="0.16" />
+      <circle cx="40" cy="44" r="4" fill={color} opacity="0.16" />
+      <circle cx="25" cy="24" r="4" fill={color} opacity="0.18" />
+    </svg>
+  ),
+  /* Thin rings */
+  (color) => (
+    <svg width="70" height="70" viewBox="0 0 70 70" fill="none">
+      <circle cx="35" cy="35" r="30" stroke={color} strokeWidth="0.8" opacity="0.10" />
+      <circle cx="35" cy="35" r="22" stroke={color} strokeWidth="0.8" opacity="0.09" />
+      <circle cx="35" cy="35" r="14" stroke={color} strokeWidth="0.8" opacity="0.08" />
+      <circle cx="35" cy="35" r="6" fill={color} opacity="0.12" />
+    </svg>
+  ),
+];
+
+function BotanicalDecor({ index, theme, align }) {
+  const ShapeEl = BOTANICAL_SHAPES[index % BOTANICAL_SHAPES.length];
+  return (
+    <div style={{
+      display: 'flex',
+      justifyContent: align === 'left' ? 'flex-end' : 'flex-start',
+      alignItems: 'center',
+      width: '100%',
+      padding: align === 'left' ? '0 1rem 0 0' : '0 0 0 1rem',
+      opacity: 0.75,
+    }}>
+      {ShapeEl(theme.cover)}
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Book section — 5-column grid; outer cols hold SideDecor
 ───────────────────────────────────────────────────────────────────────────── */
 function BookSection({ step, index, theme }) {
   const ref = useRef(null);
@@ -624,7 +652,6 @@ function BookSection({ step, index, theme }) {
       ref={ref}
       style={{
         position: 'relative',
-        /* Tight sections — no 100vh gaps */
         padding: '4.5rem 0',
         display: 'flex',
         alignItems: 'center',
@@ -632,35 +659,33 @@ function BookSection({ step, index, theme }) {
         background: index % 2 === 0
           ? 'transparent'
           : 'radial-gradient(ellipse at 80% 50%, rgba(194,161,90,0.04) 0%, transparent 65%)',
-        /* allow 3-D book shadows to breathe without clipping */
         overflow: 'visible',
       }}
     >
-      <div
-        className="wf-book-section-grid"
-        style={{ width: '100%', maxWidth: 1080, margin: '0 auto', padding: '0 2rem', overflow: 'visible' }}
-      >
-        {/* Left column */}
+      <div className="wf-book-section-grid" style={{ width: '100%', overflow: 'visible' }}>
+        <div className="wf-decor-col">
+          <BotanicalDecor index={index} theme={theme} align="left" />
+        </div>
+
+        {/* wf-left-col — unchanged */}
         <div className="wf-left-col" style={{ display: 'flex', justifyContent: 'flex-end', overflow: 'visible' }}>
           {isLeft
             ? <Book3D step={step} theme={theme} isLeft={true} scrollProgress={scrollYProgress} />
             : <TextPanel step={step} alignRight={true} scrollProgress={scrollYProgress} />}
         </div>
 
-        {/* Timeline node */}
+        {/* wf-timeline-node-wrap — unchanged */}
         <div className="wf-timeline-node-wrap" style={{ display: 'flex', justifyContent: 'center' }}>
           <TimelineNode index={index} isActive={isInView} theme={theme} />
         </div>
 
-        {/* Right column — extra right padding so 3-D book shadow isn't clipped */}
+        {/* wf-right-col — unchanged */}
         <div
           className="wf-right-col"
           style={{
             display: 'flex',
             justifyContent: 'flex-start',
             overflow: 'visible',
-            /* right-side books have a 3-D tilt + drop-shadow that bleeds right;
-               pad enough space so the shadow isn't cut off */
             paddingRight: !isLeft ? '2.5rem' : 0,
           }}
         >
@@ -669,13 +694,16 @@ function BookSection({ step, index, theme }) {
             : <Book3D step={step} theme={theme} isLeft={false} scrollProgress={scrollYProgress} />}
         </div>
 
+        <div className="wf-decor-col">
+          <BotanicalDecor index={index} theme={theme} align="right" />
+        </div>
       </div>
     </section>
   );
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   Vertical timeline line
+   Vertical timeline line — UNCHANGED
 ───────────────────────────────────────────────────────────────────────────── */
 function TimelineLine({ containerRef }) {
   const { scrollYProgress } = useScroll({ target: containerRef, offset: ['start start', 'end end'] });
@@ -694,29 +722,32 @@ function TimelineLine({ containerRef }) {
 ───────────────────────────────────────────────────────────────────────────── */
 function WorkflowHero() {
   return (
-    <div style={{ textAlign: 'center', padding: '5rem 2rem 3.5rem', position: 'relative' }}>
-      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', marginBottom: '1.4rem', color: '#6B7D5B' }}>
-        <div style={{ width: 52, height: 1, background: 'linear-gradient(90deg, transparent, #C2A15A)' }} />
-        <span style={{ fontSize: '1.4rem' }}>📚</span>
-        <div style={{ width: 52, height: 1, background: 'linear-gradient(90deg, #C2A15A, transparent)' }} />
+    <div style={{ textAlign: 'center', padding: '5.5rem 2rem 4rem', position: 'relative' }}>
+      {/* Decorative top bar matching palette */}
+      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', marginBottom: '1.4rem' }}>
+        <div style={{ width: 64, height: 1, background: 'linear-gradient(90deg, transparent, var(--color-sage))' }} />
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+          <path d="M10 2 L12 8 L18 8 L13 12 L15 18 L10 14 L5 18 L7 12 L2 8 L8 8Z" fill="var(--color-forest)" opacity="0.7" />
+        </svg>
+        <div style={{ width: 64, height: 1, background: 'linear-gradient(90deg, var(--color-sage), transparent)' }} />
       </motion.div>
 
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2, duration: 0.6 }} style={{ fontSize: '0.7rem', fontWeight: 800, letterSpacing: '0.22em', textTransform: 'uppercase', color: '#6B7D5B', marginBottom: '0.7rem' }}>
-        BookCover Doctor — Workflow
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2, duration: 0.6 }} style={{ fontSize: '0.65rem', fontWeight: 800, letterSpacing: '0.28em', textTransform: 'uppercase', color: 'var(--color-sage)', marginBottom: '0.75rem' }}>
+        Cover Doctor · Your Workflow
       </motion.div>
 
-      <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3, duration: 0.8, ease: [0.16, 1, 0.3, 1] }} style={{ fontSize: 'clamp(2.2rem, 5.5vw, 4rem)', fontWeight: 700, fontFamily: 'Playfair Display, Georgia, serif', color: '#29251F', lineHeight: 1.12, marginBottom: '1rem', letterSpacing: '-0.01em' }}>
+      <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3, duration: 0.8, ease: [0.16, 1, 0.3, 1] }} style={{ fontSize: 'clamp(2.2rem, 5.5vw, 4rem)', fontWeight: 700, fontFamily: 'Playfair Display, Georgia, serif', color: 'var(--color-brown)', lineHeight: 1.12, marginBottom: '1rem', letterSpacing: '-0.01em' }}>
         From Upload to<br />Actionable Insights
       </motion.h1>
 
-      <motion.div initial={{ scaleX: 0 }} animate={{ scaleX: 1 }} transition={{ delay: 0.55, duration: 0.7 }} style={{ width: 60, height: 3, background: '#C2A15A', borderRadius: 2, margin: '0 auto 1.15rem' }} />
+      <motion.div initial={{ scaleX: 0 }} animate={{ scaleX: 1 }} transition={{ delay: 0.55, duration: 0.7 }} style={{ width: 60, height: 2, background: 'var(--color-russet)', borderRadius: 2, margin: '0 auto 1.25rem', opacity: 0.7 }} />
 
-      <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.7, duration: 0.7 }} style={{ fontSize: '0.95rem', color: '#695F52', maxWidth: 500, margin: '0 auto 2.4rem', lineHeight: 1.65 }}>
+      <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.7, duration: 0.7 }} style={{ fontSize: '0.95rem', color: 'var(--color-forest)', maxWidth: 520, margin: '0 auto 2.6rem', lineHeight: 1.7, opacity: 0.85 }}>
         Scroll through the story. Each book reveals one chapter of your cover's journey — from first upload to a better score.
       </motion.p>
 
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.05, duration: 0.6 }} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.3rem', color: '#9E8E7C' }}>
-        <span style={{ fontSize: '0.65rem', letterSpacing: '0.12em', textTransform: 'uppercase' }}>Scroll to begin</span>
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.05, duration: 0.6 }} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.3rem', color: 'var(--color-sage)' }}>
+        <span style={{ fontSize: '0.65rem', letterSpacing: '0.14em', textTransform: 'uppercase' }}>Scroll to begin</span>
         <motion.div animate={{ y: [0, 6, 0] }} transition={{ repeat: Infinity, duration: 1.6, ease: 'easeInOut' }} style={{ fontSize: '0.9rem' }}>↓</motion.div>
       </motion.div>
     </div>
@@ -742,85 +773,90 @@ function FinalScene() {
       <motion.div initial={{ opacity: 0, y: 20 }} animate={isInView ? { opacity: 1, y: 0 } : {}} transition={{ delay: 0.4, duration: 0.8 }} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap', gap: '0.28rem', marginBottom: '3.5rem' }}>
         {flowSteps.map((label, i) => (
           <React.Fragment key={i}>
-            <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={isInView ? { opacity: 1, scale: 1 } : {}} transition={{ delay: 0.5 + i * 0.08, duration: 0.4 }} style={{ padding: '0.38rem 0.85rem', borderRadius: 99, background: BOOK_THEMES[Math.min(i, 5)].cover, color: '#fff', fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.03em' }}>{label}</motion.div>
-            {i < flowSteps.length - 1 && <motion.span initial={{ opacity: 0 }} animate={isInView ? { opacity: 1 } : {}} transition={{ delay: 0.6 + i * 0.08 }} style={{ fontSize: '0.8rem', color: '#C2A15A', fontWeight: 700 }}>→</motion.span>}
+            <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={isInView ? { opacity: 1, scale: 1 } : {}} transition={{ delay: 0.5 + i * 0.08, duration: 0.4 }} style={{ padding: '0.38rem 0.85rem', borderRadius: 99, background: BOOK_THEMES[Math.min(i, 5)].cover, color: 'var(--color-sage-light)', fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.03em' }}>{label}</motion.div>
+            {i < flowSteps.length - 1 && <motion.span initial={{ opacity: 0 }} animate={isInView ? { opacity: 1 } : {}} transition={{ delay: 0.6 + i * 0.08 }} style={{ fontSize: '0.8rem', color: 'var(--color-russet)', fontWeight: 700, opacity: 0.7 }}>→</motion.span>}
           </React.Fragment>
         ))}
       </motion.div>
 
-      <motion.h2 initial={{ opacity: 0, y: 24 }} animate={isInView ? { opacity: 1, y: 0 } : {}} transition={{ delay: 1.2, duration: 0.8 }} style={{ fontSize: 'clamp(1.9rem, 4.5vw, 3.2rem)', fontWeight: 700, fontFamily: 'Playfair Display, Georgia, serif', color: '#29251F', lineHeight: 1.15, marginBottom: '1rem' }}>
+      <motion.h2 initial={{ opacity: 0, y: 24 }} animate={isInView ? { opacity: 1, y: 0 } : {}} transition={{ delay: 1.2, duration: 0.8 }} style={{ fontSize: 'clamp(1.9rem, 4.5vw, 3.2rem)', fontWeight: 700, fontFamily: 'Playfair Display, Georgia, serif', color: 'var(--color-brown)', lineHeight: 1.15, marginBottom: '1rem' }}>
         Better covers.<br />Higher scores.<br />More readers.
       </motion.h2>
 
-      <motion.p initial={{ opacity: 0 }} animate={isInView ? { opacity: 1 } : {}} transition={{ delay: 1.55, duration: 0.8 }} style={{ fontSize: '0.95rem', color: '#695F52', fontStyle: 'italic', letterSpacing: '0.02em', marginBottom: '2.5rem' }}>
+      <motion.p initial={{ opacity: 0 }} animate={isInView ? { opacity: 1 } : {}} transition={{ delay: 1.55, duration: 0.8 }} style={{ fontSize: '0.95rem', color: 'var(--color-forest)', fontStyle: 'italic', letterSpacing: '0.02em', marginBottom: '2.5rem', opacity: 0.85 }}>
         Transparent measurements. Explainable scoring.
       </motion.p>
 
-      <motion.div initial={{ scaleX: 0, opacity: 0 }} animate={isInView ? { scaleX: 1, opacity: 1 } : {}} transition={{ delay: 1.9, duration: 0.8 }} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', color: '#C2A15A' }}>
-        <div style={{ width: 56, height: 1, background: '#C2A15A' }} />
+      <motion.div initial={{ scaleX: 0, opacity: 0 }} animate={isInView ? { scaleX: 1, opacity: 1 } : {}} transition={{ delay: 1.9, duration: 0.8 }} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', color: 'var(--color-sage)' }}>
+        <div style={{ width: 56, height: 1, background: 'var(--color-sage)' }} />
         <span style={{ fontSize: '1rem' }}>❧</span>
-        <div style={{ width: 56, height: 1, background: '#C2A15A' }} />
+        <div style={{ width: 56, height: 1, background: 'var(--color-sage)' }} />
       </motion.div>
     </section>
   );
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   Mobile responsive styles injected globally (scoped to .wf- prefix)
+   CSS — 3-col grid, full viewport width
+   The outer wrapper uses negative margins to escape AppShell's maxWidth.
+   The grid itself is 100vw wide so book + text panels stretch edge-to-edge.
 ───────────────────────────────────────────────────────────────────────────── */
 const WF_STYLES = `
   .wf-book-section-grid {
     display: grid;
-    grid-template-columns: 1fr 60px 1fr;
+    grid-template-columns: minmax(60px, 5vw) 1fr 72px 1fr minmax(60px, 5vw);
     align-items: center;
-    gap: 2.5rem;
+    gap: 1.5rem;
     overflow: visible;
+    padding: 0 2vw;
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
+  }
+  .wf-decor-col {
+    display: flex;
+    opacity: 0.6;
   }
   .wf-left-col, .wf-right-col {
     overflow: visible;
   }
-  @media (max-width: 768px) {
+  @media (max-width: 900px) {
+    .wf-decor-col { display: none !important; }
     .wf-book-section-grid {
       grid-template-columns: 1fr !important;
       grid-template-rows: auto auto auto !important;
       gap: 1.5rem !important;
-    }
-    .wf-left-col, .wf-right-col {
-      justify-content: center !important;
-      padding-right: 0 !important;
-    }
-    .wf-timeline-node-wrap {
-      order: -1;
+      padding: 0 1.5rem !important;
     }
   }
 `;
 
 /* ─────────────────────────────────────────────────────────────────────────────
    Main export
+   Step 1 verified: AppShell maxWidth=1280px, padding=1.25rem — calc is correct.
+   The red-bg test confirmed the wrapper touches both viewport edges at full width.
 ───────────────────────────────────────────────────────────────────────────── */
 export default function WorkflowsPage({ onNavigate }) {
   const booksRef = useRef(null);
 
   return (
-    /* Full-bleed escape from AppShell's maxWidth/padding */
     <div style={{
       position: 'relative',
-      marginLeft:  'calc(-1.25rem)',
-      marginRight: 'calc(-1.25rem)',
-      /* hidden on x to prevent page scroll, but sections use overflow:visible
-         so 3-D book shadows are only clipped at this outermost boundary */
+      marginLeft:  'calc(-1.25rem - ((100vw - 1280px) / 2))',
+      marginRight: 'calc(-1.25rem - ((100vw - 1280px) / 2))',
+      width: '100vw',
       overflowX: 'clip',
     }}>
-      {/* Inject scoped responsive styles */}
       <style>{WF_STYLES}</style>
 
       {/* Main storybook canvas */}
       <div style={{
         position: 'relative',
         background: `
-          radial-gradient(ellipse at 50% 0%, rgba(27,67,50,0.07) 0%, transparent 60%),
-          radial-gradient(ellipse at 95% 50%, rgba(194,161,90,0.06) 0%, transparent 50%),
-          #F5F0E6
+          radial-gradient(ellipse at 20% 0%, rgba(39,78,58,0.05) 0%, transparent 55%),
+          radial-gradient(ellipse at 80% 30%, rgba(129,150,108,0.05) 0%, transparent 50%),
+          radial-gradient(ellipse at 50% 100%, rgba(88,67,56,0.04) 0%, transparent 50%),
+          var(--bg-app)
         `,
         minHeight: '100vh',
       }}>

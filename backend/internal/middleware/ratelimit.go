@@ -1,80 +1,46 @@
 package middleware
 
 import (
+	"context"
 	"net/http"
-	"sync"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-redis/redis_rate/v10"
+	"github.com/redis/go-redis/v9"
 )
 
-type clientLimiter struct {
-	tokens     float64
-	lastRefill time.Time
-}
-
-// RateLimiter is a thread-safe sliding token-bucket rate limiter keyed by client IP.
+// RateLimiter wraps redis_rate.Limiter.
 type RateLimiter struct {
-	mu         sync.Mutex
-	clients    map[string]*clientLimiter
-	maxTokens  float64
-	refillRate float64 // tokens per second
+	limiter *redis_rate.Limiter
+	limit   redis_rate.Limit
 }
 
-// NewRateLimiter creates a new rate limiter with the given requests per minute limit.
-func NewRateLimiter(requestsPerMinute int) *RateLimiter {
-	rl := &RateLimiter{
-		clients:    make(map[string]*clientLimiter),
-		maxTokens:  float64(requestsPerMinute),
-		refillRate: float64(requestsPerMinute) / 60.0,
+// NewRateLimiter creates a new distributed rate limiter.
+func NewRateLimiter(rdb *redis.Client, requestsPerMinute int) *RateLimiter {
+	limiter := redis_rate.NewLimiter(rdb)
+	return &RateLimiter{
+		limiter: limiter,
+		limit:   redis_rate.PerMinute(requestsPerMinute),
 	}
-
-	// Periodic cleanup of stale clients to avoid memory leaks
-	go func() {
-		for {
-			time.Sleep(5 * time.Minute)
-			rl.mu.Lock()
-			now := time.Now()
-			for ip, client := range rl.clients {
-				if now.Sub(client.lastRefill) > 10*time.Minute {
-					delete(rl.clients, ip)
-				}
-			}
-			rl.mu.Unlock()
-		}
-	}()
-
-	return rl
 }
 
 // Limit returns a Gin middleware enforcing the rate limit per client IP.
 func (rl *RateLimiter) Limit() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ip := c.ClientIP()
+		key := "rate_limit:" + ip
 
-		rl.mu.Lock()
-		now := time.Now()
-		client, exists := rl.clients[ip]
-		if !exists {
-			client = &clientLimiter{
-				tokens:     rl.maxTokens - 1.0,
-				lastRefill: now,
-			}
-			rl.clients[ip] = client
-			rl.mu.Unlock()
-			c.Next()
+		res, err := rl.limiter.Allow(c.Request.Context(), key, rl.limit)
+		if err != nil {
+			// If Redis is down, we might want to fail open or close. Fail close for now.
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+				"error": "rate limiter error",
+			})
 			return
 		}
 
-		elapsed := now.Sub(client.lastRefill).Seconds()
-		client.lastRefill = now
-		client.tokens += elapsed * rl.refillRate
-		if client.tokens > rl.maxTokens {
-			client.tokens = rl.maxTokens
-		}
-
-		if client.tokens < 1.0 {
-			rl.mu.Unlock()
+		if res.Allowed == 0 {
 			c.Header("Retry-After", "60")
 			c.AbortWithStatusJSON(http.StatusTooManyRequests, gin.H{
 				"error": "too many requests, please slow down",
@@ -82,8 +48,6 @@ func (rl *RateLimiter) Limit() gin.HandlerFunc {
 			return
 		}
 
-		client.tokens -= 1.0
-		rl.mu.Unlock()
 		c.Next()
 	}
 }

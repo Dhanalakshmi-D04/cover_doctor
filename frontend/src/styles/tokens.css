@@ -1,56 +1,72 @@
 /* Cover Doctor — Warm Light Design Tokens
-   Inspired by covertech.ai: clean white/cream surfaces, forest green primary,
-   mustard gold accents, warm earthy tones, crisp professional typography.
-   LIGHT-ONLY — no dark theme. */
+   Earthy Premium Palette
+   #584338 — Deep Umber (warm dark brown)
+   #71331F — Burnt Sienna (rust/terracotta)
+   #81966C — Sage Green (muted, earthy green)
+   #274E3A — Forest Green (deep, dark green)
+   #F5F2ED — Off-white/cream
+*/
 
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
 
 :root {
+  /* ── Core Colors ── */
+  --color-forest: #274E3A;
+  --color-brown: #584338;
+  --color-russet: #71331F;
+  --color-sage: #81966C;
+
+  /* ── Light Tints ── */
+  --color-forest-light: #DCE8E2;
+  --color-brown-light: #E6DDD7;
+  --color-russet-light: #EBCDC5;
+  --color-sage-light: #E6ECD9;
+
   /* ── Page & Surface Backgrounds ── */
-  --bg-app: #FAFAF5;
-  --bg-surface: #FFFFFF;
-  --bg-surface-elevated: #F5F0E8;
-  --bg-surface-hover: #EDE7DB;
-  --bg-warm-tint: rgba(200, 155, 109, 0.06);
-  --bg-cream: #F7F3EA;
+  --bg-app: var(--color-sage-light);
+  --bg-surface: var(--color-brown-light);
+  --bg-surface-elevated: var(--color-forest-light);
+  --bg-surface-hover: var(--color-sage);
+  --bg-warm-tint: rgba(129, 150, 108, 0.1);
+  --bg-cream: var(--bg-app);
 
   /* ── Primary Brand — Forest Green ── */
-  --accent-primary: #1B4332;
-  --accent-primary-hover: #123325;
-  --accent-primary-light: #E8F2EC;
-  --accent-primary-muted: rgba(27, 67, 50, 0.08);
+  --accent-primary: #274E3A;
+  --accent-primary-hover: #1E3C2D;
+  --accent-primary-light: rgba(39, 78, 58, 0.08);
+  --accent-primary-muted: rgba(39, 78, 58, 0.08);
 
-  /* ── Secondary — Warm Mustard Gold ── */
-  --accent-warm: #C2A15A;
-  --accent-warm-hover: #A88B45;
-  --accent-warm-light: #FBF5E6;
+  /* ── Secondary — Sage Green ── */
+  --accent-warm: #81966C;
+  --accent-warm-hover: #677A55;
+  --accent-warm-light: rgba(129, 150, 108, 0.12);
 
-  /* ── Amber CTA ── */
-  --accent-amber: #D97706;
-  --accent-amber-hover: #B45309;
-  --accent-amber-light: #FEF3C7;
+  /* ── Amber CTA -> Burnt Sienna ── */
+  --accent-amber: #71331F;
+  --accent-amber-hover: #582818;
+  --accent-amber-light: rgba(113, 51, 31, 0.1);
 
-  /* ── Status Colors ── */
-  --accent-success: #2D6A4F;
-  --accent-success-light: #D1FAE5;
-  --accent-warning: #D97706;
-  --accent-warning-light: #FEF3C7;
-  --accent-danger: #DC2626;
-  --accent-danger-light: #FEE2E2;
-  --accent-info: #0369A1;
-  --accent-info-light: #E0F2FE;
+  /* ── Status Colors (Aligning to palette) ── */
+  --accent-success: #81966C;
+  --accent-success-light: rgba(129, 150, 108, 0.15);
+  --accent-warning: #71331F;
+  --accent-warning-light: rgba(113, 51, 31, 0.15);
+  --accent-danger: #71331F;
+  --accent-danger-light: rgba(113, 51, 31, 0.15);
+  --accent-info: #584338;
+  --accent-info-light: rgba(88, 67, 56, 0.15);
 
   /* ── Text & Ink ── */
-  --text-primary: #29251F;
-  --text-secondary: #695F52;
-  --text-muted: #8C7E6F;
-  --text-on-primary: #FFFFFF;
-  --text-on-warm: #2B1F10;
+  --text-primary: var(--color-brown);
+  --text-secondary: var(--color-forest);
+  --text-muted: var(--color-sage);
+  --text-on-primary: var(--color-sage-light);
+  --text-on-warm: var(--color-sage-light);
 
   /* ── Borders ── */
-  --border-default: #E0D6C8;
-  --border-light: rgba(200, 155, 109, 0.15);
-  --border-accent: rgba(27, 67, 50, 0.12);
+  --border-default: rgba(129, 150, 108, 0.25);
+  --border-light: rgba(129, 150, 108, 0.1);
+  --border-accent: var(--color-sage);
 
   /* ── Typography Fonts ── */
   --font-family-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
@@ -58,14 +74,14 @@
   --font-family-body: 'Inter', system-ui, -apple-system, sans-serif;
   --font-family-mono: 'JetBrains Mono', monospace;
 
-  /* ── Elevation & Shadows (warm-toned) ── */
-  --shadow-sm: 0 2px 8px rgba(41, 37, 31, 0.06);
-  --shadow-md: 0 4px 16px rgba(41, 37, 31, 0.08);
-  --shadow-lg: 0 12px 32px rgba(41, 37, 31, 0.12);
-  --shadow-xl: 0 20px 48px rgba(41, 37, 31, 0.16);
-  --shadow-glow-primary: 0 4px 16px rgba(27, 67, 50, 0.25);
-  --shadow-glow-warm: 0 4px 16px rgba(194, 161, 90, 0.3);
-  --shadow-3d-book: -8px 12px 24px rgba(41, 37, 31, 0.22), 2px 2px 4px rgba(0, 0, 0, 0.08);
+  /* ── Elevation & Shadows ── */
+  --shadow-sm: 0 2px 8px rgba(88, 67, 56, 0.06);
+  --shadow-md: 0 4px 16px rgba(88, 67, 56, 0.08);
+  --shadow-lg: 0 12px 32px rgba(88, 67, 56, 0.12);
+  --shadow-xl: 0 20px 48px rgba(88, 67, 56, 0.16);
+  --shadow-glow-primary: 0 4px 16px rgba(39, 78, 58, 0.25);
+  --shadow-glow-warm: 0 4px 16px rgba(129, 150, 108, 0.3);
+  --shadow-3d-book: -8px 12px 24px rgba(88, 67, 56, 0.22), 2px 2px 4px rgba(0, 0, 0, 0.08);
 
   /* ── Radii ── */
   --radius-sm: 10px;
@@ -84,19 +100,19 @@
   --theme-bg: var(--bg-app);
   --theme-card: var(--bg-surface);
   --theme-text: var(--text-primary);
-  --theme-text-muted: var(--text-secondary);
+  --theme-text-muted: var(--text-muted);
   --theme-surface: var(--bg-surface);
-  --theme-cream: var(--bg-cream);
+  --theme-cream: var(--bg-app);
   --theme-border: var(--border-default);
   --theme-muted: var(--text-muted);
   --theme-ink: var(--text-primary);
-  --theme-ink-light: #443D34;
-  --theme-surface-glass: rgba(247, 243, 234, 0.94);
+  --theme-ink-light: var(--text-secondary);
+  --theme-surface-glass: var(--color-forest);
 
   --ct-olive: var(--accent-primary);
-  --ct-sage: var(--text-secondary);
+  --ct-sage: var(--accent-warm);
   --ct-mustard: var(--accent-warm);
-  --ct-cream: var(--bg-cream);
+  --ct-cream: var(--bg-app);
   --ct-brown: var(--text-primary);
   --ct-danger: var(--accent-danger);
 
@@ -107,65 +123,65 @@
   --theme-accent-hover: var(--accent-amber-hover);
   --theme-accent-light: var(--accent-amber-light);
 
-  --theme-olive: #6B7D5B;
+  --theme-olive: var(--accent-warm);
   --theme-olive-forest: var(--accent-primary);
   --theme-olive-dark: var(--text-primary);
-  --theme-olive-light: #F3F6F1;
+  --theme-olive-light: rgba(129, 150, 108, 0.1);
   --theme-olive-border: var(--accent-warm);
 
-  --theme-secondary: #2D1E18;
-  --theme-secondary-hover: #1B110D;
-  --theme-secondary-light: #FAF4EF;
+  --theme-secondary: var(--bg-surface-elevated);
+  --theme-secondary-hover: var(--color-russet);
+  --theme-secondary-light: rgba(113, 51, 31, 0.2);
 
-  --theme-russet: #8B5E3C;
+  --theme-russet: var(--accent-amber);
   --theme-russet-dark: var(--accent-primary);
-  --theme-russet-light: #FAF4EF;
-  --theme-russet-border: var(--accent-warm);
+  --theme-russet-light: var(--accent-amber-light);
+  --theme-russet-border: var(--accent-amber);
 
-  --theme-brown: #3E2723;
-  --theme-brown-hover: #251613;
-  --theme-brown-light: #FAF4EF;
+  --theme-brown: var(--bg-surface);
+  --theme-brown-hover: rgba(88, 67, 56, 0.9);
+  --theme-brown-light: rgba(88, 67, 56, 0.2);
 
-  --theme-chocolate: #8B5E3C;
-  --theme-chocolate-dark: var(--text-primary);
-  --theme-chocolate-light: #FAF4EF;
-  --theme-chocolate-border: var(--accent-warm);
+  --theme-chocolate: var(--bg-surface);
+  --theme-chocolate-dark: var(--bg-surface);
+  --theme-chocolate-light: rgba(88, 67, 56, 0.2);
+  --theme-chocolate-border: var(--border-default);
 
-  --theme-butter: var(--accent-primary);
-  --theme-butter-yellow: var(--accent-primary);
-  --theme-butter-hover: var(--accent-primary-hover);
-  --theme-butter-light: #EEF4EF;
+  --theme-butter: var(--accent-warm);
+  --theme-butter-yellow: var(--accent-warm);
+  --theme-butter-hover: var(--accent-warm-hover);
+  --theme-butter-light: var(--accent-warm-light);
   --theme-butter-border: var(--accent-warm);
   --theme-yellow: var(--accent-warm);
-  --theme-amber: #8B5E3C;
+  --theme-amber: var(--accent-amber);
 
-  /* Pastel System */
-  --pastel-butter-bg: #FAF4ED;
+  /* Pastel System - using the new palette colors */
+  --pastel-butter-bg: var(--accent-warm-light);
   --pastel-butter-border: var(--accent-warm);
   --pastel-butter-text: var(--text-primary);
-  --pastel-olive-bg: #F3F6F1;
-  --pastel-olive-border: #6B7D5B;
+  --pastel-olive-bg: var(--accent-warm-light);
+  --pastel-olive-border: var(--accent-warm);
   --pastel-olive-text: var(--text-primary);
-  --pastel-forest-bg: #EEF4EF;
+  --pastel-forest-bg: var(--accent-primary-light);
   --pastel-forest-border: var(--accent-primary);
   --pastel-forest-text: var(--text-primary);
-  --pastel-chocolate-bg: #FAF4EF;
-  --pastel-chocolate-border: #8B5E3C;
+  --pastel-chocolate-bg: var(--theme-secondary-light);
+  --pastel-chocolate-border: var(--text-primary);
   --pastel-chocolate-text: var(--text-primary);
-  --pastel-lavender-bg: #FAF4ED;
+  --pastel-lavender-bg: var(--accent-warm-light);
   --pastel-lavender-border: var(--accent-warm);
   --pastel-lavender-text: var(--text-primary);
-  --pastel-peach-bg: #FAF4ED;
-  --pastel-peach-border: var(--accent-warm);
+  --pastel-peach-bg: var(--accent-amber-light);
+  --pastel-peach-border: var(--accent-amber);
   --pastel-peach-text: var(--text-primary);
-  --pastel-mint-bg: #EEF4EF;
-  --pastel-mint-border: #6B7D5B;
+  --pastel-mint-bg: var(--accent-primary-light);
+  --pastel-mint-border: var(--accent-primary);
   --pastel-mint-text: var(--text-primary);
-  --pastel-sky-bg: #F3F6F1;
+  --pastel-sky-bg: var(--accent-warm-light);
   --pastel-sky-border: var(--accent-warm);
   --pastel-sky-text: var(--text-primary);
-  --pastel-rose-bg: #FAF4EF;
-  --pastel-rose-border: #8B5E3C;
+  --pastel-rose-bg: var(--accent-amber-light);
+  --pastel-rose-border: var(--accent-amber);
   --pastel-rose-text: var(--text-primary);
 
   /* Component tokens */
@@ -182,9 +198,9 @@
   --heading-line-height: 1.12;
   --body-line-height: 1.6;
 
-  /* Glow effects (warm-toned for light theme) */
+  /* Glow effects */
   --glow-primary: var(--shadow-glow-primary);
   --glow-secondary: var(--shadow-glow-warm);
-  --glow-success: 0 4px 16px rgba(45, 106, 79, 0.25);
-  --glow-danger: 0 4px 16px rgba(220, 38, 38, 0.2);
+  --glow-success: var(--shadow-glow-warm);
+  --glow-danger: 0 4px 16px rgba(113, 51, 31, 0.25);
 }
