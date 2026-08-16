@@ -29,7 +29,7 @@ func NewS3Client(ctx context.Context, cfg *appconfig.Config) (*S3Client, error) 
 				PartitionID:       "aws",
 				URL:               cfg.S3Endpoint,
 				SigningRegion:     "us-east-1",
-				HostnameImmutable: true, // Needed for MinIO/path-style
+				HostnameImmutable: cfg.S3ForcePathStyle, // Needed for MinIO local dev
 			}, nil
 		}
 		// Fallback to default AWS resolver
@@ -46,7 +46,7 @@ func NewS3Client(ctx context.Context, cfg *appconfig.Config) (*S3Client, error) 
 	}
 
 	client := s3.NewFromConfig(awsCfg, func(o *s3.Options) {
-		o.UsePathStyle = true
+		o.UsePathStyle = cfg.S3ForcePathStyle
 	})
 
 	return &S3Client{

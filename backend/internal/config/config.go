@@ -38,10 +38,11 @@ type Config struct {
 	// S3/MinIO configuration for object storage.
 	// S3Endpoint can point at MinIO (local dev), Cloudflare R2, or real AWS S3 —
 	// only env vars need to change, no code changes required.
-	S3Endpoint  string
-	S3AccessKey string
-	S3SecretKey string
-	S3Bucket    string
+	S3Endpoint        string
+	S3AccessKey       string
+	S3SecretKey       string
+	S3Bucket          string
+	S3ForcePathStyle  bool
 }
 
 // Load reads environment variables into a Config, returning an error only
@@ -69,6 +70,7 @@ func Load() (*Config, error) {
 		S3AccessKey: os.Getenv("S3_ACCESS_KEY"),
 		S3SecretKey: os.Getenv("S3_SECRET_KEY"),
 		S3Bucket:    os.Getenv("S3_BUCKET"),
+		S3ForcePathStyle: getEnv("S3_FORCE_PATH_STYLE", "true") == "true",
 	}
 
 	// Fail fast with a specific message naming the missing variable, so it's

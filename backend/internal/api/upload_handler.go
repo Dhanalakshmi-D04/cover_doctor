@@ -159,7 +159,12 @@ func (h *Handler) Upload(c *gin.Context) {
 		return
 	}
 
-	info, err := h.TaskQueue.EnqueueContext(c.Request.Context(), task, asynq.TaskID(jobID))
+	info, err := h.TaskQueue.EnqueueContext(
+		c.Request.Context(), 
+		task, 
+		asynq.TaskID(jobID), 
+		asynq.MaxRetry(3),
+	)
 	if err != nil {
 		log.Printf("failed to enqueue task: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to enqueue processing job"})

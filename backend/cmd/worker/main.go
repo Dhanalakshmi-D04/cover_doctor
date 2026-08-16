@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"log/slog"
 	"os"
 	"os/signal"
@@ -80,6 +81,22 @@ func main() {
 			Queues: map[string]int{
 				"default": 1,
 			},
+			// ErrorHandler runs whenever a task fails an attempt.
+			// If it has exhausted all retries (or panicked, which counts as a failure),
+			// we update the database status so the frontend isn't polling forever.
+			ErrorHandler: asynq.ErrorHandlerFunc(func(ctx context.Context, task *asynq.Task, err error) {
+				retried, _ := asynq.GetRetryCount(ctx)
+				maxRetry, _ := asynq.GetMaxRetry(ctx)
+				if retried >= maxRetry {
+					// Task has failed for the final time and will be archived.
+					// Extract the cover_id from the payload to mark it failed.
+					var payload worker.ProcessCoverPayload
+					if unmarshalErr := json.Unmarshal(task.Payload(), &payload); unmarshalErr == nil {
+						_, _ = database.Exec(`UPDATE covers SET status = 'failed' WHERE id = $1`, payload.CoverID)
+						logger.Error("task exhausted all retries, marked cover as failed", "cover_id", payload.CoverID, "error", err)
+					}
+				}
+			}),
 		},
 	)
 

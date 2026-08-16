@@ -76,9 +76,13 @@ func NewRouter(database *sqlx.DB, rdb *redis.Client, cfg *config.Config, aiClien
 		// Protected account info
 		protected.GET("/account", handler.GetAccount)
 
-		// Admin scraper control routes
-		protected.POST("/admin/scraper/run", handler.TriggerScraper)
-		protected.GET("/admin/scraper/status", handler.GetScraperStatus)
+		// Admin scraper control routes (requires is_admin=true)
+		admin := protected.Group("/admin")
+		admin.Use(middleware.RequireAdmin(database))
+		{
+			admin.POST("/scraper/run", handler.TriggerScraper)
+			admin.GET("/scraper/status", handler.GetScraperStatus)
+		}
 	}
 
 	return router
