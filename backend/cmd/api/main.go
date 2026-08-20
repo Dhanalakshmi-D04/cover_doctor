@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"log"
 	"log/slog"
 	"net/http"
 	"os"
@@ -40,7 +41,11 @@ func main() {
 		logger.Error("failed to connect to database", "error", err)
 		os.Exit(1)
 	}
-	defer func() { _ = database.Close() }()
+	defer func() {
+		if err := database.Close(); err != nil {
+			log.Printf("error closing database: %v", err)
+		}
+	}()
 
 	database.SetMaxOpenConns(25)
 	database.SetMaxIdleConns(25)
@@ -62,11 +67,19 @@ func main() {
 		os.Exit(1)
 	}
 	rdb := redis.NewClient(opt)
-	defer func() { _ = rdb.Close() }()
+	defer func() {
+		if err := rdb.Close(); err != nil {
+			log.Printf("error closing redis: %v", err)
+		}
+	}()
 
 	// Asynq client for enqueuing jobs
 	taskQueue := asynq.NewClient(asynq.RedisClientOpt{Addr: opt.Addr})
-	defer func() { _ = taskQueue.Close() }()
+	defer func() {
+		if err := taskQueue.Close(); err != nil {
+			log.Printf("error closing task queue: %v", err)
+		}
+	}()
 
 	// S3 Client
 	s3Client, err := storage.NewS3Client(context.Background(), cfg)

@@ -33,7 +33,11 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to connect to database: %v", err)
 	}
-	defer func() { _ = database.Close() }()
+	defer func() {
+		if err := database.Close(); err != nil {
+			log.Printf("error closing database: %v", err)
+		}
+	}()
 
 	aiClient := ai.NewClient(cfg.AnthropicAPIKey)
 
@@ -46,7 +50,7 @@ func main() {
 	}
 
 	sources := []scraper.BestsellerSource{
-		scraper.NewAmazonSource(30 * time.Second, cfg.ScraperAPIKey),
+		scraper.NewAmazonSource(30*time.Second, cfg.ScraperAPIKey),
 	}
 
 	fmt.Println("=====================================================")

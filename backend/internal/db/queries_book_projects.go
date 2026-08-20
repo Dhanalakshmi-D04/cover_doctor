@@ -2,6 +2,7 @@ package db
 
 import (
 	"database/sql"
+	"log"
 
 	"github.com/jmoiron/sqlx"
 
@@ -20,7 +21,11 @@ func CreateBookProject(database *sqlx.DB, project *models.BookProject) error {
 	if err != nil {
 		return err
 	}
-	defer func() { _ = rows.Close() }()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("error closing rows: %v", err)
+		}
+	}()
 
 	if rows.Next() {
 		if err := rows.Scan(&project.CreatedAt); err != nil {

@@ -80,7 +80,11 @@ func (h *Handler) Upload(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to open uploaded file"})
 		return
 	}
-	defer func() { _ = f.Close() }()
+	defer func() {
+		if err := f.Close(); err != nil {
+			log.Printf("error closing file: %v", err)
+		}
+	}()
 
 	// Read first 512 bytes for mime type and full decode config for dimensions
 	imgConfig, format, err := image.DecodeConfig(f)

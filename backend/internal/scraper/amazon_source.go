@@ -37,7 +37,7 @@ func (a *AmazonSource) FetchTopCovers(ctx context.Context, style string, limit i
 	}
 
 	amazonURL := getAmazonCategoryURL(style)
-	
+
 	// Construct the ScraperAPI URL
 	apiURL := fmt.Sprintf("http://api.scraperapi.com?api_key=%s&url=%s&render=true", a.apiKey, url.QueryEscape(amazonURL))
 
@@ -68,7 +68,7 @@ func (a *AmazonSource) FetchTopCovers(ctx context.Context, style string, limit i
 	}
 
 	var covers []BestsellerCover
-	
+
 	// Find all images within the Amazon Bestseller grid
 	doc.Find("img.a-dynamic-image").EachWithBreak(func(i int, s *goquery.Selection) bool {
 		if len(covers) >= limit {
@@ -108,7 +108,7 @@ func (a *AmazonSource) FetchTopCovers(ctx context.Context, style string, limit i
 func (a *AmazonSource) downloadImage(ctx context.Context, imgURL string) ([]byte, error) {
 	req, _ := http.NewRequestWithContext(ctx, http.MethodGet, imgURL, nil)
 	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64)")
-	
+
 	resp, err := a.client.Do(req)
 	if err != nil {
 		return nil, err

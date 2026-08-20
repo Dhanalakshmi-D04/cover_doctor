@@ -8,6 +8,7 @@ import (
 	"image"
 	_ "image/jpeg"
 	_ "image/png"
+	"log"
 	"os"
 
 	"github.com/Dhanalakshmi-D04/cover_doctor/backend/internal/measure"
@@ -34,7 +35,11 @@ func main() {
 		fmt.Println("error opening image:", err)
 		os.Exit(1)
 	}
-	defer func() { _ = imgFile.Close() }()
+	defer func() {
+		if err := imgFile.Close(); err != nil {
+			log.Printf("error closing image file: %v", err)
+		}
+	}()
 
 	img, _, err := image.Decode(imgFile)
 	if err != nil {

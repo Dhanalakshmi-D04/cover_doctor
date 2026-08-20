@@ -8,6 +8,7 @@ import (
 	_ "image/jpeg"
 	_ "image/png"
 	"io"
+	"log"
 	"log/slog"
 	"os"
 	"sync"
@@ -53,7 +54,11 @@ func (p *Processor) ProcessTaskProcessCover(ctx context.Context, t *asynq.Task) 
 		logger.Error("failed to get file from S3", "error", err)
 		return err
 	}
-	defer func() { _ = stream.Close() }()
+	defer func() {
+		if err := stream.Close(); err != nil {
+			log.Printf("error closing stream: %v", err)
+		}
+	}()
 
 	tmpFile, err := os.CreateTemp("", "cover_*.jpg")
 	if err != nil {
@@ -61,7 +66,11 @@ func (p *Processor) ProcessTaskProcessCover(ctx context.Context, t *asynq.Task) 
 		return err
 	}
 	defer func() { _ = os.Remove(tmpFile.Name()) }()
-	defer func() { _ = tmpFile.Close() }()
+	defer func() {
+		if err := tmpFile.Close(); err != nil {
+			log.Printf("error closing temp file: %v", err)
+		}
+	}()
 
 	if _, err := io.Copy(tmpFile, stream); err != nil {
 		logger.Error("failed to save temp file", "error", err)

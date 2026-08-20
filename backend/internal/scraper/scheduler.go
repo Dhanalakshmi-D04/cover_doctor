@@ -30,7 +30,7 @@ func DefaultSchedulerOptions() SchedulerOptions {
 		RunOnStartup: false,
 		ScraperOpts:  DefaultOptions(),
 		Sources: []BestsellerSource{
-			NewAmazonSource(30 * time.Second, ""),
+			NewAmazonSource(30*time.Second, ""),
 		},
 	}
 }
@@ -53,7 +53,7 @@ type Scheduler struct {
 func NewScheduler(database *sqlx.DB, aiClient *ai.Client, opts SchedulerOptions) *Scheduler {
 	if len(opts.Sources) == 0 {
 		opts.Sources = []BestsellerSource{
-			NewAmazonSource(30 * time.Second, ""),
+			NewAmazonSource(30*time.Second, ""),
 		}
 	}
 	return &Scheduler{

@@ -19,12 +19,12 @@ type polarWebhookEvent struct {
 }
 
 type polarSubscriptionData struct {
-	ID                 string `json:"id"`
-	Status             string `json:"status"` // "active", "canceled", etc
-	CustomerID         string `json:"customer_id"`
-	Metadata           map[string]string `json:"metadata"`
-	ClientReferenceID  string `json:"client_reference_id"`
-	CurrentPeriodEnd   string `json:"current_period_end"`
+	ID                string            `json:"id"`
+	Status            string            `json:"status"` // "active", "canceled", etc
+	CustomerID        string            `json:"customer_id"`
+	Metadata          map[string]string `json:"metadata"`
+	ClientReferenceID string            `json:"client_reference_id"`
+	CurrentPeriodEnd  string            `json:"current_period_end"`
 }
 
 func HandleWebhook(database *sqlx.DB, secret string) gin.HandlerFunc {
@@ -82,7 +82,7 @@ func processPolarEvent(database *sqlx.DB, event polarWebhookEvent) error {
 		if err := json.Unmarshal(event.Data, &subData); err != nil {
 			return err
 		}
-		
+
 		userID := subData.ClientReferenceID
 		plan := string(PlanFree)
 		if subData.Status == "active" || subData.Status == "trialing" {

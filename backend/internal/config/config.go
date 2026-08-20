@@ -27,10 +27,10 @@ type Config struct {
 
 	// Polar settings are optional. If PolarAccessToken is empty, billing
 	// endpoints return a clear "not configured" error instead of panicking.
-	PolarAccessToken     string
-	PolarWebhookSecret   string
+	PolarAccessToken      string
+	PolarWebhookSecret    string
 	PolarProductIDMonthly string
-	PolarOrganizationID  string
+	PolarOrganizationID   string
 
 	// Redis configuration for job queue and rate limiting
 	RedisURL string
@@ -38,11 +38,11 @@ type Config struct {
 	// S3/MinIO configuration for object storage.
 	// S3Endpoint can point at MinIO (local dev), Cloudflare R2, or real AWS S3 —
 	// only env vars need to change, no code changes required.
-	S3Endpoint        string
-	S3AccessKey       string
-	S3SecretKey       string
-	S3Bucket          string
-	S3ForcePathStyle  bool
+	S3Endpoint       string
+	S3AccessKey      string
+	S3SecretKey      string
+	S3Bucket         string
+	S3ForcePathStyle bool
 
 	// ScraperAPIKey is used to bypass Amazon's anti-scraping defenses
 	// during quarterly benchmark runs.
@@ -69,11 +69,11 @@ func Load() (*Config, error) {
 		PolarProductIDMonthly: os.Getenv("POLAR_PRODUCT_ID_MONTHLY"),
 		PolarOrganizationID:   os.Getenv("POLAR_ORGANIZATION_ID"),
 
-		RedisURL:    getEnv("REDIS_URL", "redis://localhost:6379/0"),
-		S3Endpoint:  os.Getenv("S3_ENDPOINT"),
-		S3AccessKey: os.Getenv("S3_ACCESS_KEY"),
-		S3SecretKey: os.Getenv("S3_SECRET_KEY"),
-		S3Bucket:    os.Getenv("S3_BUCKET"),
+		RedisURL:         getEnv("REDIS_URL", "redis://localhost:6379/0"),
+		S3Endpoint:       os.Getenv("S3_ENDPOINT"),
+		S3AccessKey:      os.Getenv("S3_ACCESS_KEY"),
+		S3SecretKey:      os.Getenv("S3_SECRET_KEY"),
+		S3Bucket:         os.Getenv("S3_BUCKET"),
 		S3ForcePathStyle: getEnv("S3_FORCE_PATH_STYLE", "true") == "true",
 		ScraperAPIKey:    os.Getenv("SCRAPER_API_KEY"),
 	}
