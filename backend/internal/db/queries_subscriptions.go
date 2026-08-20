@@ -34,26 +34,26 @@ func GetSubscriptionByUserID(database *sqlx.DB, userID string) (*models.Subscrip
 	return &sub, nil
 }
 
-// UpdateSubscriptionByStripeID mirrors a Stripe subscription's plan/status
+// UpdateSubscriptionByPolarID mirrors a Polar subscription's plan/status
 // and billing period into the local table. Called from the webhook handler.
-// Stripe is always the source of truth; this only syncs, never originates changes.
-// currentPeriodEnd may be nil if Stripe didn't include it in the event (rare).
-func UpdateSubscriptionByStripeID(database *sqlx.DB, stripeSubscriptionID, plan, status string, currentPeriodEnd *time.Time) error {
+// Polar is always the source of truth; this only syncs, never originates changes.
+// currentPeriodEnd may be nil if Polar didn't include it in the event (rare).
+func UpdateSubscriptionByPolarID(database *sqlx.DB, polarSubscriptionID, plan, status string, currentPeriodEnd *time.Time) error {
 	query := `
 		UPDATE subscriptions
 		SET plan = $1, status = $2, current_period_end = $3
-		WHERE stripe_subscription_id = $4`
-	_, err := database.Exec(query, plan, status, currentPeriodEnd, stripeSubscriptionID)
+		WHERE polar_subscription_id = $4`
+	_, err := database.Exec(query, plan, status, currentPeriodEnd, polarSubscriptionID)
 	return err
 }
 
-// AttachStripeCustomer links a user's subscription row to a Stripe
+// AttachPolarCustomer links a user's subscription row to a Polar
 // customer/subscription pair, called after a successful checkout.
-func AttachStripeCustomer(database *sqlx.DB, userID, stripeCustomerID, stripeSubscriptionID string) error {
+func AttachPolarCustomer(database *sqlx.DB, userID, polarCustomerID, polarSubscriptionID string) error {
 	query := `
 		UPDATE subscriptions
-		SET stripe_customer_id = $1, stripe_subscription_id = $2, plan = 'paid', status = 'active'
+		SET polar_customer_id = $1, polar_subscription_id = $2, plan = 'paid', status = 'active'
 		WHERE user_id = $3`
-	_, err := database.Exec(query, stripeCustomerID, stripeSubscriptionID, userID)
+	_, err := database.Exec(query, polarCustomerID, polarSubscriptionID, userID)
 	return err
 }

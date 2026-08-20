@@ -25,12 +25,12 @@ type Config struct {
 	// failing the request — see internal/ai.
 	AnthropicAPIKey string
 
-	// Stripe settings are optional. If StripeSecretKey is empty, billing
+	// Polar settings are optional. If PolarAccessToken is empty, billing
 	// endpoints return a clear "not configured" error instead of panicking.
-	StripeSecretKey      string
-	StripeWebhookSecret  string
-	StripePriceIDMonthly string
-	StripePriceIDAnnual  string
+	PolarAccessToken     string
+	PolarWebhookSecret   string
+	PolarProductIDMonthly string
+	PolarOrganizationID  string
 
 	// Redis configuration for job queue and rate limiting
 	RedisURL string
@@ -64,10 +64,10 @@ func Load() (*Config, error) {
 
 		AnthropicAPIKey: os.Getenv("ANTHROPIC_API_KEY"),
 
-		StripeSecretKey:      os.Getenv("STRIPE_SECRET_KEY"),
-		StripeWebhookSecret:  os.Getenv("STRIPE_WEBHOOK_SECRET"),
-		StripePriceIDMonthly: os.Getenv("STRIPE_PRICE_ID_MONTHLY"),
-		StripePriceIDAnnual:  os.Getenv("STRIPE_PRICE_ID_ANNUAL"),
+		PolarAccessToken:      os.Getenv("POLAR_ACCESS_TOKEN"),
+		PolarWebhookSecret:    os.Getenv("POLAR_WEBHOOK_SECRET"),
+		PolarProductIDMonthly: os.Getenv("POLAR_PRODUCT_ID_MONTHLY"),
+		PolarOrganizationID:   os.Getenv("POLAR_ORGANIZATION_ID"),
 
 		RedisURL:    getEnv("REDIS_URL", "redis://localhost:6379/0"),
 		S3Endpoint:  os.Getenv("S3_ENDPOINT"),
@@ -110,9 +110,9 @@ func (c *Config) AIEnabled() bool {
 	return c.AnthropicAPIKey != ""
 }
 
-// BillingEnabled reports whether real Stripe calls can be made.
+// BillingEnabled reports whether real Polar calls can be made.
 func (c *Config) BillingEnabled() bool {
-	return c.StripeSecretKey != ""
+	return c.PolarAccessToken != ""
 }
 
 // IsProduction returns true when running in production/release mode.

@@ -34,12 +34,12 @@ func TestBillingClientDisabled(t *testing.T) {
 		t.Fatal("expected billing client to be disabled when secretKey is empty")
 	}
 
-	_, err := client.CreateCheckoutSession("price_123", "test@example.com", "user_1", "http://success", "http://cancel")
+	_, err := client.CreateCheckoutSession("price_123", "test@example.com", "user_1", "http://success")
 	if err == nil {
 		t.Fatal("expected error from CreateCheckoutSession when billing client is disabled")
 	}
 
-	_, err = client.CreatePortalSession("cus_123", "http://return")
+	_, err = client.CreatePortalSession("cus_123")
 	if err == nil {
 		t.Fatal("expected error from CreatePortalSession when billing client is disabled")
 	}

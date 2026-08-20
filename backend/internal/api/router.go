@@ -56,8 +56,8 @@ func NewRouter(database *sqlx.DB, rdb *redis.Client, cfg *config.Config, aiClien
 	router.POST("/auth/signup", authRateLimiter.Limit(), handler.Signup)
 	router.POST("/auth/login", authRateLimiter.Limit(), handler.Login)
 
-	// Stripe signs this payload itself; it can never carry a JWT.
-	router.POST("/billing/webhook", handler.StripeWebhook)
+	// Polar signs this payload itself; it can never carry a JWT.
+	router.POST("/billing/webhook", handler.PolarWebhook)
 
 	protected := router.Group("/")
 	protected.Use(middleware.Auth(cfg.JWTSecret))

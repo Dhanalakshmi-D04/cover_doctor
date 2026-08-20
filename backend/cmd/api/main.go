@@ -80,9 +80,9 @@ func main() {
 		logger.Warn("ANTHROPIC_API_KEY not set — style tagging/explanations will use deterministic fallbacks")
 	}
 
-	billingClient := billing.NewClient(cfg.StripeSecretKey)
+	billingClient := billing.NewClient(cfg.PolarAccessToken)
 	if !billingClient.Enabled() {
-		logger.Warn("STRIPE_SECRET_KEY not set — billing endpoints will return an error until configured")
+		logger.Warn("POLAR_ACCESS_TOKEN not set — billing endpoints will return an error until configured")
 	}
 
 	scraperOpts := scraper.DefaultSchedulerOptions()

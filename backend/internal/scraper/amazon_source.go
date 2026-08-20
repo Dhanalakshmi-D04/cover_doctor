@@ -50,7 +50,12 @@ func (a *AmazonSource) FetchTopCovers(ctx context.Context, style string, limit i
 	if err != nil {
 		return nil, fmt.Errorf("scraper API request failed: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if closeErr := resp.Body.Close(); closeErr != nil {
+			// Just log the error, don't fail the whole scrape
+			fmt.Printf("error closing response body: %v\n", closeErr)
+		}
+	}()
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("scraper API returned status: %d", resp.StatusCode)
@@ -108,7 +113,11 @@ func (a *AmazonSource) downloadImage(ctx context.Context, imgURL string) ([]byte
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if closeErr := resp.Body.Close(); closeErr != nil {
+			fmt.Printf("error closing image response body: %v\n", closeErr)
+		}
+	}()
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("bad status code: %d", resp.StatusCode)
