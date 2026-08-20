@@ -5,105 +5,134 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"time"
 
+	"github.com/PuerkitoBio/goquery"
 	"github.com/google/uuid"
 )
 
-// AmazonSource fetches bestseller cover image candidates from Amazon bestseller feeds
-// or Open Library bestseller listings.
 type AmazonSource struct {
 	client *http.Client
+	apiKey string
 }
 
-// NewAmazonSource initializes an AmazonSource with the specified HTTP timeout.
-func NewAmazonSource(timeout time.Duration) *AmazonSource {
+func NewAmazonSource(timeout time.Duration, apiKey string) *AmazonSource {
 	if timeout <= 0 {
-		timeout = 15 * time.Second
+		timeout = 30 * time.Second // ScraperAPI can take longer as it rotates proxies
 	}
 	return &AmazonSource{
-		client: &http.Client{
-			Timeout: timeout,
-		},
+		client: &http.Client{Timeout: timeout},
+		apiKey: apiKey,
 	}
 }
 
 func (a *AmazonSource) Name() string {
-	return "AmazonBestsellers"
+	return "AmazonBestsellers_Production"
 }
 
-// FetchTopCovers retrieves bestseller cover images for a given style/category.
 func (a *AmazonSource) FetchTopCovers(ctx context.Context, style string, limit int) ([]BestsellerCover, error) {
-	if limit <= 0 {
-		limit = 10
+	if a.apiKey == "" {
+		return nil, fmt.Errorf("SCRAPER_API_KEY is not configured")
 	}
 
-	urls := getBestsellerURLsForStyle(style, limit)
-	covers := make([]BestsellerCover, 0, len(urls))
+	amazonURL := getAmazonCategoryURL(style)
+	
+	// Construct the ScraperAPI URL
+	apiURL := fmt.Sprintf("http://api.scraperapi.com?api_key=%s&url=%s&render=true", a.apiKey, url.QueryEscape(amazonURL))
 
-	for i, u := range urls {
-		req, err := http.NewRequestWithContext(ctx, http.MethodGet, u, nil)
-		if err != nil {
-			continue
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, apiURL, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := a.client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("scraper API request failed: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("scraper API returned status: %d", resp.StatusCode)
+	}
+
+	// Parse HTML using goquery
+	doc, err := goquery.NewDocumentFromReader(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse HTML: %w", err)
+	}
+
+	var covers []BestsellerCover
+	
+	// Find all images within the Amazon Bestseller grid
+	doc.Find("img.a-dynamic-image").EachWithBreak(func(i int, s *goquery.Selection) bool {
+		if len(covers) >= limit {
+			return false // Stop when we hit the limit
 		}
-		req.Header.Set("User-Agent", "CoverDoctorScraper/1.0 (Bestseller Benchmark Analytics; +https://coverdoctor.app)")
 
-		resp, err := a.client.Do(req)
-		if err != nil || resp.StatusCode != http.StatusOK {
-			if resp != nil {
-				_ = resp.Body.Close()
-			}
-			continue
+		imgSrc, exists := s.Attr("src")
+		if !exists || imgSrc == "" {
+			return true // continue to next
 		}
 
-		imgData, err := io.ReadAll(resp.Body)
-		_ = resp.Body.Close()
+		// Download the actual image byte array
+		imgData, err := a.downloadImage(ctx, imgSrc)
 		if err != nil || len(imgData) == 0 {
-			continue
+			return true // continue to next
 		}
 
 		covers = append(covers, BestsellerCover{
 			ID:        uuid.New().String(),
 			Title:     fmt.Sprintf("Amazon Bestseller %d (%s)", i+1, style),
 			Style:     style,
-			Category:  styleToCategory(style),
-			ImageURL:  u,
+			ImageURL:  imgSrc,
 			ImageData: imgData,
 			Filename:  fmt.Sprintf("amazon_%s_%d.jpg", style, i+1),
 		})
-	}
 
-	// If HTTP fetching returned zero covers (e.g. offline mode or rate limited),
-	// fallback to SampleSource to guarantee job completion.
+		return true
+	})
+
 	if len(covers) == 0 {
-		fallback := NewSampleSource()
-		return fallback.FetchTopCovers(ctx, style, limit)
+		return nil, fmt.Errorf("failed to extract any covers from Amazon HTML")
 	}
 
 	return covers, nil
 }
 
-// getBestsellerURLsForStyle returns reference bestseller cover URLs for open data sources / Open Library covers.
-func getBestsellerURLsForStyle(style string, limit int) []string {
-	// Open Library public bestseller cover IDs for reference testing
-	openLibCoverIDs := map[string][]string{
-		"Bold Typography":   {"10521270", "8226191", "10427490", "12555543", "10287541"},
-		"Dark Photographic": {"8231996", "10521782", "9255562", "11234123", "8493012"},
-		"Illustrated":       {"10520011", "9321456", "10123987", "8765432", "12345678"},
-		"Minimalist":        {"10524455", "8341901", "9876543", "11122233", "44556677"},
+func (a *AmazonSource) downloadImage(ctx context.Context, imgURL string) ([]byte, error) {
+	req, _ := http.NewRequestWithContext(ctx, http.MethodGet, imgURL, nil)
+	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64)")
+	
+	resp, err := a.client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("bad status code: %d", resp.StatusCode)
 	}
 
-	ids, ok := openLibCoverIDs[style]
-	if !ok {
-		ids = openLibCoverIDs["Bold Typography"]
-	}
+	return io.ReadAll(resp.Body)
+}
 
-	var urls []string
-	for idx, id := range ids {
-		if idx >= limit {
-			break
-		}
-		urls = append(urls, fmt.Sprintf("https://covers.openlibrary.org/b/id/%s-L.jpg", id))
+func getAmazonCategoryURL(style string) string {
+	switch style {
+	case "Dark Photographic":
+		// Thriller / Suspense
+		return "https://www.amazon.com/best-sellers-books/zgbs/books/10484"
+	case "Illustrated":
+		// Fantasy
+		return "https://www.amazon.com/best-sellers-books/zgbs/books/16190"
+	case "Bold Typography":
+		// Business & Money
+		return "https://www.amazon.com/best-sellers-books/zgbs/books/3"
+	case "Minimalist":
+		// Self-Help
+		return "https://www.amazon.com/best-sellers-books/zgbs/books/4736"
+	default:
+		// Fallback to general Literature & Fiction
+		return "https://www.amazon.com/best-sellers-books/zgbs/books/17"
 	}
-	return urls
 }

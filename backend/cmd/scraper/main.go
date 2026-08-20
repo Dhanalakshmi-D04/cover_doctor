@@ -46,8 +46,7 @@ func main() {
 	}
 
 	sources := []scraper.BestsellerSource{
-		scraper.NewAmazonSource(15 * time.Second),
-		scraper.NewSampleSource(),
+		scraper.NewAmazonSource(30 * time.Second, cfg.ScraperAPIKey),
 	}
 
 	fmt.Println("=====================================================")

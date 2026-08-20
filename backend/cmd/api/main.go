@@ -18,6 +18,7 @@ import (
 	"github.com/Dhanalakshmi-D04/cover_doctor/backend/internal/billing"
 	"github.com/Dhanalakshmi-D04/cover_doctor/backend/internal/config"
 	"github.com/Dhanalakshmi-D04/cover_doctor/backend/internal/db"
+	"github.com/Dhanalakshmi-D04/cover_doctor/backend/internal/scraper"
 	"github.com/Dhanalakshmi-D04/cover_doctor/backend/internal/storage"
 )
 
@@ -84,7 +85,14 @@ func main() {
 		logger.Warn("STRIPE_SECRET_KEY not set — billing endpoints will return an error until configured")
 	}
 
-	router := api.NewRouter(database, rdb, cfg, aiClient, billingClient, s3Client, taskQueue)
+	scraperOpts := scraper.DefaultSchedulerOptions()
+	scraperOpts.Enabled = false // Background ticker runs in worker, API just triggers it manually
+	scraperOpts.Sources = []scraper.BestsellerSource{
+		scraper.NewAmazonSource(30*time.Second, cfg.ScraperAPIKey),
+	}
+	scraperScheduler := scraper.NewScheduler(database, aiClient, scraperOpts)
+
+	router := api.NewRouter(database, rdb, cfg, aiClient, billingClient, s3Client, taskQueue, scraperScheduler)
 
 	srv := &http.Server{
 		Addr:    ":" + cfg.Port,

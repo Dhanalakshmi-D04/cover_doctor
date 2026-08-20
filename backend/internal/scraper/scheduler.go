@@ -30,8 +30,7 @@ func DefaultSchedulerOptions() SchedulerOptions {
 		RunOnStartup: false,
 		ScraperOpts:  DefaultOptions(),
 		Sources: []BestsellerSource{
-			NewAmazonSource(15 * time.Second),
-			NewSampleSource(),
+			NewAmazonSource(30 * time.Second, ""),
 		},
 	}
 }
@@ -52,13 +51,9 @@ type Scheduler struct {
 
 // NewScheduler creates a new quarterly scraper scheduler instance.
 func NewScheduler(database *sqlx.DB, aiClient *ai.Client, opts SchedulerOptions) *Scheduler {
-	if opts.IntervalDays <= 0 {
-		opts.IntervalDays = 90
-	}
 	if len(opts.Sources) == 0 {
 		opts.Sources = []BestsellerSource{
-			NewAmazonSource(15 * time.Second),
-			NewSampleSource(),
+			NewAmazonSource(30 * time.Second, ""),
 		}
 	}
 	return &Scheduler{

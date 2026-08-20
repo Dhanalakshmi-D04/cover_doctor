@@ -43,6 +43,10 @@ type Config struct {
 	S3SecretKey       string
 	S3Bucket          string
 	S3ForcePathStyle  bool
+
+	// ScraperAPIKey is used to bypass Amazon's anti-scraping defenses
+	// during quarterly benchmark runs.
+	ScraperAPIKey string
 }
 
 // Load reads environment variables into a Config, returning an error only
@@ -71,6 +75,7 @@ func Load() (*Config, error) {
 		S3SecretKey: os.Getenv("S3_SECRET_KEY"),
 		S3Bucket:    os.Getenv("S3_BUCKET"),
 		S3ForcePathStyle: getEnv("S3_FORCE_PATH_STYLE", "true") == "true",
+		ScraperAPIKey:    os.Getenv("SCRAPER_API_KEY"),
 	}
 
 	// Fail fast with a specific message naming the missing variable, so it's

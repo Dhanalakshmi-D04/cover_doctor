@@ -70,6 +70,9 @@ func main() {
 
 	// Scraper Scheduler
 	scraperOpts := scraper.DefaultSchedulerOptions()
+	scraperOpts.Sources = []scraper.BestsellerSource{
+		scraper.NewAmazonSource(30*time.Second, cfg.ScraperAPIKey),
+	}
 	scraperScheduler := scraper.NewScheduler(database, aiClient, scraperOpts)
 	scraperScheduler.Start()
 
