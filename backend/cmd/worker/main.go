@@ -117,17 +117,18 @@ func main() {
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 
-	go func() {
-		logger.Info("Starting worker server")
-		if err := srv.Run(mux); err != nil {
-			logger.Error("worker server failed", "error", err)
-			os.Exit(1)
-		}
-	}()
+	logger.Info("Starting worker server")
+	if err := srv.Start(mux); err != nil {
+		logger.Error("worker server failed", "error", err)
+		os.Exit(1)
+	}
 
 	<-quit
 	logger.Info("Shutting down worker...")
 	scraperScheduler.Stop()
-	srv.Stop() // asynq server stop is graceful
+	
+	// srv.Stop() stops accepting new tasks and waits for in-flight tasks to finish
+	srv.Stop() 
+	
 	logger.Info("Worker exiting")
 }

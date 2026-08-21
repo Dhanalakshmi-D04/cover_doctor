@@ -32,6 +32,19 @@ COPY --from=builder /worker /worker
 COPY .env.example .env
 COPY migrations migrations
 
+# PRODUCTION DEPLOYMENT NOTE:
+# This single Docker image contains both the web API and the background worker.
+# To deploy to production, you must run TWO separate container services from this image:
+#
+# 1. API Service (Web):
+#    - Exposes Port: 8080
+#    - Command Override: /api
+#
+# 2. Worker Service (Background processing):
+#    - Exposes Port: None
+#    - Command Override: /worker
+
 EXPOSE 8080
 
+# The default command runs the API. To run the worker, override the command with "/worker".
 CMD ["/api"]

@@ -2,6 +2,7 @@ package db
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/jmoiron/sqlx"
 
@@ -57,4 +58,42 @@ func GetUserByID(database *sqlx.DB, id string) (*models.User, error) {
 		return nil, err
 	}
 	return &user, nil
+}
+
+// StorePasswordResetToken saves a hashed reset token, overwriting any existing one for the user.
+func StorePasswordResetToken(database *sqlx.DB, userID, tokenHash string, expiresAt time.Time) error {
+	_, err := database.Exec(`
+		INSERT INTO password_resets (user_id, token_hash, expires_at)
+		VALUES ($1, $2, $3)
+		ON CONFLICT (user_id) DO UPDATE 
+		SET token_hash = EXCLUDED.token_hash, expires_at = EXCLUDED.expires_at`,
+		userID, tokenHash, expiresAt)
+	return err
+}
+
+// GetPasswordResetToken retrieves the current token hash and expiration for a user.
+func GetPasswordResetToken(database *sqlx.DB, userID string) (string, time.Time, error) {
+	var hash string
+	var expiresAt time.Time
+	err := database.QueryRow(`SELECT token_hash, expires_at FROM password_resets WHERE user_id = $1`, userID).Scan(&hash, &expiresAt)
+	return hash, expiresAt, err
+}
+
+// UpdatePassword updates a user's password hash and deletes their active reset token atomically.
+func UpdatePassword(database *sqlx.DB, userID, newPasswordHash string) error {
+	tx, err := database.Beginx()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback() //nolint:errcheck
+
+	if _, err := tx.Exec(`UPDATE users SET password_hash = $1 WHERE id = $2`, newPasswordHash, userID); err != nil {
+		return err
+	}
+
+	if _, err := tx.Exec(`DELETE FROM password_resets WHERE user_id = $1`, userID); err != nil {
+		return err
+	}
+
+	return tx.Commit()
 }

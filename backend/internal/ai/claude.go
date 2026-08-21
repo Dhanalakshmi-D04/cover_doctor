@@ -15,7 +15,7 @@ import (
 
 const (
 	claudeAPIURL     = "https://api.anthropic.com/v1/messages"
-	claudeModel      = "claude-3-5-sonnet-20241022"
+	claudeModel      = "claude-haiku-4-5-20251001"
 	claudeAPIVersion = "2023-06-01"
 )
 
@@ -25,10 +25,15 @@ type claudeImageSource struct {
 	Data      string `json:"data"`
 }
 
+type cacheControl struct {
+	Type string `json:"type"`
+}
+
 type claudeContentBlock struct {
-	Type   string             `json:"type"`
-	Text   string             `json:"text,omitempty"`
-	Source *claudeImageSource `json:"source,omitempty"`
+	Type         string             `json:"type"`
+	Text         string             `json:"text,omitempty"`
+	Source       *claudeImageSource `json:"source,omitempty"`
+	CacheControl *cacheControl      `json:"cache_control,omitempty"`
 }
 
 type claudeMessage struct {
@@ -76,7 +81,11 @@ func (c *Client) callClaudeVision(prompt string, imageBytes []byte, mediaType st
 					Data:      encoded,
 				},
 			},
-			{Type: "text", Text: prompt},
+			{
+				Type:         "text",
+				Text:         prompt,
+				CacheControl: &cacheControl{Type: "ephemeral"},
+			},
 		},
 	})
 }
@@ -100,6 +109,7 @@ func (c *Client) callClaude(message claudeMessage) (string, error) {
 	req.Header.Set("content-type", "application/json")
 	req.Header.Set("x-api-key", c.apiKey)
 	req.Header.Set("anthropic-version", claudeAPIVersion)
+	req.Header.Set("anthropic-beta", "prompt-caching-2024-07-31")
 
 	httpClient := &http.Client{Timeout: 30 * time.Second}
 	resp, err := httpClient.Do(req)

@@ -7,6 +7,7 @@ import (
 	"github.com/Dhanalakshmi-D04/cover_doctor/backend/internal/ai"
 	"github.com/Dhanalakshmi-D04/cover_doctor/backend/internal/billing"
 	"github.com/Dhanalakshmi-D04/cover_doctor/backend/internal/config"
+	"github.com/Dhanalakshmi-D04/cover_doctor/backend/internal/email"
 	"github.com/Dhanalakshmi-D04/cover_doctor/backend/internal/scraper"
 	"github.com/Dhanalakshmi-D04/cover_doctor/backend/internal/storage"
 )
@@ -20,4 +21,5 @@ type Handler struct {
 	AI               *ai.Client
 	Billing          *billing.Client
 	ScraperScheduler *scraper.Scheduler
+	EmailSender      email.EmailSender
 }

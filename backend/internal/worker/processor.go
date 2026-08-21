@@ -11,7 +11,6 @@ import (
 	"log"
 	"log/slog"
 	"os"
-	"sync"
 
 	"github.com/hibiken/asynq"
 	"github.com/jmoiron/sqlx"
@@ -123,28 +122,17 @@ func (p *Processor) ProcessTaskProcessCover(ctx context.Context, t *asynq.Task) 
 	benchmark := scoring.BenchmarkForStyleWithDB(p.db, style)
 	report := scoring.Score(title.HeightPercent, contrast, whitespace, benchmark)
 
-	// AI touchpoint #2: explanations concurrently
-	var (
-		titleExplanation      string
-		contrastExplanation   string
-		whitespaceExplanation string
-		wg                    sync.WaitGroup
-	)
+	featuresData := []ai.FeatureData{
+		{Name: "title size", Value: report.Features[0].Value, BenchmarkAverage: averageOf(benchmark, "title"), Percentile: report.Features[0].Percentile},
+		{Name: "contrast", Value: report.Features[1].Value, BenchmarkAverage: averageOf(benchmark, "contrast"), Percentile: report.Features[1].Percentile},
+		{Name: "whitespace", Value: report.Features[2].Value, BenchmarkAverage: averageOf(benchmark, "whitespace"), Percentile: report.Features[2].Percentile},
+	}
 
-	wg.Add(3)
-	go func() {
-		defer wg.Done()
-		titleExplanation = p.ai.ExplainFeature("title size", report.Features[0].Value, averageOf(benchmark, "title"), report.Features[0].Percentile)
-	}()
-	go func() {
-		defer wg.Done()
-		contrastExplanation = p.ai.ExplainFeature("contrast", report.Features[1].Value, averageOf(benchmark, "contrast"), report.Features[1].Percentile)
-	}()
-	go func() {
-		defer wg.Done()
-		whitespaceExplanation = p.ai.ExplainFeature("whitespace", report.Features[2].Value, averageOf(benchmark, "whitespace"), report.Features[2].Percentile)
-	}()
-	wg.Wait()
+	explanations := p.ai.ExplainFeatures(featuresData)
+
+	titleExplanation := explanations["title size"]
+	contrastExplanation := explanations["contrast"]
+	whitespaceExplanation := explanations["whitespace"]
 
 	versionNumber := 1
 	var bookProjectIDPtr *string

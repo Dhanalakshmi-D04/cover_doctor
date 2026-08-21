@@ -12,7 +12,7 @@ type Config struct {
 	Port          string
 	DatabaseURL   string
 	JWTSecret     string
-	AllowedOrigin string
+	FrontendURL   string
 	GinMode       string
 
 	// AppBaseURL is the public URL of the frontend app (e.g. "http://localhost:5173"
@@ -44,6 +44,10 @@ type Config struct {
 	S3Bucket         string
 	S3ForcePathStyle bool
 
+	// Resend configuration for sending emails
+	ResendAPIKey    string
+	ResendFromEmail string
+
 	// ScraperAPIKey is used to bypass Amazon's anti-scraping defenses
 	// during quarterly benchmark runs.
 	ScraperAPIKey string
@@ -58,7 +62,7 @@ func Load() (*Config, error) {
 		Port:          getEnv("PORT", "8080"),
 		DatabaseURL:   os.Getenv("DATABASE_URL"),
 		JWTSecret:     os.Getenv("JWT_SECRET"),
-		AllowedOrigin: getEnv("ALLOWED_ORIGIN", "http://localhost:5173"),
+		FrontendURL:   getEnv("FRONTEND_URL", "http://localhost:5173"),
 		GinMode:       getEnv("GIN_MODE", "release"),
 		AppBaseURL:    getEnv("APP_BASE_URL", "http://localhost:5173"),
 
@@ -75,6 +79,8 @@ func Load() (*Config, error) {
 		S3SecretKey:      os.Getenv("S3_SECRET_KEY"),
 		S3Bucket:         os.Getenv("S3_BUCKET"),
 		S3ForcePathStyle: getEnv("S3_FORCE_PATH_STYLE", "true") == "true",
+		ResendAPIKey:     os.Getenv("RESEND_API_KEY"),
+		ResendFromEmail:  os.Getenv("RESEND_FROM_EMAIL"),
 		ScraperAPIKey:    os.Getenv("SCRAPER_API_KEY"),
 	}
 

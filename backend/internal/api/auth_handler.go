@@ -1,9 +1,12 @@
 package api
 
 import (
+	"crypto/rand"
 	"database/sql"
+	"encoding/hex"
 	"errors"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -121,4 +124,122 @@ func setAuthCookie(c *gin.Context, token string, secure bool) {
 		maxAge = -1 // tells the browser to delete the cookie
 	}
 	c.SetCookie("auth_token", token, maxAge, "/", "", secure, true /* httpOnly */)
+}
+
+type forgotPasswordRequest struct {
+	Email string `json:"email" binding:"required,email"`
+}
+
+// ForgotPassword handles POST /auth/forgot-password.
+func (h *Handler) ForgotPassword(c *gin.Context) {
+	var req forgotPasswordRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	user, err := db.GetUserByEmail(h.DB, req.Email)
+	if err != nil {
+		// Timing-safe: don't reveal if user exists
+		if errors.Is(err, sql.ErrNoRows) {
+			_ = bcrypt.CompareHashAndPassword(dummyPasswordHash, []byte("dummy-password-for-timing-defense"))
+			c.JSON(http.StatusOK, gin.H{"message": "If that email is in our database, we will send a password reset link to it."})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to process request"})
+		return
+	}
+
+	// Generate secure token
+	tokenBytes := make([]byte, 32)
+	if _, err := rand.Read(tokenBytes); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to generate secure token"})
+		return
+	}
+	token := hex.EncodeToString(tokenBytes)
+	
+	// Hash the token
+	tokenHash, err := bcrypt.GenerateFromPassword([]byte(token), bcrypt.DefaultCost)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to generate reset token"})
+		return
+	}
+
+	// Store it
+	expiresAt := time.Now().Add(1 * time.Hour)
+	if err := db.StorePasswordResetToken(h.DB, user.ID, string(tokenHash), expiresAt); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to store reset token"})
+		return
+	}
+
+	// Send email
+	resetLink := h.Config.FrontendURL + "/reset-password?token=" + token + "&email=" + user.Email
+	if h.EmailSender != nil {
+		if err := h.EmailSender.SendPasswordResetEmail(c.Request.Context(), user.Email, resetLink); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to send reset email"})
+			return
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "If that email is in our database, we will send a password reset link to it."})
+}
+
+type resetPasswordRequest struct {
+	Email    string `json:"email" binding:"required,email"`
+	Token    string `json:"token" binding:"required"`
+	Password string `json:"password" binding:"required,min=8"`
+}
+
+// ResetPassword handles POST /auth/reset-password.
+func (h *Handler) ResetPassword(c *gin.Context) {
+	var req resetPasswordRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	user, err := db.GetUserByEmail(h.DB, req.Email)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			_ = bcrypt.CompareHashAndPassword(dummyPasswordHash, []byte(req.Token))
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid or expired token"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to process request"})
+		return
+	}
+
+	hash, expiresAt, err := db.GetPasswordResetToken(h.DB, user.ID)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			_ = bcrypt.CompareHashAndPassword(dummyPasswordHash, []byte(req.Token))
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid or expired token"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to process request"})
+		return
+	}
+
+	if time.Now().After(expiresAt) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid or expired token"})
+		return
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(req.Token)); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid or expired token"})
+		return
+	}
+
+	newPasswordHash, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to secure new password"})
+		return
+	}
+
+	if err := db.UpdatePassword(h.DB, user.ID, string(newPasswordHash)); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update password"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "password has been reset successfully"})
 }

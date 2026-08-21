@@ -19,6 +19,7 @@ import (
 	"github.com/Dhanalakshmi-D04/cover_doctor/backend/internal/billing"
 	"github.com/Dhanalakshmi-D04/cover_doctor/backend/internal/config"
 	"github.com/Dhanalakshmi-D04/cover_doctor/backend/internal/db"
+	"github.com/Dhanalakshmi-D04/cover_doctor/backend/internal/email"
 	"github.com/Dhanalakshmi-D04/cover_doctor/backend/internal/scraper"
 	"github.com/Dhanalakshmi-D04/cover_doctor/backend/internal/storage"
 )
@@ -105,7 +106,9 @@ func main() {
 	}
 	scraperScheduler := scraper.NewScheduler(database, aiClient, scraperOpts)
 
-	router := api.NewRouter(database, rdb, cfg, aiClient, billingClient, s3Client, taskQueue, scraperScheduler)
+	emailClient := email.NewResendSender(cfg)
+
+	router := api.NewRouter(database, rdb, cfg, aiClient, billingClient, s3Client, taskQueue, emailClient, scraperScheduler)
 
 	srv := &http.Server{
 		Addr:    ":" + cfg.Port,

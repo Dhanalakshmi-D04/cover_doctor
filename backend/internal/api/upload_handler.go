@@ -86,7 +86,24 @@ func (h *Handler) Upload(c *gin.Context) {
 		}
 	}()
 
-	// Read first 512 bytes for mime type and full decode config for dimensions
+	sniffer := make([]byte, 512)
+	n, err := f.Read(sniffer)
+	if err != nil && err != io.EOF {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to read uploaded file"})
+		return
+	}
+	if _, err := f.Seek(0, io.SeekStart); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to process uploaded file"})
+		return
+	}
+
+	contentType := http.DetectContentType(sniffer[:n])
+	if contentType != "image/jpeg" && contentType != "image/png" && contentType != "image/webp" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid image content type based on file signature"})
+		return
+	}
+
+	// Read full decode config for dimensions
 	imgConfig, format, err := image.DecodeConfig(f)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "unsupported or corrupt image"})
@@ -107,7 +124,7 @@ func (h *Handler) Upload(c *gin.Context) {
 		return
 	}
 
-	contentType := "image/" + format
+	contentType = "image/" + format
 	switch format {
 	case "jpeg":
 		contentType = "image/jpeg"

@@ -12,12 +12,13 @@ import (
 	"github.com/Dhanalakshmi-D04/cover_doctor/backend/internal/billing"
 	"github.com/Dhanalakshmi-D04/cover_doctor/backend/internal/config"
 	"github.com/Dhanalakshmi-D04/cover_doctor/backend/internal/middleware"
+	"github.com/Dhanalakshmi-D04/cover_doctor/backend/internal/email"
 	"github.com/Dhanalakshmi-D04/cover_doctor/backend/internal/scraper"
 	"github.com/Dhanalakshmi-D04/cover_doctor/backend/internal/storage"
 )
 
 // NewRouter wires up all HTTP routes for the API.
-func NewRouter(database *sqlx.DB, rdb *redis.Client, cfg *config.Config, aiClient *ai.Client, billingClient *billing.Client, s3Client *storage.S3Client, taskQueue *asynq.Client, scraperScheduler ...*scraper.Scheduler) *gin.Engine {
+func NewRouter(database *sqlx.DB, rdb *redis.Client, cfg *config.Config, aiClient *ai.Client, billingClient *billing.Client, s3Client *storage.S3Client, taskQueue *asynq.Client, emailClient email.EmailSender, scraperScheduler ...*scraper.Scheduler) *gin.Engine {
 	if cfg.GinMode != "" {
 		gin.SetMode(cfg.GinMode)
 	}
@@ -28,11 +29,11 @@ func NewRouter(database *sqlx.DB, rdb *redis.Client, cfg *config.Config, aiClien
 	router.Use(middleware.HTTPSRedirect()) // Redirects http→https when behind a TLS proxy
 	_ = router.SetTrustedProxies(nil)      // explicitly disable proxy trusting by default
 
-	router.Use(middleware.CORS(cfg.AllowedOrigin))
+	router.Use(middleware.CORS(cfg.FrontendURL))
 
 	// Rate limiters for sensitive endpoints
-	authRateLimiter := middleware.NewRateLimiter(rdb, 15)   // 15 requests/min per IP
-	uploadRateLimiter := middleware.NewRateLimiter(rdb, 20) // 20 uploads/min per IP
+	authRateLimiter := middleware.NewRateLimiter(rdb, 15)         // 15 requests/min per IP
+	uploadRateLimiter := middleware.NewUploadRateLimiter(rdb, 10) // 10 uploads/min per user
 
 	var sched *scraper.Scheduler
 	if len(scraperScheduler) > 0 {
@@ -47,6 +48,7 @@ func NewRouter(database *sqlx.DB, rdb *redis.Client, cfg *config.Config, aiClien
 		AI:               aiClient,
 		Billing:          billingClient,
 		ScraperScheduler: sched,
+		EmailSender:      emailClient,
 	}
 
 	router.GET("/healthz", func(c *gin.Context) {
@@ -55,6 +57,8 @@ func NewRouter(database *sqlx.DB, rdb *redis.Client, cfg *config.Config, aiClien
 
 	router.POST("/auth/signup", authRateLimiter.Limit(), handler.Signup)
 	router.POST("/auth/login", authRateLimiter.Limit(), handler.Login)
+	router.POST("/auth/forgot-password", authRateLimiter.Limit(), handler.ForgotPassword)
+	router.POST("/auth/reset-password", authRateLimiter.Limit(), handler.ResetPassword)
 
 	// Polar signs this payload itself; it can never carry a JWT.
 	router.POST("/billing/webhook", handler.PolarWebhook)

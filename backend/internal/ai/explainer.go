@@ -1,27 +1,56 @@
 package ai
 
-import "fmt"
+import (
+	"encoding/json"
+	"fmt"
+)
 
-// ExplainFeature turns already-computed numbers into a short, natural
-// sentence. It never decides the score or the recommendation — that data
-// is already final by the time it reaches here. See docs/00-overview.md,
-// "AI Use #2 — Writing the Why Explanations".
-func (c *Client) ExplainFeature(feature string, value, benchmarkAverage, percentile float64) string {
-	if !c.enabled {
-		return fallbackExplanation(feature, value, percentile)
+type FeatureData struct {
+	Name             string  `json:"name"`
+	Value            float64 `json:"value"`
+	BenchmarkAverage float64 `json:"benchmark_average"`
+	Percentile       float64 `json:"percentile"`
+}
+
+// ExplainFeatures turns already-computed numbers into short, natural
+// sentences in a single batched API call.
+func (c *Client) ExplainFeatures(features []FeatureData) map[string]string {
+	results := make(map[string]string)
+	
+	// Pre-fill with fallbacks so we always have a safe default
+	for _, f := range features {
+		results[f.Name] = fallbackExplanation(f.Name, f.Value, f.Percentile)
 	}
 
-	prompt := fmt.Sprintf(
-		"Turn this data into a short, clear, one-sentence explanation for a book author, in a friendly but direct tone. Do not invent numbers not given here.\nFeature: %s\nYour value: %.2f\nBenchmark average: %.2f\nPercentile: %.0f",
-		feature, value, benchmarkAverage, percentile,
-	)
+	if !c.enabled || len(features) == 0 {
+		return results
+	}
+
+	prompt := "Turn the following data into a short, clear, one-sentence explanation for a book author, in a friendly but direct tone per feature. Do not invent numbers. Return ONLY a JSON object where the keys are the feature names and the values are your string explanations.\n\n"
+	
+	prompt += "Features Data:\n"
+	for _, f := range features {
+		prompt += fmt.Sprintf("- Feature: %s | Value: %.2f | Benchmark average: %.2f | Percentile: %.0f\n", f.Name, f.Value, f.BenchmarkAverage, f.Percentile)
+	}
 
 	response, err := c.callClaudeText(prompt)
 	if err != nil || response == "" {
-		return fallbackExplanation(feature, value, percentile)
+		return results // Fallback already in map
 	}
 
-	return response
+	var parsed map[string]string
+	if err := json.Unmarshal([]byte(response), &parsed); err != nil {
+		// If JSON parsing fails, fallback
+		return results
+	}
+
+	for _, f := range features {
+		if explanation, ok := parsed[f.Name]; ok && explanation != "" {
+			results[f.Name] = explanation
+		}
+	}
+
+	return results
 }
 
 // fallbackExplanation is used when AI is disabled or the call fails — a
