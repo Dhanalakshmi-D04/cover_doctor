@@ -44,8 +44,8 @@ func (h *Handler) GetReport(c *gin.Context) {
 		return
 	}
 
-	if plan == billing.PlanPaid {
-		c.JSON(http.StatusOK, gin.H{"plan": "paid", "report": cover})
+	if billing.IsPaid(plan) {
+		c.JSON(http.StatusOK, gin.H{"plan": string(plan), "report": cover})
 		return
 	}
 

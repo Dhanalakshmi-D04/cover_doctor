@@ -17,7 +17,7 @@ func init() {
 
 func TestWebhookHandlerUnconfigured(t *testing.T) {
 	router := gin.New()
-	router.POST("/billing/webhook", billing.HandleWebhook(nil, ""))
+	router.POST("/billing/webhook", billing.HandleWebhook(nil, "", nil))
 
 	req, _ := http.NewRequest("POST", "/billing/webhook", bytes.NewBufferString("{}"))
 	w := httptest.NewRecorder()

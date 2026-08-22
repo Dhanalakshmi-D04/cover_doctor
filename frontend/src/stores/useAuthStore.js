@@ -1,10 +1,12 @@
 import { create } from 'zustand';
 import { getAccount } from '../api/client';
 
-export const useAuthStore = create((set, get) => ({
+export const useAuthStore = create((set) => ({
   user: null,
   isAuthenticated: !!localStorage.getItem('token'),
   plan: 'free',
+  projectCount: 0,
+  projectLimit: 0,
   credits: 50,
   isLoading: false,
 
@@ -17,6 +19,8 @@ export const useAuthStore = create((set, get) => ({
       const data = await getAccount();
       set({
         plan: data.plan || 'free',
+        projectCount: data.project_count ?? 0,
+        projectLimit: data.project_limit ?? 0,
         credits: data.credits ?? 50,
         isLoading: false,
       });
@@ -31,6 +35,6 @@ export const useAuthStore = create((set, get) => ({
 
   logout: () => {
     localStorage.removeItem('token');
-    set({ user: null, isAuthenticated: false, plan: 'free', credits: 0 });
+    set({ user: null, isAuthenticated: false, plan: 'free', projectCount: 0, projectLimit: 0, credits: 0 });
   },
 }));

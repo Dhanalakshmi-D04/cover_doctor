@@ -16,16 +16,60 @@ type createBookProjectRequest struct {
 	Title string `json:"title" binding:"required"`
 }
 
-// CreateBookProject handles POST /book-projects: creates a named project
-// that cover versions get explicitly attached to for Evolution Tracking
-// (see docs/05-pricing-and-plans.md). Available regardless of plan —
-// what's gated is *viewing* the version history, not creating the project.
+// CreateBookProject handles POST /book-projects.
+// Book project creation is gated by plan tier:
+//
+//   - PlanFree:      0 projects — pure paywall, no unpaid AI spend
+//   - PlanStarter:   1 project
+//   - PlanCreator:   5 projects
+//   - PlanPublisher: 20 projects
+//
+// Returns a structured 403 with error code "plan_limit_reached" so the
+// frontend can open the pricing modal without parsing message text.
 func (h *Handler) CreateBookProject(c *gin.Context) {
 	userID := c.GetString(middleware.UserIDContextKey)
 
 	var req createBookProjectRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	plan, err := billing.Check(h.DB, userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to check subscription"})
+		return
+	}
+
+	limit := billing.MaxBookProjects(plan)
+
+	count, err := db.CountBookProjectsByUserID(h.DB, userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to count book projects"})
+		return
+	}
+
+	if count >= limit {
+		var message string
+		switch plan {
+		case billing.PlanFree:
+			message = "Upgrade to a paid plan to create your first book project"
+		case billing.PlanStarter:
+			message = "Plan limit reached: Starter allows 1 book project. Upgrade to Creator for 5."
+		case billing.PlanCreator:
+			message = "Plan limit reached: Creator allows 5 book projects. Upgrade to Publisher for 20."
+		case billing.PlanPublisher:
+			message = "Plan limit reached: Publisher allows 20 book projects."
+		default:
+			message = "Plan limit reached"
+		}
+		c.JSON(http.StatusForbidden, gin.H{
+			"error":        "plan_limit_reached",
+			"message":      message,
+			"current_plan": string(plan),
+			"limit":        limit,
+			"count":        count,
+		})
 		return
 	}
 
@@ -67,7 +111,7 @@ func (h *Handler) ListVersions(c *gin.Context) {
 		return
 	}
 
-	if plan != billing.PlanPaid {
+	if !billing.IsPaid(plan) {
 		c.JSON(http.StatusOK, gin.H{
 			"locked":  true,
 			"message": "Evolution Tracking is a paid feature. Upgrade to see full version history.",

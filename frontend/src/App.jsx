@@ -11,6 +11,7 @@ import Pricing from './pages/Pricing';
 import WorkflowsPage from './pages/WorkflowsPage';
 import HelpPage from './pages/HelpPage';
 import AdminPage from './pages/AdminPage';
+import BillingSuccess from './pages/BillingSuccess';
 import AppShell from './components/AppShell';
 import { logout } from './api/client';
 import { useAuthStore } from './stores/useAuthStore';
@@ -19,6 +20,7 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('token'));
   const [coverId, setCoverId] = useState(null);
   const [activeTab, setActiveTab] = useState('home');
+  const [isBillingSuccess, setIsBillingSuccess] = useState(window.location.pathname.startsWith('/billing/success'));
 
   const fetchAccount = useAuthStore((state) => state.fetchAccount);
 
@@ -64,11 +66,28 @@ function App() {
     setCoverId(null);
   }
 
+  function handleBillingSuccessNavigateHome() {
+    window.history.replaceState({}, document.title, '/');
+    setIsBillingSuccess(false);
+    setActiveTab('home');
+  }
+
   if (!isAuthenticated) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', backgroundColor: 'var(--bg-app)' }}>
         <Auth onAuthenticated={() => setIsAuthenticated(true)} />
       </div>
+    );
+  }
+
+  if (isBillingSuccess) {
+    return (
+      <AppShell activeTab="home" setActiveTab={handleTabChange} isAuthenticated={isAuthenticated} onLogout={handleLogout}>
+        <BillingSuccess 
+          onNavigateHome={handleBillingSuccessNavigateHome}
+          onUploaded={(id) => { setCoverId(id); handleBillingSuccessNavigateHome(); }} 
+        />
+      </AppShell>
     );
   }
 

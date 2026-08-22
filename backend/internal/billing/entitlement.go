@@ -1,5 +1,5 @@
 // Package billing is the ONLY place in this codebase that knows about
-// plans, Stripe, or payment status — mirroring the isolation already used
+// plans, Polar, or payment status — mirroring the isolation already used
 // for the ai package. See docs/03-project-architecture.md and
 // docs/05-pricing-and-plans.md.
 package billing
@@ -14,9 +14,36 @@ import (
 type Plan string
 
 const (
-	PlanFree Plan = "free"
+	PlanFree      Plan = "free"
+	PlanStarter   Plan = "starter"
+	PlanCreator   Plan = "creator"
+	PlanPublisher Plan = "publisher"
+
+	// PlanPaid is kept as a backwards-compat alias so existing call sites
+	// that compare against PlanPaid still compile. New code should use
+	// the specific tier constants above.
 	PlanPaid Plan = "paid"
 )
+
+// MaxBookProjects returns the maximum number of book projects a user on this
+// plan may own. PlanFree = 0 (pure paywall — no unpaid AI spend).
+func MaxBookProjects(plan Plan) int {
+	switch plan {
+	case PlanStarter:
+		return 1
+	case PlanCreator:
+		return 5
+	case PlanPublisher:
+		return 20
+	default: // PlanFree and any unrecognised plan
+		return 0
+	}
+}
+
+// IsPaid reports whether the plan grants access to paid features.
+func IsPaid(plan Plan) bool {
+	return plan == PlanStarter || plan == PlanCreator || plan == PlanPublisher
+}
 
 // Check is the ONLY function in this codebase that decides what a user is
 // allowed to see. Every api handler that needs to gate a response calls
@@ -29,8 +56,14 @@ func Check(database *sqlx.DB, userID string) (Plan, error) {
 	if sub == nil {
 		return PlanFree, nil
 	}
-	if sub.Plan == string(PlanPaid) && (sub.Status == "active" || sub.Status == "trialing") {
-		return PlanPaid, nil
+	if sub.Status == "active" || sub.Status == "trialing" {
+		switch Plan(sub.Plan) {
+		case PlanStarter, PlanCreator, PlanPublisher:
+			return Plan(sub.Plan), nil
+		case PlanPaid:
+			// Legacy rows written before the three-tier system — treat as Creator.
+			return PlanCreator, nil
+		}
 	}
 	return PlanFree, nil
 }

@@ -74,11 +74,13 @@ func NewRouter(database *sqlx.DB, rdb *redis.Client, cfg *config.Config, aiClien
 		protected.POST("/book-projects", handler.CreateBookProject)
 		protected.GET("/book-projects", handler.ListBookProjects)
 		protected.GET("/book-projects/:id/versions", handler.ListVersions)
+		protected.GET("/billing/checkout-url", handler.GetCheckoutURL)
 		protected.POST("/billing/checkout", handler.CreateCheckoutSession)
 		protected.POST("/billing/portal", handler.CreatePortalSession)
 
-		// Protected account info
+		// Protected account info — also aliased as /user/plan for frontend plan polling
 		protected.GET("/account", handler.GetAccount)
+		protected.GET("/user/plan", handler.GetAccount)
 
 		// Admin scraper control routes (requires is_admin=true)
 		admin := protected.Group("/admin")

@@ -48,8 +48,10 @@ export default function Account({ onNavigate }) {
           </div>
 
           <div>
-            <div style={{ fontSize: "0.9rem", color: "var(--theme-text-muted)" }}>Credits</div>
-            <div style={{ fontSize: "1.1rem", fontWeight: 800 }}>{account && account.credits != null ? account.credits : "Free"}</div>
+            <div style={{ fontSize: "0.9rem", color: "var(--theme-text-muted)" }}>Projects Used</div>
+            <div style={{ fontSize: "1.1rem", fontWeight: 800 }}>
+              {account ? `${account.project_count || 0} / ${account.project_limit || 0}` : "—"}
+            </div>
           </div>
 
           <div>

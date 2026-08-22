@@ -15,7 +15,11 @@ async function parseOrThrow(response) {
       localStorage.removeItem("token");
       window.dispatchEvent(new Event("auth_unauthorized"));
     }
-    throw new Error(body.error || "Request failed");
+    const err = new Error(body.message || body.error || "Request failed");
+    // Attach the full parsed body so callers can check err.code, err.current_plan, etc.
+    err.code = body.error;
+    err.body = body;
+    throw err;
   }
   return response.json();
 }
@@ -143,5 +147,29 @@ export async function getAccount() {
     headers: authHeaders(),
     credentials: "include",
   });
-  return parseOrThrow(response); // { plan, credits }
+  return parseOrThrow(response); // { plan, project_count, project_limit, credits }
+}
+
+// getCheckoutURL asks the backend to generate a Polar checkout URL for the given
+// plan slug (starter | creator | publisher). The backend injects the user's
+// client_reference_id so the webhook knows who paid.
+export async function getCheckoutURL(plan) {
+  const response = await fetch(
+    `${API_BASE_URL}/billing/checkout-url?plan=${encodeURIComponent(plan)}`,
+    {
+      headers: authHeaders(),
+      credentials: "include",
+    }
+  );
+  return parseOrThrow(response); // { checkout_url }
+}
+
+// getUserPlan polls GET /user/plan (same as /account) for up-to-date plan info.
+// Used after returning from Polar checkout to detect webhook landing.
+export async function getUserPlan() {
+  const response = await fetch(`${API_BASE_URL}/user/plan`, {
+    headers: authHeaders(),
+    credentials: "include",
+  });
+  return parseOrThrow(response); // { plan, project_count, project_limit }
 }

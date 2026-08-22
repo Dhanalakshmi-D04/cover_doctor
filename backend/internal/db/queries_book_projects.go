@@ -78,3 +78,11 @@ func NextVersionNumber(database *sqlx.DB, bookProjectID string) (int, error) {
 	}
 	return int(maxVersion.Int64) + 1, nil
 }
+
+// CountBookProjectsByUserID returns the number of book projects owned by a user.
+// Used for plan limit enforcement before creating a new project.
+func CountBookProjectsByUserID(database *sqlx.DB, userID string) (int, error) {
+	var count int
+	err := database.Get(&count, `SELECT COUNT(*) FROM book_projects WHERE user_id = $1`, userID)
+	return count, err
+}

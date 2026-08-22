@@ -49,11 +49,12 @@ func UpdateSubscriptionByPolarID(database *sqlx.DB, polarSubscriptionID, plan, s
 
 // AttachPolarCustomer links a user's subscription row to a Polar
 // customer/subscription pair, called after a successful checkout.
-func AttachPolarCustomer(database *sqlx.DB, userID, polarCustomerID, polarSubscriptionID string) error {
+// plan should be the specific tier string (e.g. "starter", "creator", "publisher").
+func AttachPolarCustomer(database *sqlx.DB, userID, polarCustomerID, polarSubscriptionID, plan string) error {
 	query := `
 		UPDATE subscriptions
-		SET polar_customer_id = $1, polar_subscription_id = $2, plan = 'paid', status = 'active'
+		SET polar_customer_id = $1, polar_subscription_id = $2, plan = $4, status = 'active'
 		WHERE user_id = $3`
-	_, err := database.Exec(query, polarCustomerID, polarSubscriptionID, userID)
+	_, err := database.Exec(query, polarCustomerID, polarSubscriptionID, userID, plan)
 	return err
 }

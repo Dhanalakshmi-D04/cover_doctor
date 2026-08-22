@@ -29,7 +29,9 @@ type Config struct {
 	// endpoints return a clear "not configured" error instead of panicking.
 	PolarAccessToken      string
 	PolarWebhookSecret    string
-	PolarProductIDMonthly string
+	PolarProductIDStarter   string
+	PolarProductIDCreator   string
+	PolarProductIDPublisher string
 	PolarOrganizationID   string
 
 	// Redis configuration for job queue and rate limiting
@@ -68,10 +70,12 @@ func Load() (*Config, error) {
 
 		AnthropicAPIKey: os.Getenv("ANTHROPIC_API_KEY"),
 
-		PolarAccessToken:      os.Getenv("POLAR_ACCESS_TOKEN"),
-		PolarWebhookSecret:    os.Getenv("POLAR_WEBHOOK_SECRET"),
-		PolarProductIDMonthly: os.Getenv("POLAR_PRODUCT_ID_MONTHLY"),
-		PolarOrganizationID:   os.Getenv("POLAR_ORGANIZATION_ID"),
+		PolarAccessToken:        os.Getenv("POLAR_ACCESS_TOKEN"),
+		PolarWebhookSecret:      os.Getenv("POLAR_WEBHOOK_SECRET"),
+		PolarProductIDStarter:   os.Getenv("POLAR_PRODUCT_ID_STARTER"),
+		PolarProductIDCreator:   os.Getenv("POLAR_PRODUCT_ID_CREATOR"),
+		PolarProductIDPublisher: os.Getenv("POLAR_PRODUCT_ID_PUBLISHER"),
+		PolarOrganizationID:     os.Getenv("POLAR_ORGANIZATION_ID"),
 
 		RedisURL:         getEnv("REDIS_URL", "redis://localhost:6379/0"),
 		S3Endpoint:       os.Getenv("S3_ENDPOINT"),

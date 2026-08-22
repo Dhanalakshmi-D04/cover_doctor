@@ -5,10 +5,11 @@ import { useAuthStore } from '../stores/useAuthStore';
 
 export default function CreditsPill({ onNavigate }) {
   const [open, setOpen] = useState(false);
-  const credits = useAuthStore((state) => state.credits);
+  const projectCount = useAuthStore((state) => state.projectCount) || 0;
+  const projectLimit = useAuthStore((state) => state.projectLimit) || 0;
   const plan = useAuthStore((state) => state.plan);
 
-  const isLow = credits !== null && credits <= 5;
+  const isLow = projectCount >= projectLimit && projectLimit > 0;
 
   return (
     <div style={{ position: 'relative', display: 'inline-block' }}>
@@ -17,7 +18,7 @@ export default function CreditsPill({ onNavigate }) {
         whileTap={{ scale: 0.98 }}
         onClick={() => setOpen((prev) => !prev)}
         aria-expanded={open}
-        aria-label="View credits balance"
+        aria-label="View project usage"
         style={{
           display: 'inline-flex',
           alignItems: 'center',
@@ -35,8 +36,8 @@ export default function CreditsPill({ onNavigate }) {
         }}
       >
         <Zap size={14} color={isLow ? 'var(--accent-warning)' : 'var(--accent-primary)'} fill={isLow ? 'var(--accent-warning)' : 'var(--accent-primary)'} />
-        <span>{credits ?? 50}</span>
-        <span style={{ fontSize: '0.75rem', opacity: 0.7 }}>credits</span>
+        <span>{projectCount} / {projectLimit}</span>
+        <span style={{ fontSize: '0.75rem', opacity: 0.7 }}>projects</span>
         <Info size={12} style={{ opacity: 0.6, marginLeft: '0.2rem' }} />
       </motion.button>
 
@@ -63,7 +64,7 @@ export default function CreditsPill({ onNavigate }) {
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: '700', fontSize: '0.9rem' }}>
                 <Sparkles size={16} color="var(--accent-primary)" />
-                <span>Credit Balance</span>
+                <span>Project Usage</span>
               </div>
               <span style={{ fontSize: '0.75rem', padding: '0.15rem 0.5rem', borderRadius: 'var(--radius-full)', backgroundColor: 'rgba(99, 102, 241, 0.15)', color: 'var(--accent-primary)', textTransform: 'uppercase', fontWeight: '700' }}>
                 {plan}
@@ -71,7 +72,7 @@ export default function CreditsPill({ onNavigate }) {
             </div>
 
             <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.75rem', lineHeight: '1.4' }}>
-              1 credit is used per cover diagnostic report, A/B comparison analysis, or visual palette breakdown.
+              Each book project tracks unlimited cover revisions for a single title.
             </p>
 
             <button
@@ -96,7 +97,7 @@ export default function CreditsPill({ onNavigate }) {
               }}
             >
               <PlusCircle size={14} />
-              <span>Get More Credits</span>
+              <span>Upgrade Plan</span>
             </button>
           </motion.div>
         )}
