@@ -69,6 +69,22 @@ func (h *Handler) Upload(c *gin.Context) {
 			c.JSON(http.StatusForbidden, gin.H{"error": "not your book project"})
 			return
 		}
+
+		// 3.5. Soft cap: Prevent API abuse (max 300 re-checks per project per month)
+		recentCount, err := db.CountRecentCoversInProject(h.DB, bookProjectID)
+		if err != nil {
+			log.Printf("failed to count recent covers for project %s: %v", bookProjectID, err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to verify upload limits"})
+			return
+		}
+		if recentCount >= 300 {
+			c.JSON(http.StatusTooManyRequests, gin.H{
+				"error":   "recheck_limit_reached",
+				"message": "You have reached the safety limit of 300 cover re-checks for this project this month. Please try again next month or create a new project.",
+			})
+			return
+		}
+
 		bookProjectIDPtr = &bookProjectID
 	}
 

@@ -1,6 +1,7 @@
 package billing
 
 import (
+	"database/sql"
 	"encoding/json"
 	"io"
 	"log/slog"
@@ -128,14 +129,31 @@ func processPolarEvent(database *sqlx.DB, cfg *config.Config, event polarWebhook
 			}
 		}
 
-		return db.UpdateSubscriptionByPolarID(database, subData.ID, plan, subData.Status, nil)
+		err := db.UpdateSubscriptionByPolarID(database, subData.ID, plan, subData.Status, nil)
+		if err == sql.ErrNoRows {
+			slog.Warn("webhook update affected 0 rows (polar subscription not found)",
+				"subscription_id", subData.ID,
+				"client_reference_id", subData.ClientReferenceID,
+				"event_type", event.Type,
+			)
+			return nil // Acknowledge webhook anyway so it doesn't endlessly retry
+		}
+		return err
 
 	case "subscription.revoked", "subscription.canceled":
 		var subData polarSubscriptionData
 		if err := json.Unmarshal(event.Data, &subData); err != nil {
 			return err
 		}
-		return db.UpdateSubscriptionByPolarID(database, subData.ID, string(PlanFree), subData.Status, nil)
+		err := db.UpdateSubscriptionByPolarID(database, subData.ID, string(PlanFree), subData.Status, nil)
+		if err == sql.ErrNoRows {
+			slog.Warn("webhook update affected 0 rows (polar subscription not found)",
+				"subscription_id", subData.ID,
+				"event_type", event.Type,
+			)
+			return nil
+		}
+		return err
 	}
 
 	return nil

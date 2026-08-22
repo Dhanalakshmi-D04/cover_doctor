@@ -18,11 +18,6 @@ const (
 	PlanStarter   Plan = "starter"
 	PlanCreator   Plan = "creator"
 	PlanPublisher Plan = "publisher"
-
-	// PlanPaid is kept as a backwards-compat alias so existing call sites
-	// that compare against PlanPaid still compile. New code should use
-	// the specific tier constants above.
-	PlanPaid Plan = "paid"
 )
 
 // MaxBookProjects returns the maximum number of book projects a user on this
@@ -60,9 +55,6 @@ func Check(database *sqlx.DB, userID string) (Plan, error) {
 		switch Plan(sub.Plan) {
 		case PlanStarter, PlanCreator, PlanPublisher:
 			return Plan(sub.Plan), nil
-		case PlanPaid:
-			// Legacy rows written before the three-tier system — treat as Creator.
-			return PlanCreator, nil
 		}
 	}
 	return PlanFree, nil
