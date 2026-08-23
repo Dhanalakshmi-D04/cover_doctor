@@ -13,11 +13,12 @@ import HelpPage from './pages/HelpPage';
 import AdminPage from './pages/AdminPage';
 import BillingSuccess from './pages/BillingSuccess';
 import AppShell from './components/AppShell';
-import { logout } from './api/client';
+import { logout, getMe } from './api/client';
 import { useAuthStore } from './stores/useAuthStore';
 
 function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('token'));
+  const [isInitializing, setIsInitializing] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [coverId, setCoverId] = useState(null);
   const [activeTab, setActiveTab] = useState('home');
   const [isBillingSuccess, setIsBillingSuccess] = useState(window.location.pathname.startsWith('/billing/success'));
@@ -25,18 +26,28 @@ function App() {
   const fetchAccount = useAuthStore((state) => state.fetchAccount);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token === 'demo-token' || token === 'demo-token-bypass') {
-      localStorage.removeItem('token');
-      setIsAuthenticated(false);
+    let mounted = true;
+
+    async function checkAuth() {
+      try {
+        await getMe();
+        if (mounted) {
+          setIsAuthenticated(true);
+        }
+      } catch (err) {
+        if (mounted) {
+          setIsAuthenticated(false);
+        }
+      } finally {
+        if (mounted) {
+          setIsInitializing(false);
+        }
+      }
     }
 
-    if (isAuthenticated) {
-      fetchAccount();
-    }
+    checkAuth();
 
     function handleUnauthorized() {
-      localStorage.removeItem('token');
       setIsAuthenticated(false);
       setCoverId(null);
     }
@@ -48,8 +59,18 @@ function App() {
       setActiveTab(hash);
     }
 
-    return () => window.removeEventListener('auth_unauthorized', handleUnauthorized);
-  }, [isAuthenticated]);
+    return () => {
+      mounted = false;
+      window.removeEventListener('auth_unauthorized', handleUnauthorized);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchAccount();
+    }
+  }, [isAuthenticated, fetchAccount]);
+
 
   function handleTabChange(tab) {
     if (tab === 'home' && activeTab === 'home' && coverId) {
@@ -61,7 +82,6 @@ function App() {
 
   async function handleLogout() {
     await logout().catch(() => {});
-    localStorage.removeItem('token');
     setIsAuthenticated(false);
     setCoverId(null);
   }
@@ -70,6 +90,15 @@ function App() {
     window.history.replaceState({}, document.title, '/');
     setIsBillingSuccess(false);
     setActiveTab('home');
+  }
+
+  if (isInitializing) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', backgroundColor: 'var(--bg-app)' }}>
+        {/* Simple loading state while we probe the backend for the HttpOnly cookie */}
+        <div style={{ color: 'var(--theme-text-muted)' }}>Loading...</div>
+      </div>
+    );
   }
 
   if (!isAuthenticated) {

@@ -13,6 +13,11 @@ type Config struct {
 	DatabaseURL   string
 	JWTSecret     string
 	FrontendURL   string
+	// CookieDomain sets the Domain attribute on auth cookies.
+	// Leave blank on .onrender.com (same-domain, no subdomain needed).
+	// Set to ".yourdomain.com" (with leading dot) when using a custom domain
+	// so the cookie is shared across subdomains (e.g. api.yourdomain.com + yourdomain.com).
+	CookieDomain  string
 	GinMode       string
 
 	// AppBaseURL is the public URL of the frontend app (e.g. "http://localhost:5173"
@@ -65,6 +70,7 @@ func Load() (*Config, error) {
 		DatabaseURL:   os.Getenv("DATABASE_URL"),
 		JWTSecret:     os.Getenv("JWT_SECRET"),
 		FrontendURL:   getEnv("FRONTEND_URL", "http://localhost:5173"),
+		CookieDomain:  os.Getenv("COOKIE_DOMAIN"), // empty = same-origin (correct for Render)
 		GinMode:       getEnv("GIN_MODE", "release"),
 		AppBaseURL:    getEnv("APP_BASE_URL", "http://localhost:5173"),
 

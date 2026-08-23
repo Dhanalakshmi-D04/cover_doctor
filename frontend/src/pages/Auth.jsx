@@ -9,10 +9,9 @@ export default function Auth({ onAuthenticated }) {
 
   const mutation = useMutation({
     mutationFn: () => (mode === "login" ? login(email, password) : signup(email, password)),
-    onSuccess: (data) => {
-      if (data && data.token) {
-        localStorage.setItem("token", data.token);
-      }
+    onSuccess: () => {
+      // The server set the HttpOnly auth_token cookie in the response headers.
+      // We don't receive or store a token — just notify the app the user is authenticated.
       onAuthenticated();
     },
   });

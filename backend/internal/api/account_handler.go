@@ -38,3 +38,36 @@ func (h *Handler) GetAccount(c *gin.Context) {
 		"credits": nil,
 	})
 }
+
+// GetMe handles GET /user/me — a lightweight endpoint the frontend calls on
+// app load to determine whether the auth cookie is still valid and get
+// the user's basic profile. Returns 401 if the cookie is missing or expired.
+func (h *Handler) GetMe(c *gin.Context) {
+	userID := c.GetString(middleware.UserIDContextKey)
+
+	user, err := db.GetUserByID(h.DB, userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to load user"})
+		return
+	}
+
+	plan, err := billing.Check(h.DB, userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to check subscription"})
+		return
+	}
+
+	projectCount, err := db.CountBookProjectsByUserID(h.DB, userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to count projects"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"user_id":       userID,
+		"email":         user.Email,
+		"plan":          string(plan),
+		"project_count": projectCount,
+		"project_limit": billing.MaxBookProjects(plan),
+	})
+}

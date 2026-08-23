@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -16,6 +17,9 @@ import (
 	"github.com/Dhanalakshmi-D04/cover_doctor/backend/internal/middleware"
 	"github.com/Dhanalakshmi-D04/cover_doctor/backend/internal/models"
 )
+
+// itoa converts an int to string without importing fmt.
+func itoa(n int) string { return strconv.Itoa(n) }
 
 // dummyPasswordHash is used in Login to perform a bcrypt comparison even when
 // no user is found. Without it, an attacker could measure the shorter response
@@ -32,8 +36,7 @@ type loginRequest struct {
 	Password string `json:"password" binding:"required"`
 }
 
-// Signup handles POST /auth/signup: creates a new account with a default
-// free-tier subscription in a single DB transaction, then issues a JWT cookie.
+// Signup handles POST /auth/signup.
 func (h *Handler) Signup(c *gin.Context) {
 	var req signupRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -70,8 +73,9 @@ func (h *Handler) Signup(c *gin.Context) {
 		return
 	}
 
-	setAuthCookie(c, token, h.Config.IsProduction())
-	c.JSON(http.StatusCreated, gin.H{"token": token, "user_id": userID})
+	setAuthCookie(c, token, h.Config.CookieDomain, h.Config.IsProduction())
+	// Never return the token in the body — cookie is the only delivery channel.
+	c.JSON(http.StatusCreated, gin.H{"user_id": userID})
 }
 
 // Login handles POST /auth/login.
@@ -105,25 +109,56 @@ func (h *Handler) Login(c *gin.Context) {
 		return
 	}
 
-	setAuthCookie(c, token, h.Config.IsProduction())
-	c.JSON(http.StatusOK, gin.H{"token": token, "user_id": user.ID})
+	setAuthCookie(c, token, h.Config.CookieDomain, h.Config.IsProduction())
+	// Never return the token in the body — cookie is the only delivery channel.
+	c.JSON(http.StatusOK, gin.H{"user_id": user.ID})
 }
 
 // Logout handles POST /auth/logout: clears the httpOnly auth_token cookie.
 func (h *Handler) Logout(c *gin.Context) {
-	setAuthCookie(c, "", h.Config.IsProduction())
+	setAuthCookie(c, "", h.Config.CookieDomain, h.Config.IsProduction())
 	c.JSON(http.StatusOK, gin.H{"message": "logged out successfully"})
 }
 
-// setAuthCookie sets (or clears) the auth_token cookie.
-// secure=true must only be set in production (HTTPS), not in local dev (HTTP),
-// because browsers refuse to send Secure cookies over plain HTTP.
-func setAuthCookie(c *gin.Context, token string, secure bool) {
-	maxAge := 7 * 24 * 3600 // 7 days
+// setAuthCookie sets (or clears) the HttpOnly auth_token cookie.
+//
+// Security attributes:
+//   - HttpOnly: JS cannot read this cookie at all (XSS protection).
+//   - Secure: only sent over HTTPS. Must be false in local dev (plain HTTP).
+//   - SameSite=Lax: cookie is sent on top-level navigations (e.g. returning
+//     from Polar checkout) but blocked on cross-site sub-requests. This is the
+//     strictest mode that doesn't break the Polar redirect round-trip.
+//     SameSite=Strict would block the cookie on the return redirect from Polar
+//     because the navigation originates from polar.sh — Lax is the correct choice.
+//   - domain: empty means same-origin (correct for Render.com); set to
+//     ".yourdomain.com" if frontend and API are on different subdomains.
+func setAuthCookie(c *gin.Context, token, domain string, secure bool) {
+	maxAge := 7 * 24 * 3600 // 7 days in seconds
 	if token == "" {
-		maxAge = -1 // tells the browser to delete the cookie
+		maxAge = -1 // instructs browser to delete the cookie immediately
 	}
-	c.SetCookie("auth_token", token, maxAge, "/", "", secure, true /* httpOnly */)
+
+	// Gin's c.SetCookie doesn't expose SameSite, so we build the Set-Cookie
+	// header manually to get full control over all security attributes.
+	sameSite := "Lax"
+	secureStr := ""
+	if secure {
+		secureStr = "; Secure"
+	}
+	domainStr := ""
+	if domain != "" {
+		domainStr = "; Domain=" + domain
+	}
+
+	cookieValue := "auth_token=" + token +
+		"; Max-Age=" + itoa(maxAge) +
+		"; Path=/" +
+		domainStr +
+		secureStr +
+		"; HttpOnly" +
+		"; SameSite=" + sameSite
+
+	c.Writer.Header().Set("Set-Cookie", cookieValue)
 }
 
 type forgotPasswordRequest struct {

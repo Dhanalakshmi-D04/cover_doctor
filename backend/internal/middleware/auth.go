@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -23,35 +22,28 @@ func GenerateJWT(userID, secret string) (string, error) {
 	return token.SignedString([]byte(secret))
 }
 
-// Auth is Gin middleware requiring a valid JWT (either via "auth_token"
-// httpOnly cookie or "Authorization: Bearer <token>" header). On success,
-// it sets the authenticated user's ID in the request context under
-// UserIDContextKey for handlers to read.
+// Auth is Gin middleware requiring a valid JWT delivered exclusively via the
+// "auth_token" HttpOnly cookie. Bearer header auth has been removed because:
+//   - The cookie is HttpOnly and therefore inaccessible to JS — the strongest
+//     XSS protection available in a browser.
+//   - Maintaining two auth paths (cookie + header) doubles the attack surface
+//     and creates inconsistency in how sessions are managed.
+//
+// If a future mobile/native client is built, add a separate API key or
+// OAuth2 token scheme rather than re-enabling Bearer headers here.
 func Auth(secret string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var tokenString string
-
-		// First try reading from httpOnly cookie
-		if cookieToken, err := c.Cookie("auth_token"); err == nil && cookieToken != "" {
-			tokenString = cookieToken
-		} else {
-			// Fallback to Authorization header
-			header := c.GetHeader("Authorization")
-			if strings.HasPrefix(header, "Bearer ") {
-				tokenString = strings.TrimPrefix(header, "Bearer ")
-			}
-		}
-
-		if tokenString == "" {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "missing or invalid authorization token"})
+		cookieToken, err := c.Cookie("auth_token")
+		if err != nil || cookieToken == "" {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "authentication required"})
 			return
 		}
 
-		token, err := jwt.Parse(tokenString, func(t *jwt.Token) (interface{}, error) {
+		token, err := jwt.Parse(cookieToken, func(t *jwt.Token) (interface{}, error) {
 			return []byte(secret), nil
 		})
 		if err != nil || !token.Valid {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid or expired token"})
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid or expired session — please log in again"})
 			return
 		}
 
