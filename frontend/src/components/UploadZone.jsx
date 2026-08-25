@@ -63,10 +63,19 @@ export default function UploadZone({ onUploaded }) {
     },
   });
 
+  const MAX_FILE_BYTES = 10 * 1024 * 1024; // 10 MB — mirrors backend limit
+
   const handleFileSelect = (selectedFile) => {
     if (!selectedFile) return;
     if (!['image/jpeg', 'image/jpg', 'image/png', 'image/webp'].includes(selectedFile.type)) {
       showToast('Please upload a valid JPEG, PNG, or WebP cover image.', 'error');
+      return;
+    }
+    if (selectedFile.size > MAX_FILE_BYTES) {
+      showToast(
+        `File is too large (${(selectedFile.size / 1024 / 1024).toFixed(1)} MB). Please upload an image under 10 MB.`,
+        'error',
+      );
       return;
     }
     setFile(selectedFile);
@@ -114,6 +123,15 @@ export default function UploadZone({ onUploaded }) {
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
           onClick={() => !mutation.isPending && fileInputRef.current?.click()}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              if (!mutation.isPending) fileInputRef.current?.click();
+            }
+          }}
+          role="button"
+          tabIndex={0}
+          aria-label="Upload book cover"
           style={{
             position: 'relative',
             padding: '2.5rem 1.5rem',

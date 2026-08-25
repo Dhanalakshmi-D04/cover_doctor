@@ -14,6 +14,18 @@ export default function Account({ onNavigate }) {
   const [deleteConfirm, setDeleteConfirm] = useState("");
 
   useEffect(() => {
+    if (!isDeleting) return;
+    const handleEsc = (e) => {
+      if (e.key === "Escape") {
+        setIsDeleting(false);
+        setDeleteConfirm("");
+      }
+    };
+    document.addEventListener("keydown", handleEsc);
+    return () => document.removeEventListener("keydown", handleEsc);
+  }, [isDeleting]);
+
+  useEffect(() => {
     let mounted = true;
     async function load() {
       try {
@@ -152,6 +164,7 @@ export default function Account({ onNavigate }) {
               <p style={{ marginBottom: "1rem", fontSize: "0.9rem" }}>Type <strong>DELETE</strong> below to confirm.</p>
               <input
                 type="text"
+                autoFocus
                 value={deleteConfirm}
                 onChange={(e) => setDeleteConfirm(e.target.value)}
                 placeholder="DELETE"

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Zap, BookOpen, Library, Check } from 'lucide-react';
 import { getCheckoutURL } from '../api/client';
@@ -78,6 +78,50 @@ const PLANS = [
 export default function PricingModal({ isOpen, onClose, currentPlan = 'free', message, onBeforeRedirect }) {
   const [loadingPlan, setLoadingPlan] = useState(null);
   const [checkoutError, setCheckoutError] = useState('');
+  const modalRef = useRef(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        onClose();
+        return;
+      }
+      
+      if (e.key === 'Tab' && modalRef.current) {
+        const focusableElements = modalRef.current.querySelectorAll(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        const firstElement = focusableElements[0];
+        const lastElement = focusableElements[focusableElements.length - 1];
+
+        if (e.shiftKey) {
+          if (document.activeElement === firstElement) {
+            lastElement.focus();
+            e.preventDefault();
+          }
+        } else {
+          if (document.activeElement === lastElement) {
+            firstElement.focus();
+            e.preventDefault();
+          }
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    
+    // Auto-focus first focusable element when opened
+    setTimeout(() => {
+      if (modalRef.current) {
+        const focusableElements = modalRef.current.querySelectorAll('button');
+        if (focusableElements.length > 0) focusableElements[0].focus();
+      }
+    }, 100);
+
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
 
   async function handleSubscribe(planKey) {
     setLoadingPlan(planKey);
@@ -122,6 +166,9 @@ export default function PricingModal({ isOpen, onClose, currentPlan = 'free', me
           {/* Modal panel */}
           <motion.div
             key="pricing-modal-panel"
+            ref={modalRef}
+            role="dialog"
+            aria-modal="true"
             initial={{ opacity: 0, scale: 0.94, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.94, y: 20 }}
@@ -143,6 +190,7 @@ export default function PricingModal({ isOpen, onClose, currentPlan = 'free', me
             {/* Close button */}
             <button
               onClick={onClose}
+              aria-label="Close pricing modal"
               style={{
                 position: 'absolute',
                 top: '1rem',

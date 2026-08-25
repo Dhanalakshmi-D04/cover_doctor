@@ -1,4 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+  useNavigate,
+  useLocation,
+} from 'react-router-dom';
 import Auth from './pages/Auth';
 import Home from './pages/Home';
 import Report from './pages/Report';
@@ -17,14 +25,31 @@ import ErrorBoundary from './components/ErrorBoundary';
 import { logout, getMe } from './api/client';
 import { useAuthStore } from './stores/useAuthStore';
 
-function App() {
+// ─── Route path map ───────────────────────────────────────────────────────────
+// Maps the old tab-id strings to URL paths so every onNavigate('explore') call
+// can be trivially converted to navigate('/explore').
+export const TAB_PATHS = {
+  home: '/',
+  explore: '/explore',
+  'ab-test': '/ab-test',
+  'palette-studio': '/palette-studio',
+  export: '/export',
+  account: '/account',
+  pricing: '/pricing',
+  workflows: '/workflows',
+  help: '/help',
+  admin: '/admin',
+};
+
+// ─── Inner app (must live inside <BrowserRouter> so hooks work) ───────────────
+function AppInner() {
   const [isInitializing, setIsInitializing] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [coverId, setCoverId] = useState(null);
-  const [activeTab, setActiveTab] = useState('home');
-  const [isBillingSuccess, setIsBillingSuccess] = useState(window.location.pathname.startsWith('/billing/success'));
   const [backendError, setBackendError] = useState(false);
 
+  const navigate = useNavigate();
+  const location = useLocation();
   const fetchAccount = useAuthStore((state) => state.fetchAccount);
 
   useEffect(() => {
@@ -33,24 +58,17 @@ function App() {
     async function checkAuth() {
       try {
         await getMe();
-        if (mounted) {
-          setIsAuthenticated(true);
-        }
+        if (mounted) setIsAuthenticated(true);
       } catch (err) {
         if (mounted) {
-          // If it's explicitly a 401 Unauthorized, they are logged out.
-          // Otherwise, it might be a 502/network error.
           if (err.message && err.message.includes('Failed to fetch')) {
-            // Leave them in an error state instead of logging them out
             setBackendError(true);
           } else {
             setIsAuthenticated(false);
           }
         }
       } finally {
-        if (mounted) {
-          setIsInitializing(false);
-        }
+        if (mounted) setIsInitializing(false);
       }
     }
 
@@ -61,13 +79,6 @@ function App() {
       setCoverId(null);
     }
     window.addEventListener('auth_unauthorized', handleUnauthorized);
-
-    const hash = window.location.hash.replace('#', '');
-    const validTabs = ['explore', 'ab-test', 'palette-studio', 'export', 'account', 'pricing', 'workflows', 'help', 'admin'];
-    if (validTabs.includes(hash)) {
-      setActiveTab(hash);
-    }
-
     return () => {
       mounted = false;
       window.removeEventListener('auth_unauthorized', handleUnauthorized);
@@ -75,37 +86,46 @@ function App() {
   }, []);
 
   useEffect(() => {
-    if (isAuthenticated) {
-      fetchAccount();
-    }
+    if (isAuthenticated) fetchAccount();
   }, [isAuthenticated, fetchAccount]);
 
-
-  function handleTabChange(tab) {
-    if (tab === 'home' && activeTab === 'home' && coverId) {
-      setCoverId(null);
+  // Derive active tab from the current URL path for TopNav highlighting
+  const activeTab = (() => {
+    const path = location.pathname;
+    for (const [tab, tabPath] of Object.entries(TAB_PATHS)) {
+      if (tabPath !== '/' && path.startsWith(tabPath)) return tab;
     }
-    setActiveTab(tab);
-    window.location.hash = tab === 'home' ? '' : tab;
+    return 'home';
+  })();
+
+  // Unified navigation helper — accepts a tab id or a full path
+  function handleTabChange(tabOrPath) {
+    const path = TAB_PATHS[tabOrPath] ?? tabOrPath;
+    // Special case: clicking "home" while on home clears the report
+    if ((tabOrPath === 'home' || tabOrPath === '/') && location.pathname === '/') {
+      setCoverId(null);
+      return;
+    }
+    navigate(path);
   }
 
   async function handleLogout() {
     await logout().catch(() => {});
     setIsAuthenticated(false);
     setCoverId(null);
+    navigate('/');
   }
 
   function handleBillingSuccessNavigateHome() {
-    window.history.replaceState({}, document.title, '/');
-    setIsBillingSuccess(false);
-    setActiveTab('home');
+    setCoverId(null);
+    navigate('/');
   }
 
+  // ── Loading / error states ──────────────────────────────────────────────────
   if (isInitializing) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', backgroundColor: 'var(--bg-app)' }}>
-        {/* Simple loading state while we probe the backend for the HttpOnly cookie */}
-        <div style={{ color: 'var(--theme-text-muted)' }}>Loading...</div>
+        <div style={{ color: 'var(--theme-text-muted)' }}>Loading…</div>
       </div>
     );
   }
@@ -130,60 +150,71 @@ function App() {
     );
   }
 
-  if (isBillingSuccess) {
-    return (
-      <AppShell activeTab="home" setActiveTab={handleTabChange} isAuthenticated={isAuthenticated} onLogout={handleLogout}>
-        <BillingSuccess 
-          onNavigateHome={handleBillingSuccessNavigateHome}
-          onUploaded={(id) => { setCoverId(id); handleBillingSuccessNavigateHome(); }} 
-        />
-      </AppShell>
-    );
-  }
-
-  // Item 7: Unknown route fallback
-  const renderTab = () => {
-    switch (activeTab) {
-      case 'home':
-        return coverId ? (
-          // Item 2: Report-specific error boundary
-          <ErrorBoundary onReset={() => setCoverId(null)}>
-            <Report coverId={coverId} onReset={() => setCoverId(null)} onNavigate={handleTabChange} />
-          </ErrorBoundary>
-        ) : (
-          <Home onUploaded={setCoverId} onNavigate={handleTabChange} />
-        );
-      case 'explore': return <BestsellerExplorer userCoverId={coverId} />;
-      case 'ab-test': return <ABTestStudio />;
-      case 'palette-studio': return <ColorPaletteStudio />;
-      case 'export': return <ExportStudio />;
-      case 'account': return <Account onNavigate={handleTabChange} />;
-      case 'pricing': return <Pricing />;
-      case 'workflows': return <WorkflowsPage onNavigate={handleTabChange} />;
-      case 'help': return <HelpPage />;
-      case 'admin': return <AdminPage />;
-      default:
-        // Fallback for unknown hashes
-        return (
-          <div style={{ textAlign: 'center', padding: '4rem 2rem', color: 'var(--text-secondary)' }}>
-            <h2>Page Not Found</h2>
-            <p>The page you are looking for doesn't exist.</p>
-            <button className="link-button" onClick={() => handleTabChange('home')} style={{ marginTop: '1rem' }}>
-              Return to Dashboard
-            </button>
-          </div>
-        );
-    }
-  };
-
+  // ── Authenticated app shell with routes ────────────────────────────────────
   return (
     <AppShell activeTab={activeTab} setActiveTab={handleTabChange} isAuthenticated={isAuthenticated} onLogout={handleLogout}>
-      {/* Item 2: Top-level ErrorBoundary wrapping all main content */}
       <ErrorBoundary>
-        {renderTab()}
+        <Routes>
+          {/* Home / Report */}
+          <Route
+            path="/"
+            element={
+              coverId ? (
+                <ErrorBoundary onReset={() => setCoverId(null)}>
+                  <Report coverId={coverId} onReset={() => setCoverId(null)} onNavigate={handleTabChange} />
+                </ErrorBoundary>
+              ) : (
+                <Home onUploaded={setCoverId} onNavigate={handleTabChange} />
+              )
+            }
+          />
+
+          {/* Feature pages */}
+          <Route path="/explore" element={<BestsellerExplorer userCoverId={coverId} />} />
+          <Route path="/ab-test" element={<ABTestStudio />} />
+          <Route path="/palette-studio" element={<ColorPaletteStudio />} />
+          <Route path="/export" element={<ExportStudio />} />
+          <Route path="/account" element={<Account onNavigate={handleTabChange} />} />
+          <Route path="/pricing" element={<Pricing />} />
+          <Route path="/workflows" element={<WorkflowsPage onNavigate={handleTabChange} />} />
+          <Route path="/help" element={<HelpPage />} />
+          <Route path="/admin" element={<AdminPage />} />
+
+          {/* Post-checkout confirmation */}
+          <Route
+            path="/billing/success"
+            element={
+              <BillingSuccess
+                onNavigateHome={handleBillingSuccessNavigateHome}
+                onUploaded={(id) => { setCoverId(id); handleBillingSuccessNavigateHome(); }}
+              />
+            }
+          />
+
+          {/* 404 fallback */}
+          <Route
+            path="*"
+            element={
+              <div style={{ textAlign: 'center', padding: '4rem 2rem', color: 'var(--text-secondary)' }}>
+                <h2>Page Not Found</h2>
+                <p>The page you are looking for doesn't exist.</p>
+                <button className="link-button" onClick={() => navigate('/')} style={{ marginTop: '1rem' }}>
+                  Return to Dashboard
+                </button>
+              </div>
+            }
+          />
+        </Routes>
       </ErrorBoundary>
     </AppShell>
   );
 }
 
-export default App;
+// ─── Root export ──────────────────────────────────────────────────────────────
+export default function App() {
+  return (
+    <BrowserRouter>
+      <AppInner />
+    </BrowserRouter>
+  );
+}

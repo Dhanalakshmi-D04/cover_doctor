@@ -47,7 +47,7 @@ export default class ErrorBoundary extends React.Component {
             <PillButton onClick={this.handleReset} icon={RefreshCw}>
               Try Again
             </PillButton>
-            <PillButton variant="muted" icon={Home} onClick={() => window.location.hash = ''}>
+            <PillButton variant="muted" icon={Home} onClick={() => window.location.href = '/'}>
               Return Home
             </PillButton>
           </div>

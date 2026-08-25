@@ -76,6 +76,14 @@ export default function Home({ onUploaded, onNavigate }) {
         <motion.div
           whileHover={{ y: -4, scale: 1.01 }}
           onClick={() => onNavigate('explore')}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              onNavigate('explore');
+            }
+          }}
           style={{
             padding: '1.5rem',
             borderRadius: 'var(--radius-lg)',
@@ -108,6 +116,14 @@ export default function Home({ onUploaded, onNavigate }) {
         <motion.div
           whileHover={{ y: -4, scale: 1.01 }}
           onClick={() => onNavigate('ab-test')}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              onNavigate('ab-test');
+            }
+          }}
           style={{
             padding: '1.5rem',
             borderRadius: 'var(--radius-lg)',
@@ -140,6 +156,14 @@ export default function Home({ onUploaded, onNavigate }) {
         <motion.div
           whileHover={{ y: -4, scale: 1.01 }}
           onClick={() => onNavigate('palette-studio')}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              onNavigate('palette-studio');
+            }
+          }}
           style={{
             padding: '1.5rem',
             borderRadius: 'var(--radius-lg)',
@@ -172,6 +196,14 @@ export default function Home({ onUploaded, onNavigate }) {
         <motion.div
           whileHover={{ y: -4, scale: 1.01 }}
           onClick={() => onNavigate('export')}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              onNavigate('export');
+            }
+          }}
           style={{
             padding: '1.5rem',
             borderRadius: 'var(--radius-lg)',
