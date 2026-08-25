@@ -51,9 +51,11 @@ type Config struct {
 	S3Bucket         string
 	S3ForcePathStyle bool
 
-	// Resend configuration for sending emails
-	ResendAPIKey    string
-	ResendFromEmail string
+	// ZeptoMail configuration for sending transactional emails.
+	// Get ZEPTOMAIL_API_KEY from the ZeptoMail dashboard → Agent → Domain.
+	// ZEPTOMAIL_FROM_EMAIL must match a domain you've verified in ZeptoMail.
+	ZeptoMailAPIKey    string
+	ZeptoMailFromEmail string
 
 	// ScraperAPIKey is used to bypass Amazon's anti-scraping defenses
 	// during quarterly benchmark runs.
@@ -89,8 +91,8 @@ func Load() (*Config, error) {
 		S3SecretKey:      os.Getenv("S3_SECRET_KEY"),
 		S3Bucket:         os.Getenv("S3_BUCKET"),
 		S3ForcePathStyle: getEnv("S3_FORCE_PATH_STYLE", "true") == "true",
-		ResendAPIKey:     os.Getenv("RESEND_API_KEY"),
-		ResendFromEmail:  os.Getenv("RESEND_FROM_EMAIL"),
+		ZeptoMailAPIKey:    os.Getenv("ZEPTOMAIL_API_KEY"),
+		ZeptoMailFromEmail: os.Getenv("ZEPTOMAIL_FROM_EMAIL"),
 		ScraperAPIKey:    os.Getenv("SCRAPER_API_KEY"),
 	}
 

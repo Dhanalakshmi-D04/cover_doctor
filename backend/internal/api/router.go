@@ -78,11 +78,13 @@ func NewRouter(database *sqlx.DB, rdb *redis.Client, cfg *config.Config, aiClien
 		protected.POST("/billing/checkout", handler.CreateCheckoutSession)
 		protected.POST("/billing/portal", handler.CreatePortalSession)
 
-		// Protected account info — also aliased as /user/plan for frontend plan polling
+		// Protected account info
 		protected.GET("/account", handler.GetAccount)
-		protected.GET("/user/plan", handler.GetAccount)
-		// Auth probe — frontend calls this on app load to check session validity
-		protected.GET("/user/me", handler.GetMe)
+		user := protected.Group("/user")
+		user.GET("/me", handler.GetMe) // Auth probe
+		user.GET("/plan", handler.GetAccount) // Aliased for frontend polling
+		user.DELETE("/me", handler.DeleteAccount)
+		user.POST("/change-password", handler.ChangePassword)
 
 		// Admin scraper control routes (requires is_admin=true)
 		admin := protected.Group("/admin")

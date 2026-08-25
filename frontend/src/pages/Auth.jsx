@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { login, signup } from "../api/client";
+import PillButton from "../components/PillButton";
 
 export default function Auth({ onAuthenticated }) {
   const [mode, setMode] = useState("login"); // "login" | "signup"

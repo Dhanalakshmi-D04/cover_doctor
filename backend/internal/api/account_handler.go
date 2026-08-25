@@ -1,9 +1,11 @@
 package api
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"golang.org/x/crypto/bcrypt"
 
 	"github.com/Dhanalakshmi-D04/cover_doctor/backend/internal/billing"
 	"github.com/Dhanalakshmi-D04/cover_doctor/backend/internal/db"
@@ -70,4 +72,82 @@ func (h *Handler) GetMe(c *gin.Context) {
 		"project_count": projectCount,
 		"project_limit": billing.MaxBookProjects(plan),
 	})
+}
+
+// DeleteAccount handles DELETE /user/me.
+// 1. Cancels the user's Polar subscription (if any).
+// 2. Deletes all their S3 images.
+// 3. Deletes their DB row (which cascades to book projects, covers, etc).
+// 4. Clears their auth cookie.
+func (h *Handler) DeleteAccount(c *gin.Context) {
+	userID := c.GetString(middleware.UserIDContextKey)
+
+	// 1. Cancel Polar Subscription
+	sub, err := db.GetSubscriptionByUserID(h.DB, userID)
+	if err == nil && sub != nil && sub.PolarSubscriptionID != nil {
+		if err := h.Billing.CancelSubscription(*sub.PolarSubscriptionID); err != nil {
+			// Log but don't fail, we still want to delete their data
+			_ = c.Error(fmt.Errorf("failed to cancel polar subscription for user %s: %w", userID, err))
+		}
+	}
+
+	// 2. Delete S3 Images
+	covers, err := db.ListCoversByUserID(h.DB, userID)
+	if err == nil {
+		for _, cover := range covers {
+			if err := h.Storage.DeleteFile(c.Request.Context(), cover.ID); err != nil {
+				_ = c.Error(fmt.Errorf("failed to delete S3 object %s: %w", cover.ID, err))
+			}
+		}
+	}
+
+	// 3. Delete DB Row (Cascades)
+	if err := db.DeleteUser(h.DB, userID); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to delete account data"})
+		return
+	}
+
+	// 4. Clear Auth Cookie
+	setAuthCookie(c, "", h.Config.CookieDomain, h.Config.IsProduction())
+	c.JSON(http.StatusOK, gin.H{"message": "account deleted successfully"})
+}
+
+type changePasswordRequest struct {
+	CurrentPassword string `json:"current_password" binding:"required"`
+	NewPassword     string `json:"new_password" binding:"required,min=8"`
+}
+
+// ChangePassword handles POST /user/change-password.
+func (h *Handler) ChangePassword(c *gin.Context) {
+	userID := c.GetString(middleware.UserIDContextKey)
+
+	var req changePasswordRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	user, err := db.GetUserByID(h.DB, userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to load user account"})
+		return
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.CurrentPassword)); err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "incorrect current password"})
+		return
+	}
+
+	newHash, err := bcrypt.GenerateFromPassword([]byte(req.NewPassword), bcrypt.DefaultCost)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to secure new password"})
+		return
+	}
+
+	if err := db.UpdatePassword(h.DB, userID, string(newHash)); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update password"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "password changed successfully"})
 }

@@ -185,7 +185,7 @@ func (p *Processor) ProcessTaskProcessCover(ctx context.Context, t *asynq.Task) 
 	// If it doesn't exist, we can create it. Let's just create an UpdateCover in db/postgres later.
 	// Wait, I can just use db.UpdateCover after creating it.
 
-	if err := db.InsertCover(p.db, cover); err != nil { // We might need to change this to an UPSERT
+	if err := db.UpdateCover(p.db, cover); err != nil {
 		logger.Error("failed to save report", "error", err)
 		return err
 	}

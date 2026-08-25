@@ -13,6 +13,7 @@ import HelpPage from './pages/HelpPage';
 import AdminPage from './pages/AdminPage';
 import BillingSuccess from './pages/BillingSuccess';
 import AppShell from './components/AppShell';
+import ErrorBoundary from './components/ErrorBoundary';
 import { logout, getMe } from './api/client';
 import { useAuthStore } from './stores/useAuthStore';
 
@@ -22,6 +23,7 @@ function App() {
   const [coverId, setCoverId] = useState(null);
   const [activeTab, setActiveTab] = useState('home');
   const [isBillingSuccess, setIsBillingSuccess] = useState(window.location.pathname.startsWith('/billing/success'));
+  const [backendError, setBackendError] = useState(false);
 
   const fetchAccount = useAuthStore((state) => state.fetchAccount);
 
@@ -36,7 +38,14 @@ function App() {
         }
       } catch (err) {
         if (mounted) {
-          setIsAuthenticated(false);
+          // If it's explicitly a 401 Unauthorized, they are logged out.
+          // Otherwise, it might be a 502/network error.
+          if (err.message && err.message.includes('Failed to fetch')) {
+            // Leave them in an error state instead of logging them out
+            setBackendError(true);
+          } else {
+            setIsAuthenticated(false);
+          }
         }
       } finally {
         if (mounted) {
@@ -101,11 +110,23 @@ function App() {
     );
   }
 
+  if (backendError) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', backgroundColor: 'var(--bg-app)', textAlign: 'center', padding: '2rem' }}>
+        <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem', color: 'var(--text-primary)' }}>Can't reach the server</h2>
+        <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>Please check your internet connection or try again later.</p>
+        <button className="pill-button" onClick={() => window.location.reload()}>Try Again</button>
+      </div>
+    );
+  }
+
   if (!isAuthenticated) {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', backgroundColor: 'var(--bg-app)' }}>
-        <Auth onAuthenticated={() => setIsAuthenticated(true)} />
-      </div>
+      <ErrorBoundary>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', backgroundColor: 'var(--bg-app)' }}>
+          <Auth onAuthenticated={() => setIsAuthenticated(true)} />
+        </div>
+      </ErrorBoundary>
     );
   }
 
@@ -120,24 +141,47 @@ function App() {
     );
   }
 
-  return (
-    <AppShell activeTab={activeTab} setActiveTab={handleTabChange} isAuthenticated={isAuthenticated} onLogout={handleLogout}>
-      {activeTab === 'home' && (
-        coverId ? (
-          <Report coverId={coverId} onReset={() => setCoverId(null)} onNavigate={handleTabChange} />
+  // Item 7: Unknown route fallback
+  const renderTab = () => {
+    switch (activeTab) {
+      case 'home':
+        return coverId ? (
+          // Item 2: Report-specific error boundary
+          <ErrorBoundary onReset={() => setCoverId(null)}>
+            <Report coverId={coverId} onReset={() => setCoverId(null)} onNavigate={handleTabChange} />
+          </ErrorBoundary>
         ) : (
           <Home onUploaded={setCoverId} onNavigate={handleTabChange} />
-        )
-      )}
-      {activeTab === 'explore' && <BestsellerExplorer userCoverId={coverId} />}
-      {activeTab === 'ab-test' && <ABTestStudio />}
-      {activeTab === 'palette-studio' && <ColorPaletteStudio />}
-      {activeTab === 'export' && <ExportStudio />}
-      {activeTab === 'account' && <Account onNavigate={handleTabChange} />}
-      {activeTab === 'pricing' && <Pricing />}
-      {activeTab === 'workflows' && <WorkflowsPage onNavigate={handleTabChange} />}
-      {activeTab === 'help' && <HelpPage />}
-      {activeTab === 'admin' && <AdminPage />}
+        );
+      case 'explore': return <BestsellerExplorer userCoverId={coverId} />;
+      case 'ab-test': return <ABTestStudio />;
+      case 'palette-studio': return <ColorPaletteStudio />;
+      case 'export': return <ExportStudio />;
+      case 'account': return <Account onNavigate={handleTabChange} />;
+      case 'pricing': return <Pricing />;
+      case 'workflows': return <WorkflowsPage onNavigate={handleTabChange} />;
+      case 'help': return <HelpPage />;
+      case 'admin': return <AdminPage />;
+      default:
+        // Fallback for unknown hashes
+        return (
+          <div style={{ textAlign: 'center', padding: '4rem 2rem', color: 'var(--text-secondary)' }}>
+            <h2>Page Not Found</h2>
+            <p>The page you are looking for doesn't exist.</p>
+            <button className="link-button" onClick={() => handleTabChange('home')} style={{ marginTop: '1rem' }}>
+              Return to Dashboard
+            </button>
+          </div>
+        );
+    }
+  };
+
+  return (
+    <AppShell activeTab={activeTab} setActiveTab={handleTabChange} isAuthenticated={isAuthenticated} onLogout={handleLogout}>
+      {/* Item 2: Top-level ErrorBoundary wrapping all main content */}
+      <ErrorBoundary>
+        {renderTab()}
+      </ErrorBoundary>
     </AppShell>
   );
 }

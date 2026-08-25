@@ -140,6 +140,25 @@ export async function getAccount() {
   return parseOrThrow(response); // { plan, project_count, project_limit, credits }
 }
 
+export async function deleteAccount() {
+  const response = await apiFetch(`${API_BASE_URL}/user/me`, {
+    method: "DELETE",
+  });
+  return parseOrThrow(response);
+}
+
+export async function changePassword(currentPassword, newPassword) {
+  const response = await apiFetch(`${API_BASE_URL}/user/change-password`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      current_password: currentPassword,
+      new_password: newPassword,
+    }),
+  });
+  return parseOrThrow(response);
+}
+
 // getCheckoutURL asks the backend to generate a Polar checkout URL for the given
 // plan slug (starter | creator | publisher). The backend injects the user's
 // client_reference_id so the webhook knows who paid.

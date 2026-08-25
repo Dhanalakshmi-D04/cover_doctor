@@ -106,7 +106,7 @@ func main() {
 	}
 	scraperScheduler := scraper.NewScheduler(database, aiClient, scraperOpts)
 
-	emailClient := email.NewResendSender(cfg)
+	emailClient := email.NewZeptoMailSender(cfg)
 
 	router := api.NewRouter(database, rdb, cfg, aiClient, billingClient, s3Client, taskQueue, emailClient, scraperScheduler)
 

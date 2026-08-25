@@ -155,31 +155,20 @@ func (h *Handler) Upload(c *gin.Context) {
 		return
 	}
 
-	versionNumber := 1
-	if bookProjectIDPtr != nil {
-		versionNumber, err = db.NextVersionNumber(h.DB, *bookProjectIDPtr)
-		if err != nil {
-			log.Printf("failed to calculate next version number for project %s: %v", *bookProjectIDPtr, err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to determine version number"})
-			return
-		}
-	}
-
-	// 6. Insert "pending" record into the database
+	// 6. Insert "pending" record into the database, calculating version in the same transaction
 	jobID := uuid.New().String()
 	cover := &models.Cover{
 		ID:            coverID,
 		Filename:      fileHeader.Filename,
 		UserID:        &userID,
 		BookProjectID: bookProjectIDPtr,
-		VersionNumber: versionNumber,
 		ImageWidth:    imgWidth,
 		ImageHeight:   imgHeight,
 		Status:        "pending",
 		JobID:         &jobID,
 	}
 
-	if err := db.InsertCover(h.DB, cover); err != nil {
+	if err := db.InsertCoverWithVersionTx(h.DB, cover); err != nil {
 		log.Printf("failed to save report to DB for %s: %v", coverID, err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to save report"})
 		return
@@ -278,6 +267,12 @@ func (h *Handler) GetJobStatus(c *gin.Context) {
 	cover, err := db.GetCoverByJobID(h.DB, jobID)
 	if err != nil {
 		// If the job_id doesn't exist in the DB, it's either invalid or hasn't committed yet.
+		c.JSON(http.StatusNotFound, gin.H{"error": "job not found"})
+		return
+	}
+
+	userID := c.GetString(middleware.UserIDContextKey)
+	if cover.UserID == nil || *cover.UserID != userID {
 		c.JSON(http.StatusNotFound, gin.H{"error": "job not found"})
 		return
 	}

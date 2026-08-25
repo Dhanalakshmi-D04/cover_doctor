@@ -28,4 +28,4 @@ benchmarks/uploads/
 *.png
 !frontend/public/**
 
-img/
+img/debug_output.txt

@@ -93,3 +93,15 @@ func (s *S3Client) GeneratePresignedURL(ctx context.Context, key string, duratio
 
 	return req.URL, nil
 }
+
+// DeleteFile deletes an object from S3.
+func (s *S3Client) DeleteFile(ctx context.Context, key string) error {
+	_, err := s.client.DeleteObject(ctx, &s3.DeleteObjectInput{
+		Bucket: aws.String(s.bucket),
+		Key:    aws.String(key),
+	})
+	if err != nil {
+		return fmt.Errorf("failed to delete object from S3: %w", err)
+	}
+	return nil
+}

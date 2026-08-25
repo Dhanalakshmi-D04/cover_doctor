@@ -118,3 +118,18 @@ func (c *Client) CreatePortalSession(polarCustomerID string) (string, error) {
 
 	return resp.CustomerPortalURL, nil
 }
+
+// CancelSubscription deletes/cancels a user's active Polar subscription.
+func (c *Client) CancelSubscription(polarSubscriptionID string) error {
+	if !c.enabled {
+		return nil
+	}
+	
+	// Polar API uses DELETE to immediately revoke a subscription.
+	path := "/subscriptions/" + polarSubscriptionID
+	if err := c.request("DELETE", path, nil, nil); err != nil {
+		return fmt.Errorf("canceling subscription: %w", err)
+	}
+
+	return nil
+}

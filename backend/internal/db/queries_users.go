@@ -97,3 +97,10 @@ func UpdatePassword(database *sqlx.DB, userID, newPasswordHash string) error {
 
 	return tx.Commit()
 }
+
+// DeleteUser permanently deletes a user from the database. Due to ON DELETE CASCADE
+// foreign keys, this automatically deletes all their book projects, covers, and subscriptions.
+func DeleteUser(database *sqlx.DB, userID string) error {
+	_, err := database.Exec(`DELETE FROM users WHERE id = $1`, userID)
+	return err
+}
