@@ -38,6 +38,12 @@ func TestSampleSource_FetchTopCovers(t *testing.T) {
 }
 
 func TestScrapeAndSave_OfflinePipeline(t *testing.T) {
+	// SampleSource generates solid-colour JPEG images with no renderable text.
+	// Since we removed the synthetic fallback generator, Tesseract will return 0
+	// words for these images and the strict OCR gate will discard all of them.
+	// This test verifies:
+	//   (a) the pipeline fetches the expected number of covers from the source, and
+	//   (b) covers that fail OCR are logged as errors but do NOT produce benchmark rows.
 	tempDir := t.TempDir()
 	opts := Options{
 		Styles:        []string{"Bold Typography", "Minimalist"},
@@ -58,19 +64,23 @@ func TestScrapeAndSave_OfflinePipeline(t *testing.T) {
 		t.Fatalf("ScrapeAndSave failed: %v", err)
 	}
 
+	// 4 images fetched (2 styles × 2 each), none make it past OCR.
 	if result.TotalFetched != 4 {
 		t.Errorf("expected TotalFetched=4, got %d", result.TotalFetched)
 	}
-	if result.TotalProcessed != 4 {
-		t.Errorf("expected TotalProcessed=4, got %d", result.TotalProcessed)
+	// No fake data inserted — all 4 should be discarded as OCR failures.
+	if result.TotalProcessed != 0 {
+		t.Errorf("expected TotalProcessed=0 (no OCR success on synthetic images), got %d", result.TotalProcessed)
 	}
-	if result.ByStyle["Bold Typography"] != 2 {
-		t.Errorf("expected 2 Bold Typography covers, got %d", result.ByStyle["Bold Typography"])
+	if result.TotalInserted != 0 {
+		t.Errorf("expected TotalInserted=0, got %d", result.TotalInserted)
 	}
-	if result.ByStyle["Minimalist"] != 2 {
-		t.Errorf("expected 2 Minimalist covers, got %d", result.ByStyle["Minimalist"])
+	// All 4 cover failures should be recorded in the error list.
+	if len(result.Errors) != 4 {
+		t.Errorf("expected 4 OCR-discard errors, got %d: %v", len(result.Errors), result.Errors)
 	}
 }
+
 
 func TestScheduler_LifecycleAndTrigger(t *testing.T) {
 	tempDir := t.TempDir()
@@ -102,8 +112,11 @@ func TestScheduler_LifecycleAndTrigger(t *testing.T) {
 		t.Fatalf("TriggerNow failed: %v", err)
 	}
 
-	if res.TotalProcessed != 1 {
-		t.Errorf("expected 1 processed cover, got %d", res.TotalProcessed)
+	// SampleSource covers cannot be OCR'd (no rendered text); the pipeline
+	// discards them. Verify the scheduler ran and produced 0 processed covers
+	// rather than silently inserting fake benchmark data.
+	if res.TotalProcessed != 0 {
+		t.Errorf("expected 0 processed covers (solid-colour synthetic images fail OCR gate), got %d", res.TotalProcessed)
 	}
 
 	statusAfter := sched.Status(context.Background())

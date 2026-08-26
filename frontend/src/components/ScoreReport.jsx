@@ -9,7 +9,7 @@ import { imageUrl } from '../api/client';
 
 export default function ScoreReport({ plan, report, coverId, onReset, onNavigate }) {
   const isPaid = plan === 'paid';
-  const overallScore = Math.round(report?.overall_score || 84);
+  const overallScore = Math.round(report?.overall_score || 0);
   const coverSrc = report?.filename ? imageUrl(coverId, report.filename) : null;
 
   const percentiles = report?.percentiles || {

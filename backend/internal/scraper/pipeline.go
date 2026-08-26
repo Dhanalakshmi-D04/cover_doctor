@@ -160,18 +160,9 @@ func processSingleCover(ctx context.Context, c BestsellerCover, targetStyle, tem
 		whitespacePercent = measure.WhitespacePercent(words, imgWidth, imgHeight)
 	}
 
-	// Fallback to estimated realistic visual metrics if OCR is unavailable or returned 0 words
+	// Reject cover entirely if OCR cannot measure it reliably (strict zero-fallback policy)
 	if titleHeightPercent == 0 || contrastRatio == 0 || whitespacePercent == 0 {
-		estTitle, estContrast, estWhitespace := fallbackMetricsForStyle(targetStyle, r)
-		if titleHeightPercent == 0 {
-			titleHeightPercent = estTitle
-		}
-		if contrastRatio == 0 {
-			contrastRatio = estContrast
-		}
-		if whitespacePercent == 0 {
-			whitespacePercent = estWhitespace
-		}
+		return nil, fmt.Errorf("OCR or measurements failed (title: %.2f, contrast: %.2f, whitespace: %.2f) - discarding cover", titleHeightPercent, contrastRatio, whitespacePercent)
 	}
 
 	// AI classification touchpoint: classify style if AI client is enabled
@@ -220,31 +211,7 @@ func fetchImageURL(ctx context.Context, url string, timeout time.Duration) ([]by
 	return io.ReadAll(resp.Body)
 }
 
-func fallbackMetricsForStyle(style string, r *rand.Rand) (title, contrast, whitespace float64) {
-	switch style {
-	case "Bold Typography":
-		title = 10.0 + r.Float64()*8.0       // 10% - 18%
-		contrast = 4.0 + r.Float64()*5.0     // 4.0 - 9.0
-		whitespace = 45.0 + r.Float64()*20.0 // 45% - 65%
-	case "Dark Photographic":
-		title = 6.0 + r.Float64()*5.0        // 6% - 11%
-		contrast = 6.0 + r.Float64()*6.0     // 6.0 - 12.0
-		whitespace = 20.0 + r.Float64()*20.0 // 20% - 40%
-	case "Illustrated":
-		title = 8.0 + r.Float64()*6.0        // 8% - 14%
-		contrast = 4.0 + r.Float64()*4.0     // 4.0 - 8.0
-		whitespace = 30.0 + r.Float64()*20.0 // 30% - 50%
-	case "Minimalist":
-		title = 4.0 + r.Float64()*4.0        // 4% - 8%
-		contrast = 8.0 + r.Float64()*6.0     // 8.0 - 14.0
-		whitespace = 65.0 + r.Float64()*20.0 // 65% - 85%
-	default:
-		title = 9.0 + r.Float64()*5.0
-		contrast = 5.0 + r.Float64()*4.0
-		whitespace = 40.0 + r.Float64()*20.0
-	}
-	return
-}
+
 
 func sanitizeFilename(name string) string {
 	var out []rune

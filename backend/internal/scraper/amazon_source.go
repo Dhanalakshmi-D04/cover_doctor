@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"regexp"
 	"time"
 
 	"github.com/PuerkitoBio/goquery"
@@ -70,6 +71,9 @@ func (a *AmazonSource) FetchTopCovers(ctx context.Context, style string, limit i
 	var covers []BestsellerCover
 
 	// Find all images within the Amazon Bestseller grid
+	reHighRes := regexp.MustCompile(`\._.*_\.([a-zA-Z0-9]+)$`)
+	reJSONUrl := regexp.MustCompile(`https://[^"]+`)
+
 	doc.Find("img.a-dynamic-image").EachWithBreak(func(i int, s *goquery.Selection) bool {
 		if len(covers) >= limit {
 			return false // Stop when we hit the limit
@@ -77,11 +81,25 @@ func (a *AmazonSource) FetchTopCovers(ctx context.Context, style string, limit i
 
 		imgSrc, exists := s.Attr("src")
 		if !exists || imgSrc == "" {
+			dynamicJSON, dynExists := s.Attr("data-a-dynamic-image")
+			if dynExists {
+				match := reJSONUrl.FindString(dynamicJSON)
+				if match != "" {
+					imgSrc = match
+				}
+			}
+		}
+
+		if imgSrc == "" {
 			return true // continue to next
 		}
 
-		// Download the actual image byte array
-		imgData, err := a.downloadImage(ctx, imgSrc)
+		// Strip Amazon's resizing modifier to fetch the full-res version directly!
+		// e.g. "...._AC_UY218_.jpg" -> "....jpg"
+		highResSrc := reHighRes.ReplaceAllString(imgSrc, ".$1")
+
+		// Download the actual high-res image byte array
+		imgData, err := a.downloadImage(ctx, highResSrc)
 		if err != nil || len(imgData) == 0 {
 			return true // continue to next
 		}
@@ -90,7 +108,7 @@ func (a *AmazonSource) FetchTopCovers(ctx context.Context, style string, limit i
 			ID:        uuid.New().String(),
 			Title:     fmt.Sprintf("Amazon Bestseller %d (%s)", i+1, style),
 			Style:     style,
-			ImageURL:  imgSrc,
+			ImageURL:  highResSrc,
 			ImageData: imgData,
 			Filename:  fmt.Sprintf("amazon_%s_%d.jpg", style, i+1),
 		})

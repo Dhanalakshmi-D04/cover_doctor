@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"os"
+	"strings"
 )
 
 // Config holds all environment-driven configuration for the backend,
@@ -60,6 +61,13 @@ type Config struct {
 	// ScraperAPIKey is used to bypass Amazon's anti-scraping defenses
 	// during quarterly benchmark runs.
 	ScraperAPIKey string
+
+	// AdminEmails is a comma-separated list of email addresses whose accounts
+	// always receive PlanPublisher entitlements regardless of their subscription
+	// row. Intended for developer/QA use only.
+	// Set ADMIN_EMAILS=you@example.com,tester@example.com in the environment.
+	// Never expose this value publicly.
+	AdminEmails []string
 }
 
 // Load reads environment variables into a Config, returning an error only
@@ -94,6 +102,15 @@ func Load() (*Config, error) {
 		ZeptoMailAPIKey:    os.Getenv("ZEPTOMAIL_API_KEY"),
 		ZeptoMailFromEmail: os.Getenv("ZEPTOMAIL_FROM_EMAIL"),
 		ScraperAPIKey:    os.Getenv("SCRAPER_API_KEY"),
+	}
+
+	// Parse the optional ADMIN_EMAILS comma-separated list.
+	if raw := os.Getenv("ADMIN_EMAILS"); raw != "" {
+		for _, e := range strings.Split(raw, ",") {
+			if trimmed := strings.TrimSpace(strings.ToLower(e)); trimmed != "" {
+				cfg.AdminEmails = append(cfg.AdminEmails, trimmed)
+			}
+		}
 	}
 
 	// Fail fast with a specific message naming the missing variable, so it's

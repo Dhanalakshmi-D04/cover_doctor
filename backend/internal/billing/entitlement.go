@@ -5,6 +5,8 @@
 package billing
 
 import (
+	"strings"
+
 	"github.com/jmoiron/sqlx"
 
 	"github.com/Dhanalakshmi-D04/cover_doctor/backend/internal/db"
@@ -43,7 +45,22 @@ func IsPaid(plan Plan) bool {
 // Check is the ONLY function in this codebase that decides what a user is
 // allowed to see. Every api handler that needs to gate a response calls
 // this rather than checking subscription status itself.
-func Check(database *sqlx.DB, userID string) (Plan, error) {
+//
+// adminEmails is the list from config.Config.AdminEmails. Any user whose
+// account email appears in that list is granted PlanPublisher automatically,
+// bypassing the Polar subscription check entirely. Pass nil/empty slice in
+// production when no admin bypass is configured.
+func Check(database *sqlx.DB, userID string, adminEmails []string) (Plan, error) {
+	// Admin bypass: look up the user's email and check the allowlist first.
+	// This runs before any Polar/subscription query so it works even when
+	// billing is not configured.
+	if len(adminEmails) > 0 {
+		user, err := db.GetUserByID(database, userID)
+		if err == nil && isAdminEmail(user.Email, adminEmails) {
+			return PlanPublisher, nil
+		}
+	}
+
 	sub, err := db.GetSubscriptionByUserID(database, userID)
 	if err != nil {
 		return PlanFree, err
@@ -58,4 +75,15 @@ func Check(database *sqlx.DB, userID string) (Plan, error) {
 		}
 	}
 	return PlanFree, nil
+}
+
+// isAdminEmail reports whether email (case-insensitive) is in the allowlist.
+func isAdminEmail(email string, adminEmails []string) bool {
+	lower := strings.ToLower(strings.TrimSpace(email))
+	for _, a := range adminEmails {
+		if a == lower {
+			return true
+		}
+	}
+	return false
 }

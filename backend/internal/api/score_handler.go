@@ -38,7 +38,7 @@ func (h *Handler) GetReport(c *gin.Context) {
 		return
 	}
 
-	plan, err := billing.Check(h.DB, userID)
+	plan, err := billing.Check(h.DB, userID, h.Config.AdminEmails)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to check subscription"})
 		return

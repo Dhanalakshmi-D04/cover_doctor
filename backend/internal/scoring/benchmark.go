@@ -1,6 +1,8 @@
 package scoring
 
 import (
+	"log"
+
 	"github.com/jmoiron/sqlx"
 )
 
@@ -99,5 +101,6 @@ func BenchmarkForStyleWithDB(database *sqlx.DB, style string) []BenchmarkEntry {
 			return entries
 		}
 	}
+	log.Printf("CRITICAL WARNING: falling back to hardcoded baseline benchmark data for style %q — real benchmark data unavailable", style)
 	return BenchmarkForStyle(style)
 }

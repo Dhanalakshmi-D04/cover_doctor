@@ -20,7 +20,7 @@ import (
 func (h *Handler) GetAccount(c *gin.Context) {
 	userID := c.GetString(middleware.UserIDContextKey)
 
-	plan, err := billing.Check(h.DB, userID)
+	plan, err := billing.Check(h.DB, userID, h.Config.AdminEmails)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to check subscription"})
 		return
@@ -53,7 +53,7 @@ func (h *Handler) GetMe(c *gin.Context) {
 		return
 	}
 
-	plan, err := billing.Check(h.DB, userID)
+	plan, err := billing.Check(h.DB, userID, h.Config.AdminEmails)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to check subscription"})
 		return
