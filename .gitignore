@@ -29,3 +29,6 @@ benchmarks/uploads/
 !frontend/public/**
 
 img/debug_output.txt
+debug_output.txt
+test_regex.go
+backend/scraper, *.txt

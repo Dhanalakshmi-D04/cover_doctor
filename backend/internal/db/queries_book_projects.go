@@ -91,7 +91,7 @@ func CountBookProjectsByUserID(database *sqlx.DB, userID string) (int, error) {
 // in the last 30 days. Used for the generous soft cap to prevent API abuse.
 func CountRecentCoversInProject(database *sqlx.DB, bookProjectID string) (int, error) {
 	var count int
-	query := `SELECT COUNT(*) FROM covers WHERE book_project_id = $1 AND created_at > now() - interval '30 days'`
+	query := `SELECT COUNT(*) FROM covers WHERE book_project_id = $1 AND status != 'failed' AND created_at > now() - interval '30 days'`
 	err := database.Get(&count, query, bookProjectID)
 	return count, err
 }

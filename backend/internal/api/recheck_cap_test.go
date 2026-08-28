@@ -62,3 +62,14 @@ func TestRecheckCap_ZeroCovers(t *testing.T) {
 		t.Error("0 covers should be well under the cap (upload allowed)")
 	}
 }
+
+func TestRecheckCap_WithFailedCoversIgnored(t *testing.T) {
+	// The DB query now ignores 'failed' covers (status != 'failed').
+	// So if a user has 299 successful/pending covers and 50 failed covers,
+	// the DB returns 299. We verify that 299 is allowed.
+	validCountFromDB := 299
+	
+	if !recheckAllowed(validCountFromDB) {
+		t.Error("299 successful covers (with ignored failures) should be allowed")
+	}
+}
