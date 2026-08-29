@@ -9,5 +9,6 @@ type User struct {
 	Email        string    `db:"email" json:"email"`
 	PasswordHash string    `db:"password_hash" json:"-"`
 	IsAdmin      bool      `db:"is_admin" json:"is_admin"`
+	TokenVersion int       `db:"token_version" json:"token_version"`
 	CreatedAt    time.Time `db:"created_at" json:"created_at"`
 }

@@ -67,7 +67,7 @@ func (h *Handler) Signup(c *gin.Context) {
 		return
 	}
 
-	token, err := middleware.GenerateJWT(userID, h.Config.JWTSecret)
+	token, err := middleware.GenerateJWT(userID, user.TokenVersion, h.Config.JWTSecret)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to issue token"})
 		return
@@ -103,7 +103,7 @@ func (h *Handler) Login(c *gin.Context) {
 		return
 	}
 
-	token, err := middleware.GenerateJWT(user.ID, h.Config.JWTSecret)
+	token, err := middleware.GenerateJWT(user.ID, user.TokenVersion, h.Config.JWTSecret)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to issue token"})
 		return

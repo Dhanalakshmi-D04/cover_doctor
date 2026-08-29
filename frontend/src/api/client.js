@@ -58,6 +58,13 @@ export async function logout() {
   return parseOrThrow(response);
 }
 
+export async function logoutEverywhere() {
+  const response = await apiFetch(`${API_BASE_URL}/user/logout-everywhere`, {
+    method: "POST",
+  });
+  return parseOrThrow(response);
+}
+
 // getMe probes the backend to check if the auth cookie is still valid.
 // Returns the user's profile on success, throws a 401 error if not authenticated.
 // The frontend calls this on app load instead of checking localStorage.

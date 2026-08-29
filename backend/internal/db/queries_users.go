@@ -104,3 +104,17 @@ func DeleteUser(database *sqlx.DB, userID string) error {
 	_, err := database.Exec(`DELETE FROM users WHERE id = $1`, userID)
 	return err
 }
+
+// IncrementTokenVersion bumps the user's token_version by 1, immediately
+// invalidating all existing JWTs since their version claim will no longer match.
+func IncrementTokenVersion(database *sqlx.DB, userID string) error {
+	_, err := database.Exec(`UPDATE users SET token_version = token_version + 1 WHERE id = $1`, userID)
+	return err
+}
+
+// GetUserTokenVersion fetches only the token_version for a user to validate their JWT.
+func GetUserTokenVersion(database *sqlx.DB, userID string) (int, error) {
+	var version int
+	err := database.Get(&version, `SELECT token_version FROM users WHERE id = $1`, userID)
+	return version, err
+}

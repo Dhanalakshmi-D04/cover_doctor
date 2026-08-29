@@ -101,7 +101,11 @@ func (h *Handler) DeleteAccount(c *gin.Context) {
 		}
 	}
 
-	// 3. Delete DB Row (Cascades)
+	// 3. Invalidate any active tokens immediately before deleting the row,
+	// so in-flight requests get a clean 401 instead of a DB cascade error.
+	_ = db.IncrementTokenVersion(h.DB, userID)
+
+	// 4. Delete DB Row (cascades)
 	if err := db.DeleteUser(h.DB, userID); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to delete account data"})
 		return
@@ -149,5 +153,60 @@ func (h *Handler) ChangePassword(c *gin.Context) {
 		return
 	}
 
+	if err := db.IncrementTokenVersion(h.DB, userID); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to invalidate old sessions"})
+		return
+	}
+
+	// Re-issue token with the new version so the current session remains active
+	user.TokenVersion++
+	newToken, err := middleware.GenerateJWT(user.ID, user.TokenVersion, h.Config.JWTSecret)
+	if err == nil {
+		maxAge := 7 * 24 * 3600
+		sameSite := "Lax"
+		secureStr := ""
+		if h.Config.IsProduction() {
+			secureStr = "; Secure"
+		}
+		domainStr := ""
+		if h.Config.CookieDomain != "" {
+			domainStr = "; Domain=" + h.Config.CookieDomain
+		}
+		cookieValue := "auth_token=" + newToken +
+			"; Max-Age=" + fmt.Sprintf("%d", maxAge) +
+			"; Path=/" + domainStr + secureStr +
+			"; HttpOnly; SameSite=" + sameSite
+		c.Writer.Header().Set("Set-Cookie", cookieValue)
+	}
+
 	c.JSON(http.StatusOK, gin.H{"message": "password changed successfully"})
+}
+
+// LogoutEverywhere handles POST /user/logout-everywhere.
+// Increments the user's token version and clears their local cookie.
+func (h *Handler) LogoutEverywhere(c *gin.Context) {
+	userID := c.GetString(middleware.UserIDContextKey)
+
+	if err := db.IncrementTokenVersion(h.DB, userID); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to revoke sessions"})
+		return
+	}
+
+	// Clear local cookie
+	maxAge := -1
+	sameSite := "Lax"
+	secureStr := ""
+	if h.Config.IsProduction() {
+		secureStr = "; Secure"
+	}
+	domainStr := ""
+	if h.Config.CookieDomain != "" {
+		domainStr = "; Domain=" + h.Config.CookieDomain
+	}
+	cookieValue := "auth_token=; Max-Age=" + fmt.Sprintf("%d", maxAge) +
+		"; Path=/" + domainStr + secureStr +
+		"; HttpOnly; SameSite=" + sameSite
+	c.Writer.Header().Set("Set-Cookie", cookieValue)
+
+	c.JSON(http.StatusOK, gin.H{"message": "logged out of all devices successfully"})
 }

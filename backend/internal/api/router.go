@@ -64,7 +64,7 @@ func NewRouter(database *sqlx.DB, rdb *redis.Client, cfg *config.Config, aiClien
 	router.POST("/billing/webhook", handler.PolarWebhook)
 
 	protected := router.Group("/")
-	protected.Use(middleware.Auth(cfg.JWTSecret))
+	protected.Use(middleware.Auth(database, cfg.JWTSecret))
 	{
 		protected.POST("/auth/logout", handler.Logout)
 		protected.POST("/upload", uploadRateLimiter.Limit(), handler.Upload)
@@ -85,6 +85,7 @@ func NewRouter(database *sqlx.DB, rdb *redis.Client, cfg *config.Config, aiClien
 		user.GET("/plan", handler.GetAccount) // Aliased for frontend polling
 		user.DELETE("/me", handler.DeleteAccount)
 		user.POST("/change-password", handler.ChangePassword)
+		user.POST("/logout-everywhere", handler.LogoutEverywhere)
 
 		// Admin scraper control routes (requires is_admin=true)
 		admin := protected.Group("/admin")

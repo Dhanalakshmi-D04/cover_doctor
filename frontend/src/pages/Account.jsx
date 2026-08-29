@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getAccount, openBillingPortal, changePassword, deleteAccount } from "../api/client";
+import { getAccount, openBillingPortal, changePassword, deleteAccount, logoutEverywhere } from "../api/client";
 import PillButton from "../components/PillButton";
 
 export default function Account({ onNavigate }) {
@@ -64,6 +64,18 @@ export default function Account({ onNavigate }) {
       setNewPassword("");
     } catch (err) {
       setPasswordMsg({ text: err.message || "Failed to change password.", type: "error" });
+    }
+  }
+
+  const [logoutMsg, setLogoutMsg] = useState("");
+
+  async function handleLogoutEverywhere() {
+    try {
+      await logoutEverywhere();
+      // Dispatch an event so App.jsx knows to log us out
+      window.dispatchEvent(new Event('auth_unauthorized'));
+    } catch (err) {
+      setLogoutMsg(err.message || "Failed to log out of all devices.");
     }
   }
 
@@ -140,6 +152,22 @@ export default function Account({ onNavigate }) {
               </div>
             )}
           </form>
+          
+          <hr style={{ border: "0", borderTop: "1px solid var(--border-glass)", margin: "2rem 0" }} />
+          
+          <div>
+            <h4 style={{ marginBottom: "0.5rem" }}>Active Sessions</h4>
+            <p style={{ color: "var(--theme-text-muted)", marginBottom: "1rem", fontSize: "0.9rem", maxWidth: "600px" }}>
+              If you left your account logged in on a public computer, or simply want to invalidate all existing sessions, you can log out of all other devices.
+            </p>
+            <button 
+              onClick={handleLogoutEverywhere}
+              style={{ padding: "0.5rem 1rem", backgroundColor: "transparent", color: "var(--text-primary)", border: "1px solid var(--border-glass)", borderRadius: "var(--radius-md)", cursor: "pointer" }}
+            >
+              Log out of all devices
+            </button>
+            {logoutMsg && <div style={{ marginTop: "1rem", color: "var(--accent-danger)" }}>{logoutMsg}</div>}
+          </div>
         </div>
       </div>
 
