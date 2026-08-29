@@ -7,8 +7,10 @@ import "time"
 type User struct {
 	ID           string    `db:"id" json:"id"`
 	Email        string    `db:"email" json:"email"`
-	PasswordHash string    `db:"password_hash" json:"-"`
+	PasswordHash *string   `db:"password_hash" json:"-"` // nil for Google-only accounts
 	IsAdmin      bool      `db:"is_admin" json:"is_admin"`
 	TokenVersion int       `db:"token_version" json:"token_version"`
+	GoogleID     *string   `db:"google_id" json:"-"`
+	AuthProvider string    `db:"auth_provider" json:"auth_provider"` // "password" or "google"
 	CreatedAt    time.Time `db:"created_at" json:"created_at"`
 }

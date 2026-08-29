@@ -137,7 +137,12 @@ func (h *Handler) ChangePassword(c *gin.Context) {
 		return
 	}
 
-	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.CurrentPassword)); err != nil {
+	if user.PasswordHash == nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "this account uses Google sign-in and has no password to change"})
+		return
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(*user.PasswordHash), []byte(req.CurrentPassword)); err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "incorrect current password"})
 		return
 	}

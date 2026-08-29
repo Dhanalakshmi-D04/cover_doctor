@@ -58,6 +58,14 @@ type Config struct {
 	ZeptoMailAPIKey    string
 	ZeptoMailFromEmail string
 
+	// Google OAuth2 settings. All three must be set for Google login to work.
+	// Leave blank to disable the /auth/google routes entirely.
+	// GOOGLE_REDIRECT_URL must match one of the Authorized Redirect URIs in
+	// your Google Cloud Console OAuth 2.0 Client credentials.
+	GoogleClientID     string
+	GoogleClientSecret string
+	GoogleRedirectURL  string
+
 	// ScraperAPIKey is used to bypass Amazon's anti-scraping defenses
 	// during quarterly benchmark runs.
 	ScraperAPIKey string
@@ -101,6 +109,9 @@ func Load() (*Config, error) {
 		S3ForcePathStyle: getEnv("S3_FORCE_PATH_STYLE", "true") == "true",
 		ZeptoMailAPIKey:    os.Getenv("ZEPTOMAIL_API_KEY"),
 		ZeptoMailFromEmail: os.Getenv("ZEPTOMAIL_FROM_EMAIL"),
+		GoogleClientID:     os.Getenv("GOOGLE_CLIENT_ID"),
+		GoogleClientSecret: os.Getenv("GOOGLE_CLIENT_SECRET"),
+		GoogleRedirectURL:  os.Getenv("GOOGLE_REDIRECT_URL"),
 		ScraperAPIKey:    os.Getenv("SCRAPER_API_KEY"),
 	}
 

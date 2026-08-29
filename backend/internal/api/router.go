@@ -60,6 +60,12 @@ func NewRouter(database *sqlx.DB, rdb *redis.Client, cfg *config.Config, aiClien
 	router.POST("/auth/forgot-password", authRateLimiter.Limit(), handler.ForgotPassword)
 	router.POST("/auth/reset-password", authRateLimiter.Limit(), handler.ResetPassword)
 
+	// Google OAuth2 — these are full browser redirects, not JSON endpoints.
+	// The rate limiter is intentionally omitted: the state cookie and Google's
+	// own consent screen already prevent abuse.
+	router.GET("/auth/google", handler.GoogleLogin)
+	router.GET("/auth/google/callback", handler.GoogleCallback)
+
 	// Polar signs this payload itself; it can never carry a JWT.
 	router.POST("/billing/webhook", handler.PolarWebhook)
 

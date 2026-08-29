@@ -57,7 +57,8 @@ func (h *Handler) Signup(c *gin.Context) {
 	}
 
 	userID := uuid.New().String()
-	user := &models.User{ID: userID, Email: req.Email, PasswordHash: string(hash)}
+	hashStr := string(hash)
+	user := &models.User{ID: userID, Email: req.Email, PasswordHash: &hashStr, AuthProvider: "password"}
 
 	// Atomic: both the user row and the free subscription row are written
 	// in the same transaction. If either fails, both are rolled back, so
@@ -98,7 +99,14 @@ func (h *Handler) Login(c *gin.Context) {
 		return
 	}
 
-	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.Password)); err != nil {
+	// Google-only accounts have no password hash; deny password login gracefully.
+	if user.PasswordHash == nil {
+		_ = bcrypt.CompareHashAndPassword(dummyPasswordHash, []byte(req.Password)) // timing-safe
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "this account uses Google sign-in — please use the 'Sign in with Google' button"})
+		return
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(*user.PasswordHash), []byte(req.Password)); err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid email or password"})
 		return
 	}

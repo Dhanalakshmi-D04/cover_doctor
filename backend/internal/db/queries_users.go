@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 
 	"github.com/Dhanalakshmi-D04/cover_doctor/backend/internal/models"
@@ -26,7 +27,7 @@ func CreateUserWithSubscription(database *sqlx.DB, user *models.User, subscripti
 	defer tx.Rollback() //nolint:errcheck
 
 	if _, err := tx.NamedExec(
-		`INSERT INTO users (id, email, password_hash) VALUES (:id, :email, :password_hash)`,
+		`INSERT INTO users (id, email, password_hash, auth_provider) VALUES (:id, :email, :password_hash, :auth_provider)`,
 		user,
 	); err != nil {
 		return fmt.Errorf("insert user: %w", err)
@@ -117,4 +118,57 @@ func GetUserTokenVersion(database *sqlx.DB, userID string) (int, error) {
 	var version int
 	err := database.Get(&version, `SELECT token_version FROM users WHERE id = $1`, userID)
 	return version, err
+}
+
+// UpsertGoogleUser finds an existing user by email and links their google_id,
+// or creates a brand-new user with auth_provider='google' if none exists.
+// Returns the user and a bool indicating whether the account was just created.
+func UpsertGoogleUser(database *sqlx.DB, email, googleID, subscriptionID string) (*models.User, bool, error) {
+	tx, err := database.Beginx()
+	if err != nil {
+		return nil, false, err
+	}
+	defer tx.Rollback() //nolint:errcheck
+
+	var user models.User
+	err = tx.Get(&user, `SELECT * FROM users WHERE email = $1 FOR UPDATE`, email)
+	if err == nil {
+		// Existing account: link google_id if not already set, leave auth_provider alone.
+		if user.GoogleID == nil || *user.GoogleID != googleID {
+			if _, err := tx.Exec(
+				`UPDATE users SET google_id = $1 WHERE id = $2`,
+				googleID, user.ID,
+			); err != nil {
+				return nil, false, fmt.Errorf("link google_id: %w", err)
+			}
+			user.GoogleID = &googleID
+		}
+		return &user, false, tx.Commit()
+	}
+
+	// No existing account — create one.
+	newID := uuid.New().String()
+	newUser := &models.User{
+		ID:           newID,
+		Email:        email,
+		GoogleID:     &googleID,
+		AuthProvider: "google",
+	}
+	if _, err := tx.NamedExec(
+		`INSERT INTO users (id, email, google_id, auth_provider) VALUES (:id, :email, :google_id, :auth_provider)`,
+		newUser,
+	); err != nil {
+		return nil, false, fmt.Errorf("insert google user: %w", err)
+	}
+	if _, err := tx.Exec(
+		`INSERT INTO subscriptions (id, user_id, plan, status) VALUES ($1, $2, 'free', 'active')`,
+		subscriptionID, newID,
+	); err != nil {
+		return nil, false, fmt.Errorf("insert subscription: %w", err)
+	}
+
+	if err := tx.Commit(); err != nil {
+		return nil, false, err
+	}
+	return newUser, true, nil
 }
