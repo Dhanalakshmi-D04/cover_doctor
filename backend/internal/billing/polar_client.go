@@ -9,17 +9,30 @@ import (
 	"net/http"
 )
 
+const (
+	PolarProductionBaseURL = "https://api.polar.sh/v1"
+	PolarSandboxBaseURL    = "https://sandbox-api.polar.sh/v1"
+)
+
 // Client wraps the Polar calls needed for Checkout and the Customer Portal.
 type Client struct {
 	enabled     bool
 	accessToken string
+	baseURL     string
 }
 
-// NewClient creates a billing client. If accessToken is empty, the client is disabled.
-func NewClient(accessToken string) *Client {
+// NewClient creates a billing client.
+// baseURL should be PolarProductionBaseURL or PolarSandboxBaseURL (or any
+// override value). If empty, PolarProductionBaseURL is used as the default.
+// If accessToken is empty the client is disabled and no real calls are made.
+func NewClient(accessToken, baseURL string) *Client {
+	if baseURL == "" {
+		baseURL = PolarProductionBaseURL
+	}
 	return &Client{
 		enabled:     accessToken != "",
 		accessToken: accessToken,
+		baseURL:     baseURL,
 	}
 }
 
@@ -29,7 +42,7 @@ func (c *Client) Enabled() bool {
 }
 
 func (c *Client) request(method, path string, body interface{}, respObj interface{}) error {
-	url := "https://api.polar.sh/v1" + path
+	url := c.baseURL + path
 	var bodyReader io.Reader
 	if body != nil {
 		b, err := json.Marshal(body)

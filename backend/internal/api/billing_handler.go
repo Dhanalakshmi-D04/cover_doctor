@@ -2,6 +2,7 @@ package api
 
 import (
 	"fmt"
+	"log/slog"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -62,6 +63,13 @@ func (h *Handler) GetCheckoutURL(c *gin.Context) {
 
 	checkoutURL, err := h.Billing.CreateCheckoutSession(productID, user.Email, userID, successURL)
 	if err != nil {
+		slog.Error("Polar CreateCheckoutSession failed",
+			"handler", "GetCheckoutURL",
+			"plan", plan,
+			"product_id", productID,
+			"user_id", userID,
+			"error", err.Error(), // contains "polar API error (status NNN): <body>" when Polar returned 4xx/5xx
+		)
 		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "checkout is currently unavailable"})
 		return
 	}
@@ -99,6 +107,13 @@ func (h *Handler) CreateCheckoutSession(c *gin.Context) {
 
 	checkoutURL, err := h.Billing.CreateCheckoutSession(productID, user.Email, userID, successURL)
 	if err != nil {
+		slog.Error("Polar CreateCheckoutSession failed",
+			"handler", "CreateCheckoutSession",
+			"plan", req.Plan,
+			"product_id", productID,
+			"user_id", userID,
+			"error", err.Error(),
+		)
 		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "checkout is currently unavailable"})
 		return
 	}

@@ -94,9 +94,11 @@ func main() {
 		logger.Warn("ANTHROPIC_API_KEY not set — style tagging/explanations will use deterministic fallbacks")
 	}
 
-	billingClient := billing.NewClient(cfg.PolarAccessToken)
+	billingClient := billing.NewClient(cfg.PolarAccessToken, cfg.PolarAPIBaseURL)
 	if !billingClient.Enabled() {
 		logger.Warn("POLAR_ACCESS_TOKEN not set — billing endpoints will return an error until configured")
+	} else {
+		logger.Info("Polar billing enabled", "api_base_url", cfg.PolarAPIBaseURL)
 	}
 
 	scraperOpts := scraper.DefaultSchedulerOptions()

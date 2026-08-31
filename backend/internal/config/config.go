@@ -39,6 +39,11 @@ type Config struct {
 	PolarProductIDCreator   string
 	PolarProductIDPublisher string
 	PolarOrganizationID   string
+	// PolarAPIBaseURL overrides the Polar REST API host.
+	// Leave blank for production (https://api.polar.sh/v1).
+	// Set to https://sandbox-api.polar.sh/v1 when POLAR_SANDBOX_MODE=true
+	// or when POLAR_API_BASE_URL is explicitly set in the environment.
+	PolarAPIBaseURL string
 
 	// Redis configuration for job queue and rate limiting
 	RedisURL string
@@ -122,6 +127,24 @@ func Load() (*Config, error) {
 				cfg.AdminEmails = append(cfg.AdminEmails, trimmed)
 			}
 		}
+	}
+
+	// Resolve the Polar API base URL.
+	// Priority:
+	//   1. POLAR_API_BASE_URL — explicit override (any host, including custom proxies)
+	//   2. POLAR_SANDBOX_MODE=true — automatically selects https://sandbox-api.polar.sh/v1
+	//   3. default — https://api.polar.sh/v1 (production)
+	//
+	// A sandbox access token will be rejected with 401 by the production host,
+	// so these two settings MUST match the environment your Polar credentials came from.
+	switch {
+	case os.Getenv("POLAR_API_BASE_URL") != "":
+		cfg.PolarAPIBaseURL = os.Getenv("POLAR_API_BASE_URL")
+	case strings.EqualFold(os.Getenv("POLAR_SANDBOX_MODE"), "true") ||
+		os.Getenv("POLAR_SANDBOX_MODE") == "1":
+		cfg.PolarAPIBaseURL = "https://sandbox-api.polar.sh/v1"
+	default:
+		cfg.PolarAPIBaseURL = "https://api.polar.sh/v1"
 	}
 
 	// Fail fast with a specific message naming the missing variable, so it's

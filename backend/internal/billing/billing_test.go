@@ -29,7 +29,7 @@ func TestWebhookHandlerUnconfigured(t *testing.T) {
 }
 
 func TestBillingClientDisabled(t *testing.T) {
-	client := billing.NewClient("")
+	client := billing.NewClient("", "")
 	if client.Enabled() {
 		t.Fatal("expected billing client to be disabled when secretKey is empty")
 	}
