@@ -1,11 +1,16 @@
 package billing
 
 import (
+	"crypto/hmac"
+	"crypto/sha256"
 	"database/sql"
+	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"io"
 	"log/slog"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jmoiron/sqlx"
@@ -50,7 +55,73 @@ func HandleWebhook(database *sqlx.DB, secret string, cfg *config.Config) gin.Han
 			headers[k] = v
 		}
 
-		wh, err := webhook.NewWebhook(secret)
+		// Aggressively trim any accidental whitespace, newlines, OR QUOTES from .env copy-paste
+		cleanSecret := strings.TrimSpace(secret)
+		cleanSecret = strings.Trim(cleanSecret, `"'`)
+
+		payloadStr := cleanSecret
+		if len(cleanSecret) > 6 && cleanSecret[:6] == "whsec_" {
+			payloadStr = cleanSecret[6:]
+		}
+
+		// 1. Convert base64url alphabet -> standard base64
+		payloadStr = strings.ReplaceAll(payloadStr, "-", "+")
+		payloadStr = strings.ReplaceAll(payloadStr, "_", "/")
+
+		// 2. Fix missing base64 padding so len(payloadStr) % 4 == 0
+		switch len(payloadStr) % 4 {
+		case 2:
+			payloadStr += "=="
+		case 3:
+			payloadStr += "="
+		}
+
+		fixedSecret := cleanSecret
+		if len(cleanSecret) > 6 && cleanSecret[:6] == "whsec_" {
+			fixedSecret = "whsec_" + payloadStr
+		} else {
+			fixedSecret = payloadStr
+		}
+
+		// =========================================================================
+		// RAW CAPTURE & MANUAL CRYPTO VERIFICATION (Requested by User)
+		// =========================================================================
+		msgID := c.Request.Header.Get("webhook-id")
+		timestamp := c.Request.Header.Get("webhook-timestamp")
+		polarSigHeader := c.Request.Header.Get("webhook-signature") // e.g. v1,xyz...
+
+		fmt.Println("\n--- [WEBHOOK RAW CAPTURE] ---")
+		fmt.Printf("1. Raw Payload String: %s\n", string(payload))
+		fmt.Printf("2. Headers: ID=[%s] Timestamp=[%s]\n", msgID, timestamp)
+		fmt.Printf("3. Secret Passed In (length %d): %s...\n", len(secret), secret[:min(10, len(secret))])
+		fmt.Printf("4. Fixed Secret (length %d): %s...\n", len(fixedSecret), fixedSecret[:min(10, len(fixedSecret))])
+
+		// Decode secret manually
+		b64ToDecode := fixedSecret
+		b64ToDecode = strings.TrimPrefix(b64ToDecode, "whsec_")
+		secretBytes, decodeErr := base64.StdEncoding.DecodeString(b64ToDecode)
+		if decodeErr != nil {
+			fmt.Printf("--> FATAL: Manual base64 decode failed: %v\n", decodeErr)
+		} else {
+			// Compute HMAC manually
+			toSign := fmt.Sprintf("%s.%s.%s", msgID, timestamp, string(payload))
+			h := hmac.New(sha256.New, secretBytes)
+			h.Write([]byte(toSign))
+			computedSig := "v1," + base64.StdEncoding.EncodeToString(h.Sum(nil))
+
+			fmt.Printf("5. Polar sent signature:    %s\n", polarSigHeader)
+			fmt.Printf("6. We manually computed:    %s\n", computedSig)
+
+			if polarSigHeader == computedSig {
+				fmt.Println("--> MATCH! The raw crypto algorithm perfectly matches what Polar sent.")
+			} else {
+				fmt.Println("--> MISMATCH! The payload or secret is genuinely incorrect/tampered.")
+			}
+		}
+		fmt.Println("-----------------------------")
+		// =========================================================================
+
+		wh, err := webhook.NewWebhook(fixedSecret)
 		if err != nil {
 			slog.Error("failed to initialize webhook verifier", "error", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "webhook configuration error"})

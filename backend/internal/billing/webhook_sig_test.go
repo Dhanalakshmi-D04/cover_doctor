@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -146,5 +147,86 @@ func TestWebhookSignature_UnconfiguredSecret(t *testing.T) {
 
 	if w.Code != http.StatusServiceUnavailable {
 		t.Errorf("unconfigured secret: expected 503, got %d", w.Code)
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Polar-format secret: 43-char unpadded base64 (the actual format Polar issues
+// from its dashboard — 32 raw bytes encodes to 43 base64 chars, 43 % 4 == 3,
+// so it is missing one '=' padding character).
+// This test proves the padding-fix in HandleWebhook works end-to-end.
+// ---------------------------------------------------------------------------
+
+func TestWebhookSignature_PolarFormatUnpaddedSecret(t *testing.T) {
+	// Build a 32-byte key encoded without padding (as Polar issues it).
+	raw := make([]byte, 32)
+	for i := range raw {
+		raw[i] = byte(i + 1)
+	}
+	b64full := base64.StdEncoding.EncodeToString(raw) // 44 chars (padded)
+	// Strip the trailing '=' to simulate Polar's unpadded secret (43 chars).
+	unpadded := strings.TrimRight(b64full, "=")
+	if len(unpadded) != 43 {
+		t.Fatalf("expected 43-char unpadded secret, got %d: %s", len(unpadded), unpadded)
+	}
+	polarSecret := "whsec_" + unpadded // exactly what Polar dashboard gives you
+
+	// The signer must use the padded version (standard-webhooks signer is strict too).
+	paddedSecret := "whsec_" + b64full
+	router := setupWebhookRouter(polarSecret) // server receives the unpadded secret
+
+	payload := []byte(`{"type":"test.event","data":{}}`)
+	ts := time.Now()
+	headers := signPayload(t, paddedSecret, "msg_polar_001", ts, payload)
+
+	req := httptest.NewRequest(http.MethodPost, "/billing/webhook", bytes.NewReader(payload))
+	for k, vs := range headers {
+		for _, v := range vs {
+			req.Header.Set(k, v)
+		}
+	}
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("Polar-format unpadded secret: expected 200 OK, got %d — body: %s", w.Code, w.Body.String())
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Base64url alphabet secret (Polar may issue '-' and '_' instead of '+' '/').
+// Verifies the alphabet-conversion fix works alongside the padding fix.
+// ---------------------------------------------------------------------------
+
+func TestWebhookSignature_Base64UrlSecret(t *testing.T) {
+	// Build a raw key that encodes to base64 chars containing '+' and '/',
+	// then manually replace them with '-' and '_' to simulate a base64url secret.
+	raw := []byte{0xFB, 0xFF, 0xFE, 0xBF, 0xEF, 0xDF, 0xBE, 0xFE,
+		0xFB, 0xFF, 0xFE, 0xBF, 0xEF, 0xDF, 0xBE, 0xFE,
+		0xFB, 0xFF, 0xFE, 0xBF, 0xEF, 0xDF, 0xBE, 0xFE, 0x01}
+	b64std := base64.StdEncoding.EncodeToString(raw) // contains '+' and '/'
+	b64url := strings.NewReplacer("+", "-", "/", "_").Replace(b64std)
+	b64urlUnpadded := strings.TrimRight(b64url, "=")
+
+	base64urlSecret := "whsec_" + b64urlUnpadded // what Polar might send
+	paddedStdSecret := "whsec_" + b64std         // what the signer needs
+
+	router := setupWebhookRouter(base64urlSecret)
+
+	payload := []byte(`{"type":"test.event","data":{}}`)
+	ts := time.Now()
+	headers := signPayload(t, paddedStdSecret, "msg_b64url_001", ts, payload)
+
+	req := httptest.NewRequest(http.MethodPost, "/billing/webhook", bytes.NewReader(payload))
+	for k, vs := range headers {
+		for _, v := range vs {
+			req.Header.Set(k, v)
+		}
+	}
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("base64url secret: expected 200 OK, got %d — body: %s", w.Code, w.Body.String())
 	}
 }
