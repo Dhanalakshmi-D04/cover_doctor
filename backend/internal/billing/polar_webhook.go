@@ -1,10 +1,7 @@
 package billing
 
 import (
-	"crypto/hmac"
-	"crypto/sha256"
 	"database/sql"
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -26,13 +23,14 @@ type polarWebhookEvent struct {
 }
 
 type polarSubscriptionData struct {
-	ID                string            `json:"id"`
-	Status            string            `json:"status"` // "active", "canceled", etc.
-	CustomerID        string            `json:"customer_id"`
-	ProductID         string            `json:"product_id"`
-	Metadata          map[string]string `json:"metadata"`
-	ClientReferenceID string            `json:"client_reference_id"`
-	CurrentPeriodEnd  string            `json:"current_period_end"`
+	ID                string                 `json:"id"`
+	Status            string                 `json:"status"` // "active", "canceled", etc.
+	CustomerID        string                 `json:"customer_id"`
+	ProductID         string                 `json:"product_id"`
+	Metadata          map[string]string      `json:"metadata"`
+	CustomFieldData   map[string]interface{} `json:"custom_field_data"`
+	ClientReferenceID string                 `json:"client_reference_id"`
+	CurrentPeriodEnd  string                 `json:"current_period_end"`
 }
 
 // HandleWebhook returns a Gin handler that verifies and processes Polar webhook events.
@@ -82,44 +80,6 @@ func HandleWebhook(database *sqlx.DB, secret string, cfg *config.Config) gin.Han
 		} else {
 			fixedSecret = payloadStr
 		}
-
-		// =========================================================================
-		// RAW CAPTURE & MANUAL CRYPTO VERIFICATION (Requested by User)
-		// =========================================================================
-		msgID := c.Request.Header.Get("webhook-id")
-		timestamp := c.Request.Header.Get("webhook-timestamp")
-		polarSigHeader := c.Request.Header.Get("webhook-signature") // e.g. v1,xyz...
-
-		fmt.Println("\n--- [WEBHOOK RAW CAPTURE] ---")
-		fmt.Printf("1. Raw Payload String: %s\n", string(payload))
-		fmt.Printf("2. Headers: ID=[%s] Timestamp=[%s]\n", msgID, timestamp)
-		fmt.Printf("3. Secret Passed In (length %d): %s...\n", len(secret), secret[:min(10, len(secret))])
-		fmt.Printf("4. Fixed Secret (length %d): %s...\n", len(fixedSecret), fixedSecret[:min(10, len(fixedSecret))])
-
-		// Decode secret manually
-		b64ToDecode := fixedSecret
-		b64ToDecode = strings.TrimPrefix(b64ToDecode, "whsec_")
-		secretBytes, decodeErr := base64.StdEncoding.DecodeString(b64ToDecode)
-		if decodeErr != nil {
-			fmt.Printf("--> FATAL: Manual base64 decode failed: %v\n", decodeErr)
-		} else {
-			// Compute HMAC manually
-			toSign := fmt.Sprintf("%s.%s.%s", msgID, timestamp, string(payload))
-			h := hmac.New(sha256.New, secretBytes)
-			h.Write([]byte(toSign))
-			computedSig := "v1," + base64.StdEncoding.EncodeToString(h.Sum(nil))
-
-			fmt.Printf("5. Polar sent signature:    %s\n", polarSigHeader)
-			fmt.Printf("6. We manually computed:    %s\n", computedSig)
-
-			if polarSigHeader == computedSig {
-				fmt.Println("--> MATCH! The raw crypto algorithm perfectly matches what Polar sent.")
-			} else {
-				fmt.Println("--> MISMATCH! The payload or secret is genuinely incorrect/tampered.")
-			}
-		}
-		fmt.Println("-----------------------------")
-		// =========================================================================
 
 		wh, err := webhook.NewWebhook(fixedSecret)
 		if err != nil {
@@ -193,7 +153,16 @@ func processPolarEvent(database *sqlx.DB, cfg *config.Config, event polarWebhook
 			plan = string(PlanFree)
 		}
 
-		userID := subData.ClientReferenceID
+		userID := ""
+		if subData.CustomFieldData != nil && subData.CustomFieldData["user_id"] != nil {
+			userID = fmt.Sprintf("%v", subData.CustomFieldData["user_id"])
+		}
+		if userID == "" && subData.Metadata != nil {
+			userID = subData.Metadata["user_id"]
+		}
+		if userID == "" {
+			userID = subData.ClientReferenceID
+		}
 		if event.Type == "subscription.created" && userID != "" {
 			if err := db.AttachPolarCustomer(database, userID, subData.CustomerID, subData.ID, plan); err != nil {
 				return err

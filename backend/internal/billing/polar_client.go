@@ -97,6 +97,12 @@ func (c *Client) CreateCheckoutSession(productID, customerEmail, userID, success
 		"customer_email":      customerEmail,
 		"success_url":         successURL,
 		"client_reference_id": userID,
+		"metadata": map[string]string{
+			"user_id": userID,
+		},
+		"custom_field_data": map[string]interface{}{
+			"user_id": userID,
+		},
 	}
 
 	var resp struct {
@@ -137,7 +143,7 @@ func (c *Client) CancelSubscription(polarSubscriptionID string) error {
 	if !c.enabled {
 		return nil
 	}
-	
+
 	// Polar API uses DELETE to immediately revoke a subscription.
 	path := "/subscriptions/" + polarSubscriptionID
 	if err := c.request("DELETE", path, nil, nil); err != nil {

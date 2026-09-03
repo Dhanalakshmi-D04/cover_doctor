@@ -18,7 +18,7 @@ export default function BillingSuccess({ onNavigateHome, onUploaded }) {
       while (polling && attempts < 15) {
         try {
           const acc = await getUserPlan();
-          if (acc.plan !== 'free') {
+          if (acc.project_limit > acc.project_count) {
             polling = false;
             break;
           }
