@@ -2,11 +2,13 @@ package billing
 
 import (
 	"database/sql"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
 	"log/slog"
 	"net/http"
+	"regexp"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -16,6 +18,33 @@ import (
 	"github.com/Dhanalakshmi-D04/cover_doctor/backend/internal/config"
 	"github.com/Dhanalakshmi-D04/cover_doctor/backend/internal/db"
 )
+
+// isHexString returns true if s consists entirely of lowercase hex characters.
+// This is how the Polar CLI generates its local webhook secrets.
+var hexPattern = regexp.MustCompile(`^[0-9a-f]+$`)
+
+// normalizeWebhookSecret converts any supported secret format into the
+// whsec_<base64> format required by the standard-webhooks library:
+//
+//   - whsec_<base64>  → returned as-is (Dashboard format)
+//   - raw hex string  → Base64-encoded then wrapped in whsec_ (polar listen format)
+//   - plain base64    → wrapped in whsec_
+func normalizeWebhookSecret(raw string) string {
+	s := strings.TrimSpace(raw)
+	s = strings.Trim(s, `"'`)
+
+	// Already in the correct format.
+	if strings.HasPrefix(s, "whsec_") {
+		return s
+	}
+
+	// Raw hex from `polar listen` → encode to base64 first.
+	if hexPattern.MatchString(s) {
+		s = base64.StdEncoding.EncodeToString([]byte(s))
+	}
+
+	return "whsec_" + s
+}
 
 type polarWebhookEvent struct {
 	Type string          `json:"type"`
@@ -53,33 +82,10 @@ func HandleWebhook(database *sqlx.DB, secret string, cfg *config.Config) gin.Han
 			headers[k] = v
 		}
 
-		// Aggressively trim any accidental whitespace, newlines, OR QUOTES from .env copy-paste
-		cleanSecret := strings.TrimSpace(secret)
-		cleanSecret = strings.Trim(cleanSecret, `"'`)
-
-		payloadStr := cleanSecret
-		if len(cleanSecret) > 6 && cleanSecret[:6] == "whsec_" {
-			payloadStr = cleanSecret[6:]
-		}
-
-		// 1. Convert base64url alphabet -> standard base64
-		payloadStr = strings.ReplaceAll(payloadStr, "-", "+")
-		payloadStr = strings.ReplaceAll(payloadStr, "_", "/")
-
-		// 2. Fix missing base64 padding so len(payloadStr) % 4 == 0
-		switch len(payloadStr) % 4 {
-		case 2:
-			payloadStr += "=="
-		case 3:
-			payloadStr += "="
-		}
-
-		fixedSecret := cleanSecret
-		if len(cleanSecret) > 6 && cleanSecret[:6] == "whsec_" {
-			fixedSecret = "whsec_" + payloadStr
-		} else {
-			fixedSecret = payloadStr
-		}
+		// Normalize the secret regardless of format:
+		//   whsec_<base64>  → used as-is (Polar Dashboard)
+		//   raw hex         → auto Base64-encoded (polar listen CLI)
+		fixedSecret := normalizeWebhookSecret(secret)
 
 		wh, err := webhook.NewWebhook(fixedSecret)
 		if err != nil {
