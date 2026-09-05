@@ -24,26 +24,39 @@ import (
 var hexPattern = regexp.MustCompile(`^[0-9a-f]+$`)
 
 // normalizeWebhookSecret converts any supported secret format into the
-// whsec_<base64> format required by the standard-webhooks library:
+// whsec_<standard-padded-base64> format required by the standard-webhooks library:
 //
-//   - whsec_<base64>  → returned as-is (Dashboard format)
-//   - raw hex string  → Base64-encoded then wrapped in whsec_ (polar listen format)
-//   - plain base64    → wrapped in whsec_
+//   - whsec_<base64std padded>    → returned as-is (Polar Dashboard format)
+//   - whsec_<base64url unpadded>  → alphabet fixed + padding re-added
+//   - raw hex string              → Base64-encoded then wrapped in whsec_
+//   - plain base64                → wrapped in whsec_
 func normalizeWebhookSecret(raw string) string {
 	s := strings.TrimSpace(raw)
 	s = strings.Trim(s, `"'`)
 
-	// Already in the correct format.
+	// Strip the whsec_ prefix so we can normalise the inner base64 blob,
+	// then re-attach it at the end.
+	inner := s
 	if strings.HasPrefix(s, "whsec_") {
-		return s
+		inner = s[len("whsec_"):]
+	} else if hexPattern.MatchString(s) {
+		// Raw hex from `polar listen` → encode to standard base64 first.
+		inner = base64.StdEncoding.EncodeToString([]byte(s))
+		return "whsec_" + inner
 	}
 
-	// Raw hex from `polar listen` → encode to base64 first.
-	if hexPattern.MatchString(s) {
-		s = base64.StdEncoding.EncodeToString([]byte(s))
+	// Fix base64url alphabet (- → +, _ → /) so StdEncoding can decode it.
+	inner = strings.NewReplacer("-", "+", "_", "/").Replace(inner)
+
+	// Re-add padding so the length is a multiple of 4.
+	switch len(inner) % 4 {
+	case 2:
+		inner += "=="
+	case 3:
+		inner += "="
 	}
 
-	return "whsec_" + s
+	return "whsec_" + inner
 }
 
 type polarWebhookEvent struct {
