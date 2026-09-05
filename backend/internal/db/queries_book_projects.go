@@ -95,3 +95,27 @@ func CountRecentCoversInProject(database *sqlx.DB, bookProjectID string) (int, e
 	err := database.Get(&count, query, bookProjectID)
 	return count, err
 }
+
+// DeleteBookProject removes a book project and all its associated covers
+func DeleteBookProject(database *sqlx.DB, id string, userID string) error {
+	// First, delete covers associated with the project
+	_, err := database.Exec(`DELETE FROM covers WHERE book_project_id = $1`, id)
+	if err != nil {
+		return err
+	}
+
+	// Then, delete the project itself, making sure it belongs to the user
+	res, err := database.Exec(`DELETE FROM book_projects WHERE id = $1 AND user_id = $2`, id, userID)
+	if err != nil {
+		return err
+	}
+	
+	rowsAffected, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rowsAffected == 0 {
+		return sql.ErrNoRows
+	}
+	return nil
+}

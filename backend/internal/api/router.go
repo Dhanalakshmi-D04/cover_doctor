@@ -66,6 +66,10 @@ func NewRouter(database *sqlx.DB, rdb *redis.Client, cfg *config.Config, aiClien
 	router.GET("/auth/google", handler.GoogleLogin)
 	router.GET("/auth/google/callback", handler.GoogleCallback)
 
+	// Public AB Tests
+	router.GET("/ab-tests/:slug", handler.GetABTest)
+	router.POST("/ab-tests/:slug/vote", handler.VoteABTest)
+
 	// Polar signs this payload itself; it can never carry a JWT.
 	router.POST("/billing/webhook", handler.PolarWebhook)
 
@@ -77,9 +81,19 @@ func NewRouter(database *sqlx.DB, rdb *redis.Client, cfg *config.Config, aiClien
 		protected.GET("/jobs/:job_id", handler.GetJobStatus)
 		protected.GET("/report/:cover_id", handler.GetReport)
 		protected.GET("/images/:filename", handler.GetCoverImage)
+		// Public routes (Auth is not checked here, so we add them to the main router outside the block)
+		
 		protected.POST("/book-projects", handler.CreateBookProject)
 		protected.GET("/book-projects", handler.ListBookProjects)
 		protected.GET("/book-projects/:id/versions", handler.ListVersions)
+		protected.DELETE("/book-projects/:id", handler.DeleteBookProject)
+		
+		// AB Tests
+		protected.POST("/ab-tests", handler.CreateABTest)
+		protected.GET("/ab-tests", handler.ListABTests)
+		protected.GET("/covers", handler.ListCovers)
+		protected.POST("/covers/:cover_id/color-advice", handler.GetColorAdvice)
+		protected.GET("/benchmarks", handler.ListBenchmarks)
 		protected.GET("/billing/checkout-url", handler.GetCheckoutURL)
 		protected.POST("/billing/checkout", handler.CreateCheckoutSession)
 		protected.POST("/billing/portal", handler.CreatePortalSession)

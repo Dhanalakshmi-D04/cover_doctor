@@ -179,6 +179,10 @@ func processSingleCover(ctx context.Context, c BestsellerCover, targetStyle, tem
 		TitleHeightPercent: roundToDecimal(titleHeightPercent, 2),
 		ContrastRatio:      roundToDecimal(contrastRatio, 2),
 		WhitespacePercent:  roundToDecimal(whitespacePercent, 2),
+		Title:              &c.Title,
+		Author:             &c.Author,
+		Category:           &c.Category,
+		ImageURL:           &c.ImageURL,
 		CreatedAt:          time.Now(),
 	}, nil
 }

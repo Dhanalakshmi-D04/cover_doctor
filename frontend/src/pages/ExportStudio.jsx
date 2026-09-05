@@ -1,26 +1,75 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { getReport, imageUrl } from "../api/client";
+import PillButton from "../components/PillButton";
 import { createCoverSvgDataUrl } from "../data/bestsellersData";
 
-export default function ExportStudio({ userCoverImage }) {
+export default function ExportStudio({ coverId }) {
   const [copiedChecklist, setCopiedChecklist] = useState(false);
   const [designerNotes, setDesignerNotes] = useState("");
+  const [checklistItems, setChecklistItems] = useState([]);
 
-  const [checklistItems, setChecklistItems] = useState([
-    { id: 1, text: "Increase title text height from 11% to >18% for mobile thumbnail legibility.", category: "Typography", checked: false },
-    { id: 2, text: "Darken top background gradient for at least 4.5:1 WCAG contrast ratio.", category: "Contrast", checked: false },
-    { id: 3, text: "Increase negative space around author name by 15% to improve visual focus.", category: "Whitespace", checked: false },
-    { id: 4, text: "Align primary title color hex with #F7BA04 to fit top 88% genre bestsellers.", category: "Color Psychology", checked: false },
-    { id: 5, text: "Ensure subtitle font weight is at least Semi-Bold (600) so it doesn't blur on Kindle devices.", category: "Legibility", checked: false },
-  ]);
+  // Fetch the real report data using React Query
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["report", coverId],
+    queryFn: () => getReport(coverId),
+    enabled: !!coverId,
+  });
 
-  const coverImgSrc = userCoverImage || createCoverSvgDataUrl({
-    title: "Shadows of Destiny",
-    author: "Jane Doe",
-    style: "Bold Typography",
+  // Once the report loads, initialize the checklist with real AI explanations
+  useEffect(() => {
+    if (data && data.report && checklistItems.length === 0) {
+      const items = [];
+      let idCounter = 1;
+      
+      if (data.report.title_explanation) {
+        items.push({ id: idCounter++, text: data.report.title_explanation, category: "Typography", checked: false });
+      }
+      if (data.report.contrast_explanation) {
+        items.push({ id: idCounter++, text: data.report.contrast_explanation, category: "Contrast", checked: false });
+      }
+      if (data.report.whitespace_explanation) {
+        items.push({ id: idCounter++, text: data.report.whitespace_explanation, category: "Whitespace", checked: false });
+      }
+      
+      setChecklistItems(items);
+    }
+  }, [data]);
+
+  // If no cover is selected, show an empty state instead of fake data
+  if (!coverId) {
+    return (
+      <div className="spring-card" style={{ textAlign: "center", padding: "4rem 2rem", margin: "2rem auto", maxWidth: "600px" }}>
+        <h3 style={{ color: "var(--theme-primary)", fontFamily: "var(--font-serif)" }}>No Cover Selected</h3>
+        <p style={{ color: "var(--theme-text-muted)", marginTop: "0.5rem" }}>
+          Please upload a cover and view its report first to generate an export brief.
+        </p>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return <div style={{ padding: "4rem", textAlign: "center" }}>Loading report data...</div>;
+  }
+  
+  if (error) {
+    return <div style={{ padding: "4rem", textAlign: "center", color: "var(--accent-danger)" }}>Error loading report.</div>;
+  }
+
+  const report = data.report;
+  
+  // Load real image or fallback
+  const coverImgSrc = report.filename ? imageUrl(coverId, report.filename) : createCoverSvgDataUrl({
+    title: report.title_text || "Unknown Title",
+    author: "Unknown Author",
+    style: report.style || "Unknown Style",
     bgHex: "#445237",
     textHex: "#ffffff",
     accentHex: "#f7ba04",
   });
+
+  // Calculate pass/fail for WCAG
+  const isWcagPass = report.contrast_ratio >= 4.5;
 
   function toggleCheckItem(id) {
     setChecklistItems((items) =>
@@ -146,12 +195,12 @@ export default function ExportStudio({ userCoverImage }) {
                 EXECUTIVE COVER AUDIT REPORT
               </span>
               <h2 style={{ fontSize: "1.4rem", color: "var(--theme-olive-dark)", margin: 0, fontFamily: "var(--font-serif)" }}>
-                Shadows of Destiny
+                {report.title_text || "Untitled Book"}
               </h2>
             </div>
             <div style={{ textAlign: "right", fontSize: "0.75rem", color: "var(--theme-muted)" }}>
               Cover Doctor Audit<br />
-              {new Date().toLocaleDateString()}
+              {new Date(report.created_at || Date.now()).toLocaleDateString()}
             </div>
           </div>
 
@@ -165,21 +214,21 @@ export default function ExportStudio({ userCoverImage }) {
             <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "0.5rem" }}>
               <div className="card-metrics-row">
                 <div>
-                  <div className="metric-item-val">84/100</div>
+                  <div className="metric-item-val">{Math.round(report.overall_score || 0)}/100</div>
                   <div className="metric-item-lbl">Overall</div>
                 </div>
                 <div>
-                  <div className="metric-item-val">78th</div>
+                  <div className="metric-item-val">{Math.round(((report.title_height_percentile || 0) + (report.contrast_percentile || 0) + (report.whitespace_percentile || 0)) / 3)}th</div>
                   <div className="metric-item-lbl">Percentile</div>
                 </div>
                 <div>
-                  <div className="metric-item-val">PASS</div>
+                  <div className="metric-item-val" style={{ color: isWcagPass ? 'inherit' : 'var(--accent-danger)' }}>{isWcagPass ? 'PASS' : 'FAIL'}</div>
                   <div className="metric-item-lbl">WCAG AA</div>
                 </div>
               </div>
 
               <div style={{ fontSize: "0.82rem", color: "var(--theme-ink-light)", marginTop: "0.4rem" }}>
-                <strong>Key Benchmark Summary:</strong> Title size occupies 18.4% of total canvas area. Contrast ratio achieves 6.4:1 over primary background dark tones.
+                <strong>Key Benchmark Summary:</strong> Title size occupies {report.title_height_percent?.toFixed(1)}% of total canvas area. Contrast ratio achieves {report.contrast_ratio?.toFixed(1)}:1 over primary background dark tones. The visual style is determined as "{report.style}".
               </div>
             </div>
           </div>

@@ -9,5 +9,9 @@ type Benchmark struct {
 	TitleHeightPercent float64   `db:"title_height_percent" json:"title_height_percent"`
 	ContrastRatio      float64   `db:"contrast_ratio" json:"contrast_ratio"`
 	WhitespacePercent  float64   `db:"whitespace_percent" json:"whitespace_percent"`
+	Title              *string   `db:"title" json:"title"`
+	Author             *string   `db:"author" json:"author"`
+	Category           *string   `db:"category" json:"category"`
+	ImageURL           *string   `db:"image_url" json:"image_url"`
 	CreatedAt          time.Time `db:"created_at" json:"created_at"`
 }

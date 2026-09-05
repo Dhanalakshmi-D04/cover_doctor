@@ -109,6 +109,16 @@ export async function listBookProjects() {
   return parseOrThrow(response); // { projects: [...] }
 }
 
+export async function deleteBookProject(bookProjectId) {
+  const response = await apiFetch(`${API_BASE_URL}/book-projects/${bookProjectId}`, {
+    method: 'DELETE',
+  });
+  if (response.status !== 204) {
+    const data = await response.json().catch(() => ({}));
+    throw new Error(data.error || 'Failed to delete book project');
+  }
+}
+
 export async function listVersions(bookProjectId) {
   const response = await apiFetch(`${API_BASE_URL}/book-projects/${bookProjectId}/versions`);
   return parseOrThrow(response); // { locked, versions?, message? }
@@ -181,4 +191,50 @@ export async function getCheckoutURL(plan) {
 export async function getUserPlan() {
   const response = await apiFetch(`${API_BASE_URL}/user/plan`);
   return parseOrThrow(response); // { plan, project_count, project_limit }
+}
+
+export async function createABTest(coverAId, coverBId) {
+  const response = await apiFetch(`${API_BASE_URL}/ab-tests`, {
+    method: "POST",
+    body: JSON.stringify({ cover_a_id: coverAId, cover_b_id: coverBId }),
+  });
+  return parseOrThrow(response);
+}
+
+export async function getABTest(slug) {
+  // Public endpoint
+  const response = await fetch(`${API_BASE_URL}/ab-tests/${slug}`);
+  return parseOrThrow(response);
+}
+
+export async function voteABTest(slug, vote) {
+  const response = await fetch(`${API_BASE_URL}/ab-tests/${slug}/vote`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ vote }),
+  });
+  return parseOrThrow(response);
+}
+
+export async function listABTests() {
+  const response = await apiFetch(`${API_BASE_URL}/ab-tests`);
+  return parseOrThrow(response);
+}
+
+export async function listCovers() {
+  const response = await apiFetch(`${API_BASE_URL}/covers`);
+  return parseOrThrow(response);
+}
+
+export async function listBenchmarks() {
+  const response = await apiFetch(`${API_BASE_URL}/benchmarks`);
+  return parseOrThrow(response);
+}
+
+export async function getColorAdvice(coverId, genre) {
+  const response = await apiFetch(`${API_BASE_URL}/covers/${coverId}/color-advice`, {
+    method: "POST",
+    body: JSON.stringify({ genre }),
+  });
+  return parseOrThrow(response);
 }

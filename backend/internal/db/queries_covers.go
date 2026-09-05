@@ -47,14 +47,14 @@ func InsertCoverWithVersionTx(database *sqlx.DB, cover *models.Cover) error {
 			title_text, title_height_percent, title_height_percentile, title_explanation,
 			contrast_ratio, contrast_percentile, contrast_explanation,
 			whitespace_percent, whitespace_percentile, whitespace_explanation,
-			overall_score
+			overall_score, palette_colors, color_harmony_score, color_harmony_explanation
 		) VALUES (
 			:id, :filename, :user_id, :book_project_id, :version_number, :status, :job_id,
 			:image_width, :image_height, :style,
 			:title_text, :title_height_percent, :title_height_percentile, :title_explanation,
 			:contrast_ratio, :contrast_percentile, :contrast_explanation,
 			:whitespace_percent, :whitespace_percentile, :whitespace_explanation,
-			:overall_score
+			:overall_score, :palette_colors, :color_harmony_score, :color_harmony_explanation
 		) ON CONFLICT (id) DO UPDATE SET
 			status = EXCLUDED.status,
 			style = EXCLUDED.style,
@@ -68,7 +68,10 @@ func InsertCoverWithVersionTx(database *sqlx.DB, cover *models.Cover) error {
 			whitespace_percent = EXCLUDED.whitespace_percent,
 			whitespace_percentile = EXCLUDED.whitespace_percentile,
 			whitespace_explanation = EXCLUDED.whitespace_explanation,
-			overall_score = EXCLUDED.overall_score`
+			overall_score = EXCLUDED.overall_score,
+			palette_colors = EXCLUDED.palette_colors,
+			color_harmony_score = EXCLUDED.color_harmony_score,
+			color_harmony_explanation = EXCLUDED.color_harmony_explanation`
 
 	_, err = tx.NamedExec(query, cover)
 	if err != nil {

@@ -12,9 +12,9 @@ import (
 func InsertBenchmark(database *sqlx.DB, b *models.Benchmark) error {
 	query := `
 		INSERT INTO benchmarks (
-			id, style, title_height_percent, contrast_ratio, whitespace_percent, created_at
+			id, style, title_height_percent, contrast_ratio, whitespace_percent, title, author, category, image_url, created_at
 		) VALUES (
-			:id, :style, :title_height_percent, :contrast_ratio, :whitespace_percent, :created_at
+			:id, :style, :title_height_percent, :contrast_ratio, :whitespace_percent, :title, :author, :category, :image_url, :created_at
 		)`
 	_, err := database.NamedExec(query, b)
 	return err

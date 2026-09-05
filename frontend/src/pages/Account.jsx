@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { getAccount, openBillingPortal, changePassword, deleteAccount, logoutEverywhere } from "../api/client";
+import { getAccount, openBillingPortal, changePassword, deleteAccount, logoutEverywhere, listBookProjects, deleteBookProject } from "../api/client";
 import PillButton from "../components/PillButton";
 
 export default function Account({ onNavigate }) {
   const [account, setAccount] = useState(null);
+  const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState("");
   
@@ -12,6 +13,8 @@ export default function Account({ onNavigate }) {
   const [passwordMsg, setPasswordMsg] = useState({ text: "", type: "" });
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState("");
+
+  const [deletingProjectId, setDeletingProjectId] = useState(null);
 
   useEffect(() => {
     if (!isDeleting) return;
@@ -25,18 +28,19 @@ export default function Account({ onNavigate }) {
     return () => document.removeEventListener("keydown", handleEsc);
   }, [isDeleting]);
 
-  useEffect(() => {
-    let mounted = true;
-    async function load() {
-      try {
-        const data = await getAccount();
-        if (mounted) setAccount(data);
-      } catch (err) {
-        setMsg("Unable to load account.");
-      }
+  async function loadData() {
+    try {
+      const data = await getAccount();
+      setAccount(data);
+      const projData = await listBookProjects();
+      setProjects(projData.projects || []);
+    } catch (err) {
+      setMsg("Unable to load account data.");
     }
-    load();
-    return () => { mounted = false; };
+  }
+
+  useEffect(() => {
+    loadData();
   }, []);
 
   async function handleManageBilling() {
@@ -92,8 +96,23 @@ export default function Account({ onNavigate }) {
     }
   }
 
+  async function handleDeleteProject(id) {
+    if (!window.confirm("Are you sure you want to delete this project and all its covers? This cannot be undone.")) {
+      return;
+    }
+    setDeletingProjectId(id);
+    try {
+      await deleteBookProject(id);
+      await loadData(); // refresh the list and project_count
+    } catch (err) {
+      setMsg(err.message || "Failed to delete project");
+    } finally {
+      setDeletingProjectId(null);
+    }
+  }
+
   return (
-    <div style={{ maxWidth: 920, margin: "0 auto" }}>
+    <div style={{ maxWidth: 920, margin: "0 auto", paddingBottom: "3rem" }}>
       <h1 style={{ fontSize: "1.6rem", marginBottom: "0.6rem" }}>Account</h1>
       <div className="spring-card" style={{ padding: "1.5rem" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -118,6 +137,43 @@ export default function Account({ onNavigate }) {
 
         {msg && <div style={{ marginTop: "1rem", color: "var(--accent-danger)" }}>{msg}</div>}
       </div>
+
+      <div style={{ marginTop: "2rem" }}>
+        <h3 style={{ marginBottom: "0.5rem" }}>Your Projects</h3>
+        <div className="spring-card" style={{ padding: "1.5rem" }}>
+          {projects.length === 0 ? (
+            <p style={{ color: "var(--theme-text-muted)", fontSize: "0.95rem" }}>You haven't created any projects yet.</p>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+              {projects.map(proj => (
+                <div key={proj.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "1rem", backgroundColor: "var(--bg-app)", borderRadius: "var(--radius-md)", border: "1px solid var(--border-glass)" }}>
+                  <div>
+                    <h4 style={{ margin: 0, fontSize: "1.1rem" }}>{proj.title}</h4>
+                    <span style={{ fontSize: "0.85rem", color: "var(--theme-text-muted)" }}>
+                      Created {new Date(proj.created_at).toLocaleDateString()}
+                    </span>
+                  </div>
+                  <button 
+                    onClick={() => handleDeleteProject(proj.id)}
+                    disabled={deletingProjectId === proj.id}
+                    style={{
+                      padding: "0.5rem 1rem",
+                      backgroundColor: "transparent",
+                      color: "var(--accent-danger)",
+                      border: "1px solid rgba(244, 63, 94, 0.3)",
+                      borderRadius: "var(--radius-sm)",
+                      cursor: deletingProjectId === proj.id ? "wait" : "pointer"
+                    }}
+                  >
+                    {deletingProjectId === proj.id ? "Deleting..." : "Delete"}
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
 
       <div style={{ marginTop: "1.25rem" }}>
         <h3 style={{ marginBottom: "0.5rem" }}>Security</h3>

@@ -38,5 +38,9 @@ type Cover struct {
 
 	OverallScore float64 `db:"overall_score" json:"overall_score"`
 
+	PaletteColors           *string  `db:"palette_colors" json:"palette_colors,omitempty"`
+	ColorHarmonyScore       float64  `db:"color_harmony_score" json:"color_harmony_score"`
+	ColorHarmonyExplanation *string  `db:"color_harmony_explanation" json:"color_harmony_explanation,omitempty"`
+
 	CreatedAt time.Time `db:"created_at" json:"created_at"`
 }

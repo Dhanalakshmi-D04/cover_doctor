@@ -20,6 +20,7 @@ import WorkflowsPage from './pages/WorkflowsPage';
 import HelpPage from './pages/HelpPage';
 import AdminPage from './pages/AdminPage';
 import BillingSuccess from './pages/BillingSuccess';
+import PublicVotePage from './pages/PublicVotePage';
 import AppShell from './components/AppShell';
 import ErrorBoundary from './components/ErrorBoundary';
 import { logout, getMe } from './api/client';
@@ -169,11 +170,14 @@ function AppInner() {
             }
           />
 
+          {/* Public Voting Route */}
+          <Route path="/vote/:slug" element={<PublicVotePage />} />
+
           {/* Feature pages */}
           <Route path="/explore" element={<BestsellerExplorer userCoverId={coverId} />} />
           <Route path="/ab-test" element={<ABTestStudio />} />
-          <Route path="/palette-studio" element={<ColorPaletteStudio />} />
-          <Route path="/export" element={<ExportStudio />} />
+          <Route path="/palette-studio" element={<ColorPaletteStudio coverId={coverId} />} />
+          <Route path="/export" element={<ExportStudio coverId={coverId} />} />
           <Route path="/account" element={<Account onNavigate={handleTabChange} />} />
           <Route path="/pricing" element={<Pricing />} />
           <Route path="/workflows" element={<WorkflowsPage onNavigate={handleTabChange} />} />

@@ -140,3 +140,17 @@ func (h *Handler) ListBookProjects(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"projects": projects})
 }
+
+// DeleteBookProject handles DELETE /book-projects/:id
+func (h *Handler) DeleteBookProject(c *gin.Context) {
+	userID := c.GetString(middleware.UserIDContextKey)
+	projectID := c.Param("id")
+
+	err := db.DeleteBookProject(h.DB, projectID, userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to delete book project"})
+		return
+	}
+
+	c.Status(http.StatusNoContent)
+}

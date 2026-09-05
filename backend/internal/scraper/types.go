@@ -74,13 +74,17 @@ type SchedulerStatus struct {
 }
 
 // BenchmarkFromCover converts processed cover measurements into a DB Benchmark model.
-func BenchmarkFromCover(id, style string, titleHeightPercent, contrastRatio, whitespacePercent float64) *models.Benchmark {
+func BenchmarkFromCover(c BestsellerCover, titleHeightPercent, contrastRatio, whitespacePercent float64) *models.Benchmark {
 	return &models.Benchmark{
-		ID:                 id,
-		Style:              style,
+		ID:                 c.ID,
+		Style:              c.Style,
 		TitleHeightPercent: titleHeightPercent,
 		ContrastRatio:      contrastRatio,
 		WhitespacePercent:  whitespacePercent,
+		Title:              &c.Title,
+		Author:             &c.Author,
+		Category:           &c.Category,
+		ImageURL:           &c.ImageURL,
 		CreatedAt:          time.Now(),
 	}
 }
