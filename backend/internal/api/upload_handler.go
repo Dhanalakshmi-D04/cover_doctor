@@ -18,6 +18,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/hibiken/asynq"
 
+	"github.com/Dhanalakshmi-D04/cover_doctor/backend/internal/billing"
 	"github.com/Dhanalakshmi-D04/cover_doctor/backend/internal/db"
 	"github.com/Dhanalakshmi-D04/cover_doctor/backend/internal/middleware"
 	"github.com/Dhanalakshmi-D04/cover_doctor/backend/internal/models"
@@ -70,17 +71,24 @@ func (h *Handler) Upload(c *gin.Context) {
 			return
 		}
 
-		// 3.5. Soft cap: Prevent API abuse (max 300 re-checks per project per month)
+		// 3.5. Enforce per-plan AI monthly re-check limits
+		plan, err := billing.Check(h.DB, userID, h.Config.AdminEmails)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to verify plan limits"})
+			return
+		}
+		
+		maxCovers := billing.MaxCoversPerMonth(plan)
 		recentCount, err := db.CountRecentCoversInProject(h.DB, bookProjectID)
 		if err != nil {
 			log.Printf("failed to count recent covers for project %s: %v", bookProjectID, err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to verify upload limits"})
 			return
 		}
-		if recentCount >= 300 {
+		if recentCount >= maxCovers {
 			c.JSON(http.StatusTooManyRequests, gin.H{
 				"error":   "recheck_limit_reached",
-				"message": "You have reached the safety limit of 300 cover re-checks for this project this month. Please try again next month or create a new project.",
+				"message": "You have reached your plan's limit of cover re-checks for this project this month. Please try again next month or upgrade your plan.",
 			})
 			return
 		}

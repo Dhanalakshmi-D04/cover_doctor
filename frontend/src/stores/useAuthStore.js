@@ -18,6 +18,7 @@ export const useAuthStore = create((set) => ({
     try {
       const data = await getAccount();
       set({
+        user: { email: data.email, user_id: data.user_id },
         plan: data.plan || 'free',
         projectCount: data.project_count ?? 0,
         projectLimit: data.project_limit ?? 0,

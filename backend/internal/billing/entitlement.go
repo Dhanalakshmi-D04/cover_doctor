@@ -37,6 +37,21 @@ func MaxBookProjects(plan Plan) int {
 	}
 }
 
+// MaxCoversPerMonth returns the maximum number of cover re-checks a user on this
+// plan may perform per project per month.
+func MaxCoversPerMonth(plan Plan) int {
+	switch plan {
+	case PlanStarter:
+		return 50
+	case PlanCreator:
+		return 150
+	case PlanPublisher:
+		return 500
+	default: // PlanFree and any unrecognised plan
+		return 0
+	}
+}
+
 // IsPaid reports whether the plan grants access to paid features.
 func IsPaid(plan Plan) bool {
 	return plan == PlanStarter || plan == PlanCreator || plan == PlanPublisher

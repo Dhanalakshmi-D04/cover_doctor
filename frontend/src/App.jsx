@@ -52,6 +52,7 @@ function AppInner() {
   const navigate = useNavigate();
   const location = useLocation();
   const fetchAccount = useAuthStore((state) => state.fetchAccount);
+  const user = useAuthStore((state) => state.user);
 
   useEffect(() => {
     let mounted = true;
@@ -182,7 +183,16 @@ function AppInner() {
           <Route path="/pricing" element={<Pricing />} />
           <Route path="/workflows" element={<WorkflowsPage onNavigate={handleTabChange} />} />
           <Route path="/help" element={<HelpPage />} />
-          <Route path="/admin" element={<AdminPage />} />
+          
+          {/* Protected Admin Route */}
+          <Route 
+            path="/admin" 
+            element={
+              user?.email === 'dhanalakshmidgowda04@gmail.com' 
+                ? <AdminPage /> 
+                : <Navigate to="/" replace />
+            } 
+          />
 
           {/* Post-checkout confirmation */}
           <Route
