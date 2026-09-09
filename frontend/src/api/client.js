@@ -238,3 +238,21 @@ export async function getColorAdvice(coverId, genre) {
   });
   return parseOrThrow(response);
 }
+
+export async function forgotPassword(email) {
+  const response = await apiFetch(`${API_BASE_URL}/auth/forgot-password`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email }),
+  });
+  return parseOrThrow(response);
+}
+
+export async function resetPassword(token, email, newPassword) {
+  const response = await apiFetch(`${API_BASE_URL}/auth/reset-password`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ token, email, password: newPassword }),
+  });
+  return parseOrThrow(response);
+}
