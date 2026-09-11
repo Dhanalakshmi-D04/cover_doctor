@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { getAccount } from '../api/client';
+import { getMe } from '../api/client';
 
 export const useAuthStore = create((set) => ({
   user: null,
@@ -13,12 +13,13 @@ export const useAuthStore = create((set) => ({
   setAuthenticated: (isAuth) => set({ isAuthenticated: isAuth }),
 
   fetchAccount: async () => {
-    if (!localStorage.getItem('token')) return;
+    // Note: the backend uses cookies, so token might not be in localStorage anymore.
+    // getMe will throw a 401 if the cookie is missing/expired.
     set({ isLoading: true });
     try {
-      const data = await getAccount();
+      const data = await getMe();
       set({
-        user: { email: data.email, user_id: data.user_id },
+        user: { email: data.email, user_id: data.user_id, isAdmin: data.is_admin },
         plan: data.plan || 'free',
         projectCount: data.project_count ?? 0,
         projectLimit: data.project_limit ?? 0,

@@ -188,7 +188,7 @@ function AppInner() {
           <Route 
             path="/admin" 
             element={
-              user?.email === 'dhanalakshmidgowda04@gmail.com' 
+              user?.isAdmin === true
                 ? <AdminPage /> 
                 : <Navigate to="/" replace />
             } 
