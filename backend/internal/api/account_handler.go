@@ -68,6 +68,7 @@ func (h *Handler) GetMe(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"user_id":       userID,
 		"email":         user.Email,
+		"is_admin":      user.IsAdmin,
 		"plan":          string(plan),
 		"project_count": projectCount,
 		"project_limit": billing.MaxBookProjects(plan),

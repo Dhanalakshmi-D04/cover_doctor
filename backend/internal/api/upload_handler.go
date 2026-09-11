@@ -136,6 +136,19 @@ func (h *Handler) Upload(c *gin.Context) {
 	imgWidth := imgConfig.Width
 	imgHeight := imgConfig.Height
 
+	// 4a. Decompression bomb guard — reject images whose pixel area is
+	// absurdly large even if the file itself is under 10 MB (e.g. a specially
+	// crafted PNG that decompresses to 100,000×100,000 pixels will exhaust RAM
+	// and crash the worker process). 4000×6000 is well above any real book cover.
+	const maxDimension = 6000
+	if imgWidth > maxDimension || imgHeight > maxDimension {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "image dimensions too large",
+			"message": "Image must not exceed 6000×6000 pixels. Please resize your cover and try again.",
+		})
+		return
+	}
+
 	// Reset file pointer
 	if _, err := f.Seek(0, 0); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to process uploaded file"})
