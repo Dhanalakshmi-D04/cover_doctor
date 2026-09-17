@@ -8,6 +8,7 @@ export default function PercentileBar({
   benchmark = 50,
   unit = '%',
   description = '',
+  explanation = '',
 }) {
   const roundedPercentile = Math.round(percentile);
   
@@ -97,6 +98,14 @@ export default function PercentileBar({
           />
         )}
       </div>
+
+      {/* AI Design Tip */}
+      {explanation && (
+        <div style={{ marginTop: '0.85rem', padding: '0.65rem 0.85rem', backgroundColor: 'rgba(99, 102, 241, 0.08)', borderRadius: 'var(--radius-sm)', borderLeft: '3px solid var(--accent-primary)', fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
+          <strong style={{ color: 'var(--accent-primary)', display: 'block', marginBottom: '0.2rem' }}>AI Design Tip:</strong>
+          {explanation}
+        </div>
+      )}
     </div>
   );
 }

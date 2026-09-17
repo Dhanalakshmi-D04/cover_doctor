@@ -134,6 +134,7 @@ export default function ScoreReport({ plan, report, coverId, onReset, onNavigate
             benchmark={19.0}
             unit="%"
             description="Vertical title percentage vs cover size"
+            explanation={report?.title_explanation}
           />
           <PercentileBar
             label="WCAG Text Contrast Ratio"
@@ -142,6 +143,7 @@ export default function ScoreReport({ plan, report, coverId, onReset, onNavigate
             benchmark={5.2}
             unit=":1"
             description="Foreground title vs background luminosity"
+            explanation={report?.contrast_explanation}
           />
           <PercentileBar
             label="Visual Whitespace Margin"
@@ -150,6 +152,7 @@ export default function ScoreReport({ plan, report, coverId, onReset, onNavigate
             benchmark={30.0}
             unit="%"
             description="Breathing room around visual elements"
+            explanation={report?.whitespace_explanation}
           />
           <PercentileBar
             label="Genre Style Alignment"
@@ -158,29 +161,12 @@ export default function ScoreReport({ plan, report, coverId, onReset, onNavigate
             benchmark={75.0}
             unit="%"
             description="Visual match against Thriller bestsellers"
+            explanation={report?.style_explanation}
           />
         </div>
       </div>
 
-      {/* AI "Why" Explanation Insights Card */}
-      <div
-        style={{
-          padding: '1.5rem',
-          borderRadius: 'var(--radius-lg)',
-          backgroundColor: 'rgba(99, 102, 241, 0.1)',
-          border: '1px solid var(--accent-primary)',
-          backdropFilter: 'blur(8px)',
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--accent-primary)', fontWeight: '700', fontSize: '1.05rem', marginBottom: '0.75rem' }}>
-          <Sparkles size={20} />
-          <span>AI Diagnostic Explanation ("Why" Insights)</span>
-        </div>
-        <p style={{ fontSize: '0.925rem', color: 'var(--text-primary)', lineHeight: '1.6' }}>
-          {report?.why_explanation ||
-            `Your cover title occupies ${metrics.title_height_pct}% of total vertical height (78th percentile for Thrillers). The contrast ratio of ${metrics.contrast_ratio}:1 easily satisfies WCAG legibility rules for Kindle 120px search thumbnails, ensuring your cover pops on mobile screens.`}
-        </p>
-      </div>
+
 
       {/* Interactive Visual Canvas Overlay Engine */}
       <div>

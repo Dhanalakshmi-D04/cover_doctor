@@ -26,7 +26,7 @@ func (c *Client) ExplainFeatures(features []FeatureData) map[string]string {
 		return results
 	}
 
-	prompt := "Turn the following data into a short, clear, one-sentence explanation for a book author, in a friendly but direct tone per feature. Do not invent numbers. Return ONLY a JSON object where the keys are the feature names and the values are your string explanations.\n\n"
+	prompt := "Turn the following data into a short, clear, two-sentence explanation for a book author, in a friendly but direct tone per feature. The first sentence should explain the score. The second sentence MUST provide a specific, actionable design tip on how to improve it (e.g. 'increase the font weight', 'add a dark drop shadow', 'remove background clutter'). Do not invent numbers. Return ONLY a JSON object where the keys are the feature names and the values are your string explanations.\n\n"
 	
 	prompt += "Features Data:\n"
 	for _, f := range features {

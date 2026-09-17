@@ -24,7 +24,7 @@ type S3Client struct {
 // NewS3Client creates a new S3Client connected to the provided endpoint (MinIO or real AWS S3).
 func NewS3Client(ctx context.Context, cfg *appconfig.Config) (*S3Client, error) {
 	opts := []func(*config.LoadOptions) error{
-		config.WithRegion("ap-south-1"),
+		config.WithRegion(cfg.S3Region),
 		config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(cfg.S3AccessKey, cfg.S3SecretKey, "")),
 	}
 

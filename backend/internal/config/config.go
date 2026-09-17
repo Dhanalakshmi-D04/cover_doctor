@@ -55,6 +55,7 @@ type Config struct {
 	S3AccessKey      string
 	S3SecretKey      string
 	S3Bucket         string
+	S3Region         string
 	S3ForcePathStyle bool
 
 	// ZeptoMail configuration for sending transactional emails.
@@ -111,6 +112,7 @@ func Load() (*Config, error) {
 		S3AccessKey:      os.Getenv("S3_ACCESS_KEY"),
 		S3SecretKey:      os.Getenv("S3_SECRET_KEY"),
 		S3Bucket:         os.Getenv("S3_BUCKET"),
+		S3Region:         getEnv("S3_REGION", "ap-south-1"),
 		S3ForcePathStyle: getEnv("S3_FORCE_PATH_STYLE", "true") == "true",
 		ZeptoMailAPIKey:    os.Getenv("ZEPTOMAIL_API_KEY"),
 		ZeptoMailFromEmail: os.Getenv("ZEPTOMAIL_FROM_EMAIL"),
