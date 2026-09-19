@@ -12,19 +12,17 @@ export default function ScoreReport({ plan, report, coverId, onReset, onNavigate
   const overallScore = Math.round(report?.overall_score || 0);
   const coverSrc = report?.filename ? imageUrl(coverId, report.filename) : null;
 
-  const percentiles = report?.percentiles || {
-    title_height_pct: 78,
-    contrast_ratio: 82,
-    whitespace_pct: 65,
-    style_alignment: 88,
-  };
-
-  const metrics = report?.metrics || {
-    title_height_pct: 18.4,
-    contrast_ratio: 4.8,
-    whitespace_pct: 32.1,
-    style_tag: 'Bold Typography',
-  };
+  // Read directly from the flat backend Cover model fields.
+  // Backend sends: title_height_percent, title_height_percentile,
+  //                contrast_ratio, contrast_percentile,
+  //                whitespace_percent, whitespace_percentile, style
+  const titleValue       = report?.title_height_percent ?? 0;
+  const titlePercentile  = report?.title_height_percentile ?? 0;
+  const contrastValue    = report?.contrast_ratio ?? 0;
+  const contrastPct      = report?.contrast_percentile ?? 0;
+  const whitespaceValue  = report?.whitespace_percent ?? 0;
+  const whitespacePct    = report?.whitespace_percentile ?? 0;
+  const styleTag         = report?.style || 'Unknown';
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
@@ -98,7 +96,7 @@ export default function ScoreReport({ plan, report, coverId, onReset, onNavigate
             )}
           </div>
           <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.75rem' }}>
-            Classification Style: <strong style={{ color: 'var(--accent-primary)' }}>{metrics.style_tag}</strong>
+            Classification Style: <strong style={{ color: 'var(--accent-primary)' }}>{styleTag}</strong>
           </span>
         </div>
 
@@ -124,13 +122,13 @@ export default function ScoreReport({ plan, report, coverId, onReset, onNavigate
       {/* Diagnostic Percentile Breakdown Section */}
       <div>
         <h3 style={{ fontSize: '1.25rem', fontWeight: '800', fontFamily: 'var(--font-family-heading)', color: 'var(--text-primary)', marginBottom: '1rem' }}>
-          Mathematical Measurement & Percentiles
+          Mathematical Measurement &amp; Percentiles
         </h3>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>
           <PercentileBar
             label="Title Height Ratio"
-            value={metrics.title_height_pct}
-            percentile={percentiles.title_height_pct}
+            value={titleValue}
+            percentile={titlePercentile}
             benchmark={19.0}
             unit="%"
             description="Vertical title percentage vs cover size"
@@ -138,8 +136,8 @@ export default function ScoreReport({ plan, report, coverId, onReset, onNavigate
           />
           <PercentileBar
             label="WCAG Text Contrast Ratio"
-            value={metrics.contrast_ratio}
-            percentile={percentiles.contrast_ratio}
+            value={contrastValue}
+            percentile={contrastPct}
             benchmark={5.2}
             unit=":1"
             description="Foreground title vs background luminosity"
@@ -147,33 +145,22 @@ export default function ScoreReport({ plan, report, coverId, onReset, onNavigate
           />
           <PercentileBar
             label="Visual Whitespace Margin"
-            value={metrics.whitespace_pct}
-            percentile={percentiles.whitespace_pct}
+            value={whitespaceValue}
+            percentile={whitespacePct}
             benchmark={30.0}
             unit="%"
             description="Breathing room around visual elements"
             explanation={report?.whitespace_explanation}
           />
-          <PercentileBar
-            label="Genre Style Alignment"
-            value={percentiles.style_alignment}
-            percentile={percentiles.style_alignment}
-            benchmark={75.0}
-            unit="%"
-            description="Visual match against Thriller bestsellers"
-            explanation={report?.style_explanation}
-          />
         </div>
       </div>
-
-
 
       {/* Interactive Visual Canvas Overlay Engine */}
       <div>
         <h3 style={{ fontSize: '1.25rem', fontWeight: '800', fontFamily: 'var(--font-family-heading)', color: 'var(--text-primary)', marginBottom: '1rem' }}>
           Interactive Canvas Diagnostic Engine
         </h3>
-        <VisualBreakdown imageSrc={coverSrc || 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c'} titleRatio={metrics.title_height_pct} contrastScore={metrics.contrast_ratio} />
+        <VisualBreakdown imageSrc={coverSrc || 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c'} titleRatio={titleValue} contrastScore={contrastValue} />
       </div>
     </div>
   );
