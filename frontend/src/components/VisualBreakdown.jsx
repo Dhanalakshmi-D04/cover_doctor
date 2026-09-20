@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { Eye, Grid, Maximize2, ShieldAlert, Sparkles, Smartphone, ShoppingBag } from 'lucide-react';
 import PillButton from './PillButton';
 
-export default function VisualBreakdown({ imageSrc, ocrData = null, titleRatio = 18.4, contrastScore = 4.8 }) {
+export default function VisualBreakdown({ imageSrc, bookTitle = "The Bestseller Mystery Code", ocrData = null, titleRatio = 18.4, contrastScore = 4.8 }) {
   const [activeTab, setActiveTab] = useState('canvas'); // 'canvas', 'thumbnail', 'amazon', 'mobile'
   const [showTitleBox, setShowTitleBox] = useState(true);
   const [showGrid, setShowGrid] = useState(true);
@@ -101,7 +101,7 @@ export default function VisualBreakdown({ imageSrc, ocrData = null, titleRatio =
               boxShadow: 'var(--shadow-lg)',
             }}
           >
-            <img src={imageSrc} alt="Diagnostic Cover Overlay" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            {imageSrc ? <img src={imageSrc} alt="Diagnostic Cover Overlay" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <div style={{ width: '100%', height: '100%', backgroundColor: 'var(--bg-surface-elevated)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>Image Failed to Load</div>}
 
             {/* Title Bounding Box Overlay */}
             {showTitleBox && (
@@ -167,7 +167,7 @@ export default function VisualBreakdown({ imageSrc, ocrData = null, titleRatio =
             <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>80% of readers judge titles at this exact pixel scale.</p>
           </div>
           <div style={{ height: '120px', aspectRatio: '2/3', borderRadius: '4px', overflow: 'hidden', boxShadow: 'var(--shadow-md)' }}>
-            <img src={imageSrc} alt="Kindle Thumbnail" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            {imageSrc ? <img src={imageSrc} alt="Kindle Thumbnail" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <div style={{ width: '100%', height: '100%', backgroundColor: 'var(--bg-surface-elevated)' }} />}
           </div>
         </div>
       )}
@@ -177,10 +177,10 @@ export default function VisualBreakdown({ imageSrc, ocrData = null, titleRatio =
         <div style={{ display: 'flex', justifyContent: 'center', padding: '1rem' }}>
           <div style={{ width: '100%', maxWidth: '420px', padding: '1rem', borderRadius: 'var(--radius-md)', backgroundColor: '#FFFFFF', color: '#111', display: 'flex', gap: '1rem' }}>
             <div style={{ width: '90px', aspectRatio: '2/3', borderRadius: '4px', overflow: 'hidden', flexShrink: 0 }}>
-              <img src={imageSrc} alt="Amazon Cover" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              {imageSrc ? <img src={imageSrc} alt="Amazon Cover" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <div style={{ width: '100%', height: '100%', backgroundColor: '#ddd' }} />}
             </div>
             <div>
-              <div style={{ fontSize: '0.95rem', fontWeight: '800', lineHeight: '1.2' }}>The Bestseller Mystery Code</div>
+              <div style={{ fontSize: '0.95rem', fontWeight: '800', lineHeight: '1.2' }}>{bookTitle}</div>
               <div style={{ fontSize: '0.75rem', color: '#555', margin: '0.2rem 0' }}>by Author Name</div>
               <div style={{ color: '#E67E22', fontSize: '0.8rem' }}>★★★★★ 4.8 (1,240 ratings)</div>
               <div style={{ fontSize: '0.9rem', fontWeight: '800', color: '#B12704', marginTop: '0.4rem' }}>Kindle Unlimited $0.00</div>
@@ -193,7 +193,7 @@ export default function VisualBreakdown({ imageSrc, ocrData = null, titleRatio =
       {activeTab === 'mobile' && (
         <div style={{ display: 'flex', justifyContent: 'center', padding: '1rem' }}>
           <div style={{ width: '180px', height: '320px', borderRadius: '24px', border: '6px solid #222', backgroundColor: '#090D16', padding: '8px', overflow: 'hidden', boxShadow: 'var(--shadow-lg)' }}>
-            <img src={imageSrc} alt="Mobile Cover" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '12px' }} />
+            {imageSrc ? <img src={imageSrc} alt="Mobile Cover" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '12px' }} /> : <div style={{ width: '100%', height: '100%', backgroundColor: 'var(--bg-surface-elevated)', borderRadius: '12px' }} />}
           </div>
         </div>
       )}

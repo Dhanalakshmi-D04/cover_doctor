@@ -57,5 +57,23 @@ func (c *Client) ExplainFeatures(features []FeatureData) map[string]string {
 // plain template, less polished, but it never blocks the report from
 // existing.
 func fallbackExplanation(feature string, value, percentile float64) string {
-	return fmt.Sprintf("%s is %.2f, which is at the %.0fth percentile among comparable covers.", feature, value, percentile)
+	base := fmt.Sprintf("Your %s is %.2f, which is at the %.0fth percentile among comparable covers. ", feature, value, percentile)
+	
+	tip := ""
+	if percentile < 50 {
+		switch feature {
+		case "title size":
+			tip = "Tip: Try increasing the font size or using a bolder typeface to make the title legible on small screens."
+		case "contrast":
+			tip = "Tip: Try adding a dark drop shadow behind the text, or change the font color to increase readability."
+		case "whitespace":
+			tip = "Tip: Your cover feels cluttered. Try scaling down the background art to give the title more breathing room."
+		default:
+			tip = "Tip: Consider adjusting this element to better align with bestseller expectations."
+		}
+	} else {
+		tip = "This is well within the optimal range for your genre!"
+	}
+
+	return base + tip
 }

@@ -59,7 +59,7 @@ function AppInner() {
 
     async function checkAuth() {
       try {
-        await getMe();
+        await fetchAccount();
         if (mounted) setIsAuthenticated(true);
       } catch (err) {
         if (mounted) {

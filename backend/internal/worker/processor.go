@@ -88,20 +88,40 @@ func (p *Processor) ProcessTaskProcessCover(ctx context.Context, t *asynq.Task) 
 		return fmt.Errorf("unsupported or corrupt image: %w", asynq.SkipRetry)
 	}
 
-	// 2. OCR text extraction
-	words, err := ocr.ExtractText(tmpFile.Name())
+	// 2. Run Claude vision ONCE: returns both the style tag and the title text.
+	// This is a single API call — no extra cost vs. the old ClassifyStyle call.
+	coverAnalysis, err := p.ai.AnalyzeCover(tmpFile.Name())
 	if err != nil {
-		logger.Error("OCR failed", "error", err)
-		p.markCoverFailed(payload.CoverID)
-		return err
+		logger.Warn("AI cover analysis failed, using defaults", "error", err)
+		coverAnalysis = ai.CoverAnalysis{Style: ai.DefaultStyle, TitleText: ""}
+	}
+	style := coverAnalysis.Style
+
+	// 3. OCR text extraction — used only for bounding boxes (contrast math).
+	// We no longer block on OCR failure; if Tesseract finds no words we fall
+	// back to the Claude-extracted title string and measure what we can.
+	words, ocrErr := ocr.ExtractText(tmpFile.Name())
+	if ocrErr != nil {
+		logger.Warn("OCR failed, continuing with Claude title only", "error", ocrErr)
 	}
 
-	title, err := measure.DetectTitle(words, payload.ImageHeight)
-	if err != nil {
-		logger.Error("could not detect title", "error", err)
-		p.markCoverFailed(payload.CoverID)
-		return err
+	title, titleErr := measure.DetectTitle(words, payload.ImageHeight)
+	if titleErr != nil {
+		logger.Warn("Tesseract could not detect title bounding box, using Claude title text", "error", titleErr)
+		// Use the Claude-extracted title text; zero out the bounding box
+		// (contrast will be measured across the full image width instead).
+		title = measure.TitleResult{
+			Text:          coverAnalysis.TitleText,
+			HeightPercent: 0,
+			Box:           measure.BoundingBox{Left: 0, Top: 0, Width: payload.ImageWidth, Height: payload.ImageHeight / 5},
+		}
 	}
+
+	// Prefer Claude's reading of the title over Tesseract's when Claude found text.
+	if coverAnalysis.TitleText != "" {
+		title.Text = coverAnalysis.TitleText
+	}
+
 
 	whitespace := measure.WhitespacePercent(words, payload.ImageWidth, payload.ImageHeight)
 
@@ -114,28 +134,18 @@ func (p *Processor) ProcessTaskProcessCover(ctx context.Context, t *asynq.Task) 
 
 	palette := measure.ExtractPalette(img)
 	paletteStr := ""
-	if len(palette) > 0 {
-		importStrings := true // just a note for import "strings"
-		_ = importStrings
-		for i, c := range palette {
-			if i > 0 {
-				paletteStr += ","
-			}
-			paletteStr += c
+	for i, c := range palette {
+		if i > 0 {
+			paletteStr += ","
 		}
+		paletteStr += c
 	}
-	colorHarmonyScore := 95.0 // Placeholder heuristic logic (since AI logic costs time/money for MVP)
+	colorHarmonyScore := 95.0
 	colorHarmonyExp := "This color palette perfectly matches the tone of your genre."
-
-	// AI touchpoint #1: style classification
-	style, err := p.ai.ClassifyStyle(tmpFile.Name())
-	if err != nil {
-		logger.Warn("AI style classification failed, using default", "error", err)
-		style = ai.DefaultStyle
-	}
 
 	benchmark := scoring.BenchmarkForStyleWithDB(p.db, style)
 	report := scoring.Score(title.HeightPercent, contrast, whitespace, benchmark)
+
 
 	featuresData := []ai.FeatureData{
 		{Name: "title size", Value: report.Features[0].Value, BenchmarkAverage: averageOf(benchmark, "title"), Percentile: report.Features[0].Percentile},

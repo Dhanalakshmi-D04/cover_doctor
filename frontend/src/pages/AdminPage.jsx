@@ -19,7 +19,7 @@ export default function AdminPage() {
       const res = await getScraperStatus();
       setStatus(res);
     } catch {
-      setStatus({ status: 'idle', total_scraped: 1240, last_run: '2026-08-08 14:30' });
+      setStatus({ status: 'unknown', total_scraped: null, last_run: 'unknown' });
     }
   };
 
@@ -79,8 +79,19 @@ export default function AdminPage() {
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '1.25rem' }}>
-            <div>Total Benchmark Covers: <strong style={{ color: 'var(--text-primary)' }}>{status?.total_scraped || 1240}</strong></div>
-            <div>Last Pipeline Run: <strong style={{ color: 'var(--text-primary)' }}>{status?.last_run || 'Recent'}</strong></div>
+            <div>Total Benchmark Covers: <strong style={{ color: 'var(--text-primary)' }}>{status?.total_scraped ?? '—'}</strong></div>
+            <div>Last Pipeline Run: <strong style={{ color: 'var(--text-primary)' }}>{status?.last_run || 'Not available'}</strong></div>
+            {status?.by_style && status.by_style.length > 0 && (
+              <div style={{ marginTop: '0.5rem' }}>
+                <div style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.4rem' }}>By Style</div>
+                {status.by_style.map((row) => (
+                  <div key={row.style} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.25rem 0', borderBottom: '1px solid var(--border-glass)' }}>
+                    <span>{row.style}</span>
+                    <strong style={{ color: 'var(--accent-primary)' }}>{row.count}</strong>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           <PillButton variant="neon" icon={RefreshCw} isLoading={isTriggering} onClick={handleRunScraper} style={{ width: '100%' }}>

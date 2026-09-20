@@ -26,8 +26,9 @@ export const useAuthStore = create((set) => ({
         credits: data.credits ?? 50,
         isLoading: false,
       });
-    } catch {
+    } catch (err) {
       set({ isLoading: false });
+      throw err;
     }
   },
 
