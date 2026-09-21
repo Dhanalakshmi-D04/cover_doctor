@@ -104,7 +104,7 @@ func main() {
 	scraperOpts := scraper.DefaultSchedulerOptions()
 	scraperOpts.Enabled = false // Background ticker runs in worker, API just triggers it manually
 	scraperOpts.Sources = []scraper.BestsellerSource{
-		scraper.NewAmazonSource(30*time.Second, cfg.ScraperAPIKey),
+		scraper.NewAmazonSource(30*time.Second, cfg.ApifyToken),
 	}
 	scraperScheduler := scraper.NewScheduler(database, aiClient, scraperOpts)
 

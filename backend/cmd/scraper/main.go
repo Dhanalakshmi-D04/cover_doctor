@@ -50,7 +50,7 @@ func main() {
 	}
 
 	sources := []scraper.BestsellerSource{
-		scraper.NewAmazonSource(30*time.Second, cfg.ScraperAPIKey),
+		scraper.NewAmazonSource(30*time.Second, cfg.ApifyToken),
 	}
 
 	fmt.Println("=====================================================")
@@ -64,7 +64,10 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), 45*time.Minute)
 	defer cancel()
 
-	result, err := scraper.ScrapeAndSave(ctx, database, aiClient, sources, opts)
+	result, err := scraper.ScrapeAndSave(ctx, database, aiClient, sources, opts, func(p scraper.ScrapeProgress) {
+		fmt.Printf("[%d%%] %s — %s (processed: %d, inserted: %d)\n",
+			p.PercentComplete, p.CurrentStyle, p.CurrentAction, p.ProcessedCovers, p.InsertedCovers)
+	})
 	if err != nil {
 		log.Fatalf("Scraper execution failed: %v", err)
 	}

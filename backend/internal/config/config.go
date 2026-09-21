@@ -72,9 +72,8 @@ type Config struct {
 	GoogleClientSecret string
 	GoogleRedirectURL  string
 
-	// ScraperAPIKey is used to bypass Amazon's anti-scraping defenses
-	// during quarterly benchmark runs.
-	ScraperAPIKey string
+	// ApifyToken is used to run the Amazon crawler via Apify Actor
+	ApifyToken string
 
 	// AdminEmails is a comma-separated list of email addresses whose accounts
 	// always receive PlanPublisher entitlements regardless of their subscription
@@ -119,7 +118,7 @@ func Load() (*Config, error) {
 		GoogleClientID:     os.Getenv("GOOGLE_CLIENT_ID"),
 		GoogleClientSecret: os.Getenv("GOOGLE_CLIENT_SECRET"),
 		GoogleRedirectURL:  os.Getenv("GOOGLE_REDIRECT_URL"),
-		ScraperAPIKey:    os.Getenv("SCRAPER_API_KEY"),
+		ApifyToken:         os.Getenv("APIFY_TOKEN"),
 	}
 
 	// Parse the optional ADMIN_EMAILS comma-separated list.

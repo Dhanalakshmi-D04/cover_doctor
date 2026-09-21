@@ -59,7 +59,7 @@ func TestScrapeAndSave_OfflinePipeline(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	result, err := ScrapeAndSave(ctx, nil, aiClient, sources, opts)
+	result, err := ScrapeAndSave(ctx, nil, aiClient, sources, opts, nil)
 	if err != nil {
 		t.Fatalf("ScrapeAndSave failed: %v", err)
 	}

@@ -47,6 +47,7 @@ type Scheduler struct {
 	nextRunTime *time.Time
 	lastResult  *ScrapeResult
 	stopCh      chan struct{}
+	progress    *ScrapeProgress // live progress — only non-nil while running
 }
 
 // NewScheduler creates a new quarterly scraper scheduler instance.
@@ -128,6 +129,17 @@ func (s *Scheduler) Stop() {
 	}
 }
 
+// updateProgress is a thread-safe helper called from within ScrapeAndSave
+// to push live progress updates into the Scheduler so the status endpoint
+// can expose them to the admin UI.
+func (s *Scheduler) updateProgress(p ScrapeProgress) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.progress != nil {
+		*s.progress = p
+	}
+}
+
 // TriggerNow executes a scrape job immediately. It is thread-safe and prevents concurrent execution.
 func (s *Scheduler) TriggerNow(ctx context.Context) (*ScrapeResult, error) {
 	s.mu.Lock()
@@ -136,16 +148,19 @@ func (s *Scheduler) TriggerNow(ctx context.Context) (*ScrapeResult, error) {
 		return nil, fmt.Errorf("scraper job is already running")
 	}
 	s.isRunning = true
+	initial := ScrapeProgress{CurrentAction: "Initialising scraper..."}
+	s.progress = &initial
 	s.mu.Unlock()
 
 	defer func() {
 		s.mu.Lock()
 		s.isRunning = false
+		s.progress = nil
 		s.mu.Unlock()
 	}()
 
 	log.Println("starting automated benchmark scraper job...")
-	result, err := ScrapeAndSave(ctx, s.database, s.aiClient, s.opts.Sources, s.opts.ScraperOpts)
+	result, err := ScrapeAndSave(ctx, s.database, s.aiClient, s.opts.Sources, s.opts.ScraperOpts, s.updateProgress)
 	if err != nil {
 		return nil, fmt.Errorf("scrape execution failed: %w", err)
 	}
@@ -172,6 +187,13 @@ func (s *Scheduler) Status(ctx context.Context) SchedulerStatus {
 		}
 	}
 
+	// Copy progress safely so we can return it without holding the lock
+	var progressCopy *ScrapeProgress
+	if s.progress != nil {
+		p := *s.progress
+		progressCopy = &p
+	}
+
 	return SchedulerStatus{
 		Enabled:      s.opts.Enabled,
 		IsRunning:    s.isRunning,
@@ -180,5 +202,7 @@ func (s *Scheduler) Status(ctx context.Context) SchedulerStatus {
 		NextRunTime:  s.nextRunTime,
 		LastResult:   s.lastResult,
 		TotalInDB:    totalInDB,
+		Progress:     progressCopy,
 	}
 }
+

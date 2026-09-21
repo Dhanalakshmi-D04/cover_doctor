@@ -19,6 +19,20 @@ type BestsellerCover struct {
 	Filename  string
 }
 
+// ScrapeProgress holds the live state of a running scraper job.
+// It is updated in real-time as the pipeline progresses so the admin UI
+// can display an accurate progress bar and status message.
+type ScrapeProgress struct {
+	CurrentStyle     string `json:"current_style"`      // e.g. "Minimalist"
+	CurrentAction    string `json:"current_action"`     // e.g. "Fetching Amazon data via Apify..."
+	TotalCovers      int    `json:"total_covers"`       // total covers found across all styles
+	ProcessedCovers  int    `json:"processed_covers"`   // how many have completed OCR/AI/DB
+	InsertedCovers   int    `json:"inserted_covers"`    // how many were successfully saved to DB
+	ErrorCount       int    `json:"error_count"`        // failures so far
+	PercentComplete  int    `json:"percent_complete"`   // 0–100
+}
+
+
 // ScrapeResult summarizes the results of a scraper execution run.
 type ScrapeResult struct {
 	StartedAt       time.Time      `json:"started_at"`
@@ -64,13 +78,14 @@ func DefaultOptions() Options {
 
 // SchedulerStatus reports current status of the background scraper job.
 type SchedulerStatus struct {
-	Enabled      bool          `json:"enabled"`
-	IsRunning    bool          `json:"is_running"`
-	IntervalDays int           `json:"interval_days"`
-	LastRunTime  *time.Time    `json:"last_run_time,omitempty"`
-	NextRunTime  *time.Time    `json:"next_run_time,omitempty"`
-	LastResult   *ScrapeResult `json:"last_result,omitempty"`
-	TotalInDB    int           `json:"total_in_db"`
+	Enabled      bool            `json:"enabled"`
+	IsRunning    bool            `json:"is_running"`
+	IntervalDays int             `json:"interval_days"`
+	LastRunTime  *time.Time      `json:"last_run_time,omitempty"`
+	NextRunTime  *time.Time      `json:"next_run_time,omitempty"`
+	LastResult   *ScrapeResult   `json:"last_result,omitempty"`
+	TotalInDB    int             `json:"total_in_db"`
+	Progress     *ScrapeProgress `json:"progress,omitempty"` // non-nil only while running
 }
 
 // BenchmarkFromCover converts processed cover measurements into a DB Benchmark model.

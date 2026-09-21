@@ -1,82 +1,112 @@
 package scraper
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
-	"net/url"
-	"regexp"
 	"time"
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/google/uuid"
+	"regexp"
+	"strings"
 )
 
 type AmazonSource struct {
-	client *http.Client
-	apiKey string
+	client   *http.Client
+	apiToken string
 }
 
-func NewAmazonSource(timeout time.Duration, apiKey string) *AmazonSource {
+func NewAmazonSource(timeout time.Duration, apiToken string) *AmazonSource {
 	if timeout <= 0 {
-		timeout = 30 * time.Second // ScraperAPI can take longer as it rotates proxies
+		timeout = 60 * time.Second // Apify Puppeteer can take 30-40 seconds to spin up and render
 	}
+
 	return &AmazonSource{
-		client: &http.Client{Timeout: timeout},
-		apiKey: apiKey,
+		client:   &http.Client{Timeout: timeout},
+		apiToken: apiToken,
 	}
 }
 
 func (a *AmazonSource) Name() string {
-	return "AmazonBestsellers_Production"
+	return "AmazonBestsellers_Apify"
+}
+
+// apifyRequest Payload for the Apify Puppeteer Scraper Actor
+type apifyRequest struct {
+	StartUrls    []map[string]string `json:"startUrls"`
+	PageFunction string              `json:"pageFunction"`
+}
+
+// apifyResponse Represents the dataset item returned by the actor
+type apifyResponse []struct {
+	Html string `json:"html"`
 }
 
 func (a *AmazonSource) FetchTopCovers(ctx context.Context, style string, limit int) ([]BestsellerCover, error) {
-	if a.apiKey == "" {
-		return nil, fmt.Errorf("SCRAPER_API_KEY is not configured")
+	if a.apiToken == "" {
+		return nil, fmt.Errorf("APIFY_TOKEN is not configured")
 	}
 
 	amazonURL := getAmazonCategoryURL(style)
 
-	// Construct the ScraperAPI URL
-	apiURL := fmt.Sprintf("http://api.scraperapi.com?api_key=%s&url=%s&render=true", a.apiKey, url.QueryEscape(amazonURL))
+	// We use Apify's official Puppeteer Scraper (apify/puppeteer-scraper)
+	// run-sync-get-dataset-items allows us to start the job, wait for it to finish, and get the data in one request!
+	apiURL := fmt.Sprintf("https://api.apify.com/v2/acts/apify~puppeteer-scraper/run-sync-get-dataset-items?token=%s", a.apiToken)
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, apiURL, nil)
+	reqPayload := apifyRequest{
+		StartUrls: []map[string]string{{"url": amazonURL}},
+		// This tiny JS function runs inside the Apify headless browser and grabs the fully rendered HTML
+		PageFunction: "async function pageFunction(context) { return { html: await context.page.content() }; }",
+	}
+
+	reqBytes, _ := json.Marshal(reqPayload)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, apiURL, bytes.NewReader(reqBytes))
 	if err != nil {
 		return nil, err
 	}
+	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := a.client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("scraper API request failed: %w", err)
+		return nil, fmt.Errorf("apify API request failed: %w", err)
 	}
 	defer func() {
 		if closeErr := resp.Body.Close(); closeErr != nil {
-			// Just log the error, don't fail the whole scrape
-			fmt.Printf("error closing response body: %v\n", closeErr)
+			fmt.Printf("error closing apify response body: %v\n", closeErr)
 		}
 	}()
 
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("scraper API returned status: %d", resp.StatusCode)
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
+		bodyErr, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("apify API returned status %d: %s", resp.StatusCode, string(bodyErr))
+	}
+
+	var dataset apifyResponse
+	if err := json.NewDecoder(resp.Body).Decode(&dataset); err != nil {
+		return nil, fmt.Errorf("failed to decode apify response: %w", err)
+	}
+
+	if len(dataset) == 0 || dataset[0].Html == "" {
+		return nil, fmt.Errorf("apify returned empty dataset")
 	}
 
 	// Parse HTML using goquery
-	doc, err := goquery.NewDocumentFromReader(resp.Body)
+	doc, err := goquery.NewDocumentFromReader(strings.NewReader(dataset[0].Html))
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse HTML: %w", err)
 	}
 
 	var covers []BestsellerCover
-
-	// Find all images within the Amazon Bestseller grid
 	reHighRes := regexp.MustCompile(`\._.*_\.([a-zA-Z0-9]+)$`)
 	reJSONUrl := regexp.MustCompile(`https://[^"]+`)
 
 	doc.Find("img.a-dynamic-image").EachWithBreak(func(i int, s *goquery.Selection) bool {
 		if len(covers) >= limit {
-			return false // Stop when we hit the limit
+			return false
 		}
 
 		imgSrc, exists := s.Attr("src")
@@ -91,17 +121,14 @@ func (a *AmazonSource) FetchTopCovers(ctx context.Context, style string, limit i
 		}
 
 		if imgSrc == "" {
-			return true // continue to next
+			return true
 		}
 
-		// Strip Amazon's resizing modifier to fetch the full-res version directly!
-		// e.g. "...._AC_UY218_.jpg" -> "....jpg"
 		highResSrc := reHighRes.ReplaceAllString(imgSrc, ".$1")
 
-		// Download the actual high-res image byte array
 		imgData, err := a.downloadImage(ctx, highResSrc)
 		if err != nil || len(imgData) == 0 {
-			return true // continue to next
+			return true
 		}
 
 		covers = append(covers, BestsellerCover{
@@ -125,7 +152,7 @@ func (a *AmazonSource) FetchTopCovers(ctx context.Context, style string, limit i
 
 func (a *AmazonSource) downloadImage(ctx context.Context, imgURL string) ([]byte, error) {
 	req, _ := http.NewRequestWithContext(ctx, http.MethodGet, imgURL, nil)
-	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64)")
+	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
 
 	resp, err := a.client.Do(req)
 	if err != nil {
@@ -147,19 +174,14 @@ func (a *AmazonSource) downloadImage(ctx context.Context, imgURL string) ([]byte
 func getAmazonCategoryURL(style string) string {
 	switch style {
 	case "Dark Photographic":
-		// Thriller / Suspense
 		return "https://www.amazon.com/best-sellers-books/zgbs/books/10484"
 	case "Illustrated":
-		// Fantasy
 		return "https://www.amazon.com/best-sellers-books/zgbs/books/16190"
 	case "Bold Typography":
-		// Business & Money
 		return "https://www.amazon.com/best-sellers-books/zgbs/books/3"
 	case "Minimalist":
-		// Self-Help
 		return "https://www.amazon.com/best-sellers-books/zgbs/books/4736"
 	default:
-		// Fallback to general Literature & Fiction
 		return "https://www.amazon.com/best-sellers-books/zgbs/books/17"
 	}
 }

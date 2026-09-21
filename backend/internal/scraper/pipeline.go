@@ -27,7 +27,8 @@ import (
 
 // ScrapeAndSave executes a full bestseller cover scraping and measurement pipeline,
 // inserting extracted visual benchmark metrics into PostgreSQL.
-func ScrapeAndSave(ctx context.Context, database *sqlx.DB, aiClient *ai.Client, sources []BestsellerSource, opts Options) (*ScrapeResult, error) {
+// progressFn is called after every meaningful step so callers can expose live status.
+func ScrapeAndSave(ctx context.Context, database *sqlx.DB, aiClient *ai.Client, sources []BestsellerSource, opts Options, progressFn func(ScrapeProgress)) (*ScrapeResult, error) {
 	if len(opts.Styles) == 0 {
 		opts.Styles = DefaultOptions().Styles
 	}
@@ -39,6 +40,9 @@ func ScrapeAndSave(ctx context.Context, database *sqlx.DB, aiClient *ai.Client, 
 	}
 	if len(sources) == 0 {
 		sources = []BestsellerSource{NewSampleSource()}
+	}
+	if progressFn == nil {
+		progressFn = func(ScrapeProgress) {} // no-op so callers don't need to check nil
 	}
 
 	if err := os.MkdirAll(opts.TempDir, 0o755); err != nil {
@@ -61,11 +65,24 @@ func ScrapeAndSave(ctx context.Context, database *sqlx.DB, aiClient *ai.Client, 
 
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 
+	// Estimate total covers so the progress bar can show a percent
+	totalEstimated := len(opts.Styles) * len(sources) * opts.LimitPerStyle
+
 	for _, style := range opts.Styles {
 		for _, source := range sources {
 			if ctx.Err() != nil {
 				return result, ctx.Err()
 			}
+
+			progressFn(ScrapeProgress{
+				CurrentStyle:    style,
+				CurrentAction:   fmt.Sprintf("Fetching Amazon bestsellers for \"%s\" via Apify...", style),
+				TotalCovers:     totalEstimated,
+				ProcessedCovers: result.TotalProcessed,
+				InsertedCovers:  result.TotalInserted,
+				ErrorCount:      len(result.Errors),
+				PercentComplete: percent(result.TotalProcessed, totalEstimated),
+			})
 
 			covers, err := source.FetchTopCovers(ctx, style, opts.LimitPerStyle)
 			if err != nil {
@@ -76,11 +93,23 @@ func ScrapeAndSave(ctx context.Context, database *sqlx.DB, aiClient *ai.Client, 
 			}
 
 			result.TotalFetched += len(covers)
+			// Refine total now that we know the actual fetched count
+			totalEstimated = totalEstimated - opts.LimitPerStyle + len(covers)
 
-			for _, c := range covers {
+			for i, c := range covers {
 				if ctx.Err() != nil {
 					return result, ctx.Err()
 				}
+
+				progressFn(ScrapeProgress{
+					CurrentStyle:    style,
+					CurrentAction:   fmt.Sprintf("Processing cover %d of %d for \"%s\"...", i+1, len(covers), style),
+					TotalCovers:     totalEstimated,
+					ProcessedCovers: result.TotalProcessed,
+					InsertedCovers:  result.TotalInserted,
+					ErrorCount:      len(result.Errors),
+					PercentComplete: percent(result.TotalProcessed, totalEstimated),
+				})
 
 				bm, err := processSingleCover(ctx, c, style, opts.TempDir, aiClient, opts.HTTPTimeout, r)
 				if err != nil {
@@ -98,6 +127,7 @@ func ScrapeAndSave(ctx context.Context, database *sqlx.DB, aiClient *ai.Client, 
 						result.Errors = append(result.Errors, errMsg)
 						log.Println("scraper error:", errMsg)
 						continue
+
 					}
 					result.TotalInserted++
 				}
@@ -239,3 +269,16 @@ func roundToDecimal(val float64, decimals int) float64 {
 	}
 	return float64(int(val*mult+0.5)) / mult
 }
+
+// percent returns processed/total as an integer 0–100.
+func percent(processed, total int) int {
+	if total <= 0 {
+		return 0
+	}
+	p := (processed * 100) / total
+	if p > 100 {
+		return 100
+	}
+	return p
+}
+
