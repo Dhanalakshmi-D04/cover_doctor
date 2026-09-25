@@ -24,6 +24,7 @@ type Cover struct {
 	Style *string `db:"style" json:"style,omitempty"`
 
 	TitleText             string  `db:"title_text" json:"title_text"`
+	AuthorText            *string `db:"author_text" json:"author_text,omitempty"`
 	TitleHeightPercent    float64 `db:"title_height_percent" json:"title_height_percent"`
 	TitleHeightPercentile float64 `db:"title_height_percentile" json:"title_height_percentile"`
 	TitleExplanation      *string `db:"title_explanation" json:"title_explanation,omitempty"`

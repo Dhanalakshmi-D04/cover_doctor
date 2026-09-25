@@ -187,6 +187,7 @@ func (p *Processor) ProcessTaskProcessCover(ctx context.Context, t *asynq.Task) 
 		Style:         &style,
 
 		TitleText:             title.Text,
+		AuthorText:            &coverAnalysis.AuthorText,
 		TitleHeightPercent:    report.Features[0].Value,
 		TitleHeightPercentile: report.Features[0].Percentile,
 		TitleExplanation:      &titleExplanation,

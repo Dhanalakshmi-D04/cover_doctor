@@ -160,7 +160,7 @@ export default function ScoreReport({ plan, report, coverId, onReset, onNavigate
         <h3 style={{ fontSize: '1.25rem', fontWeight: '800', fontFamily: 'var(--font-family-heading)', color: 'var(--text-primary)', marginBottom: '1rem' }}>
           Interactive Canvas Diagnostic Engine
         </h3>
-        <VisualBreakdown imageSrc={coverSrc} bookTitle={report?.title_text || "Your Book Title"} titleRatio={titleValue} contrastScore={contrastValue} />
+        <VisualBreakdown imageSrc={coverSrc} bookTitle={report?.title_text || "Your Book Title"} bookAuthor={report?.author_text || "Unknown Author"} titleRatio={titleValue} contrastScore={contrastValue} />
       </div>
     </div>
   );

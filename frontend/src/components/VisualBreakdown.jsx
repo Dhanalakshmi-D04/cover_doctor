@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { Eye, Grid, Maximize2, ShieldAlert, Sparkles, Smartphone, ShoppingBag } from 'lucide-react';
 import PillButton from './PillButton';
 
-export default function VisualBreakdown({ imageSrc, bookTitle = "The Bestseller Mystery Code", ocrData = null, titleRatio = 18.4, contrastScore = 4.8 }) {
+export default function VisualBreakdown({ imageSrc, bookTitle = "The Bestseller Mystery Code", bookAuthor = "Unknown Author", ocrData = null, titleRatio = 18.4, contrastScore = 4.8 }) {
   const [activeTab, setActiveTab] = useState('canvas'); // 'canvas', 'thumbnail', 'amazon', 'mobile'
   const [showTitleBox, setShowTitleBox] = useState(true);
   const [showGrid, setShowGrid] = useState(true);
@@ -181,7 +181,7 @@ export default function VisualBreakdown({ imageSrc, bookTitle = "The Bestseller 
             </div>
             <div>
               <div style={{ fontSize: '0.95rem', fontWeight: '800', lineHeight: '1.2' }}>{bookTitle}</div>
-              <div style={{ fontSize: '0.75rem', color: '#555', margin: '0.2rem 0' }}>by Author Name</div>
+              <div style={{ fontSize: '0.75rem', color: '#555', margin: '0.2rem 0' }}>by {bookAuthor}</div>
               <div style={{ color: '#E67E22', fontSize: '0.8rem' }}>★★★★★ 4.8 (1,240 ratings)</div>
               <div style={{ fontSize: '0.9rem', fontWeight: '800', color: '#B12704', marginTop: '0.4rem' }}>Kindle Unlimited $0.00</div>
             </div>

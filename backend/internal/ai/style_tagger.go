@@ -23,8 +23,9 @@ const DefaultStyle = "Bold Typography"
 // CoverAnalysis holds both the style tag and the Claude-extracted title text
 // from a single vision API call.
 type CoverAnalysis struct {
-	Style     string
-	TitleText string
+	Style      string
+	TitleText  string
+	AuthorText string
 }
 
 // AnalyzeCover sends the cover image to Claude ONCE and returns both the
@@ -33,7 +34,7 @@ type CoverAnalysis struct {
 // rely on Tesseract for the title string (Tesseract is still used for
 // bounding box coordinates to do contrast math).
 func (c *Client) AnalyzeCover(imagePath string) (CoverAnalysis, error) {
-	fallback := CoverAnalysis{Style: DefaultStyle, TitleText: ""}
+	fallback := CoverAnalysis{Style: DefaultStyle, TitleText: "", AuthorText: ""}
 
 	if !c.enabled {
 		return fallback, nil
@@ -45,11 +46,12 @@ func (c *Client) AnalyzeCover(imagePath string) (CoverAnalysis, error) {
 	}
 
 	prompt := fmt.Sprintf(
-		`You are analyzing a book cover image. Return ONLY a valid JSON object with exactly two keys:
+		`You are analyzing a book cover image. Return ONLY a valid JSON object with exactly three keys:
 1. "style": classify the cover as exactly one of: %s
 2. "title": the exact title text visible on the cover (read carefully, including stylized or decorative fonts). If you truly cannot read any title text, use an empty string "".
+3. "author": the author name visible on the cover. If you cannot read any author name, use an empty string "".
 
-Example response: {"style": "Dark Photographic", "title": "The Silent Patient"}
+Example response: {"style": "Dark Photographic", "title": "The Silent Patient", "author": "Alex Michaelides"}
 
 Return only the JSON object, nothing else.`,
 		strings.Join(styleCategories, " / "),
@@ -68,8 +70,9 @@ Return only the JSON object, nothing else.`,
 	cleaned = strings.TrimSpace(cleaned)
 
 	var result struct {
-		Style string `json:"style"`
-		Title string `json:"title"`
+		Style  string `json:"style"`
+		Title  string `json:"title"`
+		Author string `json:"author"`
 	}
 	if err := json.Unmarshal([]byte(cleaned), &result); err != nil {
 		return fallback, fmt.Errorf("parsing cover analysis JSON: %w", err)
@@ -85,8 +88,9 @@ Return only the JSON object, nothing else.`,
 	}
 
 	return CoverAnalysis{
-		Style:     validStyle,
-		TitleText: strings.TrimSpace(result.Title),
+		Style:      validStyle,
+		TitleText:  strings.TrimSpace(result.Title),
+		AuthorText: strings.TrimSpace(result.Author),
 	}, nil
 }
 

@@ -8,9 +8,7 @@ import { useUIStore } from '../stores/useUIStore';
 export default function AdminPage() {
   const [status, setStatus] = useState(null);
   const [isTriggering, setIsTriggering] = useState(false);
-  const [aiPrompt, setAiPrompt] = useState(
-    'Given this book cover math: title_ratio={ratio}%, contrast={contrast}:1, genre={genre}. Generate a concise, encouraging "Why" diagnostic summary.'
-  );
+
   const pollRef = useRef(null);
   const showToast = useUIStore((state) => state.showToast);
 
@@ -163,24 +161,7 @@ export default function AdminPage() {
           </PillButton>
         </div>
 
-        {/* AI Prompt Template Editor */}
-        <div style={{ padding: '1.5rem', borderRadius: 'var(--radius-lg)', backgroundColor: 'var(--bg-glass-card)', border: '1px solid var(--border-glass)', boxShadow: 'var(--shadow-md)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '700', fontSize: '1.05rem', color: 'var(--text-primary)', marginBottom: '1rem' }}>
-            <Cpu size={20} color="var(--accent-secondary)" />
-            <span>AI "Why" Explanation Prompt Template</span>
-          </div>
 
-          <textarea
-            rows={4}
-            value={aiPrompt}
-            onChange={(e) => setAiPrompt(e.target.value)}
-            style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-md)', backgroundColor: 'var(--bg-surface-elevated)', border: '1px solid var(--border-glass)', color: 'var(--text-primary)', fontFamily: 'var(--font-family-mono)', fontSize: '0.8rem', outline: 'none', marginBottom: '1rem' }}
-          />
-
-          <PillButton variant="glass" onClick={() => showToast('AI Prompt template saved!', 'success')} style={{ width: '100%' }}>
-            Save Prompt Schema
-          </PillButton>
-        </div>
       </div>
     </div>
   );
